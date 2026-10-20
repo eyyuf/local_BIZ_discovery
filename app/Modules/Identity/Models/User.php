@@ -26,6 +26,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar'
     ];
 
     /**
@@ -50,7 +51,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function oauthAccounts(){
-        return $this->hasMany(OauthAccount::class);
+    public function oauthAccounts()
+    {
+        return $this->hasMany(OAuthAccount::class);
     }
 }
