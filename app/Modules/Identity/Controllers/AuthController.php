@@ -3,13 +3,42 @@
 namespace App\Modules\Identity\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Identity\Actions\LoginUserAction;
+use App\Modules\Identity\Actions\RegisterUserAction;
 use App\Modules\Identity\Models\OAuthAccount;
 use App\Modules\Identity\Models\User;
+use App\Modules\Identity\Requests\LoginRequest;
+use App\Modules\Identity\Requests\RegisterRequest;
+use App\Modules\Identity\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 class AuthController extends Controller
 {
+    public function register(RegisterRequest $request, RegisterUserAction $action)
+        {
+            $user = $action->execute($request->validated());
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'message' => 'Registered successfully',
+            'token'   => $token,
+            'user'    => new UserResource($user),
+        ], 201);
+        }
+
+    public function login(LoginRequest $request, LoginUserAction $action)
+        {
+        $user = $action->execute($request->validated());
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Logged in successfully',
+            'token'   => $token,
+            'user'    => new UserResource($user),
+        ]);
+    }
+
     public function redirectToGoogle()
     {
         $url= Socialite::driver('google')->Stateless()->redirect()->getTargetUrl();

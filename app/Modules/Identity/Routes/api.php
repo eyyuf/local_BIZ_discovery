@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Modules\Identity\Controllers\AuthController;
 use App\Modules\Identity\Controllers\ProfileController; 
 Route::prefix('api/v1/auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+
 
     Route::get('google/redirect', [AuthController::class, 'redirectToGoogle']);
     Route::get('google/callback', [AuthController::class, 'handleGoogleCallback']);
