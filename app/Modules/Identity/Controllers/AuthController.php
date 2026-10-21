@@ -1,11 +1,12 @@
 <?php
 
 namespace App\Modules\Identity\Controllers;
-use App\Modules\Identity\Models\OAuthAccount;
-use App\Modules\Identity\Models\User;
-use Illuminate\Support\Str;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Identity\Models\OAuthAccount;
+use App\Modules\Identity\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 class AuthController extends Controller
 {
@@ -51,6 +52,12 @@ class AuthController extends Controller
             'message' => 'Logged in successfully',
             'token' => $token,
             'user' => $user,
+        ]);
+    }
+    public function logout(Request $request){
+        $request->user()->currentAccessToken()->delete();
+        return response()->json([
+            'message' => 'Logged out successfully',
         ]);
     }
 }
