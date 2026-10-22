@@ -8,6 +8,9 @@ Route::prefix('api/v1/auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
 
 
+    Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('reset-password', [AuthController::class, 'resetPassword']);
+
     Route::get('google/redirect', [AuthController::class, 'redirectToGoogle']);
     Route::get('google/callback', [AuthController::class, 'handleGoogleCallback']);
 

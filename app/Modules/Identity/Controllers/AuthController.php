@@ -5,10 +5,14 @@ namespace App\Modules\Identity\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Identity\Actions\LoginUserAction;
 use App\Modules\Identity\Actions\RegisterUserAction;
+use App\Modules\Identity\Actions\ResetPasswordAction;
+use App\Modules\Identity\Actions\SendPasswordResetLinkAction;
 use App\Modules\Identity\Models\OAuthAccount;
 use App\Modules\Identity\Models\User;
+use App\Modules\Identity\Requests\ForgotPasswordRequest;
 use App\Modules\Identity\Requests\LoginRequest;
 use App\Modules\Identity\Requests\RegisterRequest;
+use App\Modules\Identity\Requests\ResetPasswordRequest;
 use App\Modules\Identity\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -87,6 +91,24 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
         return response()->json([
             'message' => 'Logged out successfully',
+        ]);
+    }
+
+    public function forgotPassword(ForgotPasswordRequest $request, SendPasswordResetLinkAction $action)
+    {
+        $message = $action->execute($request->validated());
+
+        return response()->json([
+            'message' => $message,
+        ]);
+    }
+
+    public function resetPassword(ResetPasswordRequest $request, ResetPasswordAction $action)
+    {
+        $message = $action->execute($request->validated());
+
+        return response()->json([
+            'message' => $message,
         ]);
     }
 }
