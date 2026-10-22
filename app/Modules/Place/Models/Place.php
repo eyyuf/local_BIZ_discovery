@@ -28,21 +28,21 @@ class Place extends Model
 
     public function owner(): BelongsTo
     {
-        // TODO: define owner relation
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function operatingHours(): HasMany
     {
-        // TODO: define operating hours relation
+        return $this->hasMany(OperatingHour::class, 'place_id');
     }
 
     public function menuSections(): HasMany
     {
-        // TODO: define menu sections relation
+        return $this->hasMany(MenuSection::class, 'place_id');
     }
 
     public function menuItems(): HasManyThrough
     {
-        // TODO: define menu items relation
+        return $this->hasManyThrough(MenuItem::class, MenuSection::class);
     }
 }

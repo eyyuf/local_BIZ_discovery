@@ -20,6 +20,6 @@ class OperatingHour extends Model
 
     public function place(): BelongsTo
     {
-        // TODO: define place relation
+        return $this->BelongsTo(Place::class,'place_id');
     }
 }

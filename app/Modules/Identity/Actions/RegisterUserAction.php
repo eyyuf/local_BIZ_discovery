@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Modules\Identity\Actions;
+use App\Modules\Identity\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 
-use App\Modules\Identity\Models\User;
 class RegisterUserAction
 {
     public function execute(array $data): User{

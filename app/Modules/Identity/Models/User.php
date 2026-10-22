@@ -56,4 +56,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(OAuthAccount::class);
     }
+
+    public function places(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Place\Models\Place::class);
+    }
 }

@@ -21,6 +21,6 @@ class MenuItem extends Model
 
     public function section(): BelongsTo
     {
-        // TODO: define section relation
+        return $this->BelongsTo(MenuSection::class,'menu_section_id');
     }
 }
