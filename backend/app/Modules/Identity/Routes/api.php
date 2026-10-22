@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Modules\Identity\Controllers\AuthController;
 use App\Modules\Identity\Controllers\ProfileController; 
-Route::prefix('api/v1/auth')->group(function () {
+Route::middleware('api')->prefix('api/v1/auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
 
@@ -16,6 +16,13 @@ Route::prefix('api/v1/auth')->group(function () {
 
     Route::get('google/redirect', [AuthController::class, 'redirectToGoogle']);
     Route::get('google/callback', [AuthController::class, 'handleGoogleCallback']);
+
+    // Verification notice route for unverified users
+    Route::get('email/verify', function () {
+        return response()->json([
+            'message' => 'Your email address is not verified.',
+        ], 403);
+    })->name('verification.notice');
 
     // Email verification link clicked from email (signed)
     Route::get('email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])

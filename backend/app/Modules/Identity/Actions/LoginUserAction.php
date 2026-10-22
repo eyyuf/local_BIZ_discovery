@@ -18,12 +18,6 @@ class LoginUserAction
             ]);
         }
 
-        if (! $user->hasVerifiedEmail()) {
-            throw ValidationException::withMessages([
-                'email' => ['Please verify your email address before logging in.'],
-            ]);
-        }
-
         return $user;
     }
 }
