@@ -11,8 +11,8 @@ class LoginRequest extends FormRequest
     }
     public function rules(): array{
         return [
-            'email'=>['required', 'email', 'max:255', Rule::unique('users', 'email')],
-            'password'=>['required', 'string', 'min:8', 'confirmed'],   
+            'email'=>['required', 'email' ],
+            'password'=>['required', 'string'],   
         ];
 
     }

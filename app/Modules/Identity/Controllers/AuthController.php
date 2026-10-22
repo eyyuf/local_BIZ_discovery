@@ -14,6 +14,7 @@ use App\Modules\Identity\Requests\LoginRequest;
 use App\Modules\Identity\Requests\RegisterRequest;
 use App\Modules\Identity\Requests\ResetPasswordRequest;
 use App\Modules\Identity\Resources\UserResource;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
@@ -110,5 +111,35 @@ class AuthController extends Controller
         return response()->json([
             'message' => $message,
         ]);
+    }
+
+    public function verifyEmail(Request $request, $id, $hash)
+    {
+        $user = User::findOrFail($id);
+
+        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return response()->json(['message' => 'Invalid or expired verification link.'], 403);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email already verified.']);
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+
+        return response()->json(['message' => 'Email verified successfully!']);
+    }
+
+    public function resendVerificationEmail(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email is already verified.']);
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return response()->json(['message' => 'Verification link sent!']);
     }
 }

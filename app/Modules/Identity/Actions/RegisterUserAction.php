@@ -12,6 +12,7 @@ class RegisterUserAction
             'email'=> $data['email'],
             'password'=>Hash::make($data['password']),
         ]);
+        event(new Registered($user));
         return $user;
 
     }

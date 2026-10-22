@@ -1,18 +1,29 @@
 <?php
 
 namespace App\Modules\Identity\Actions;
-use Illuminate\Support\Facades\Hash;
 
 use App\Modules\Identity\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+
 class LoginUserAction
 {
-    public function execute(array $data): User{
-        $user=User::where('email', $data['email'])->first();
-        if(!$user ||!Hash::check($data['password'], $user->password)){
-           throw ValidationException::withMessages([
+    public function execute(array $data): User
+    {
+        $user = User::where('email', $data['email'])->first();
+
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
+            throw ValidationException::withMessages([
                 'email' => ['Invalid credentials.'],
             ]);
         }
+
+        if (! $user->hasVerifiedEmail()) {
+            throw ValidationException::withMessages([
+                'email' => ['Please verify your email address before logging in.'],
+            ]);
+        }
+
         return $user;
     }
 }
