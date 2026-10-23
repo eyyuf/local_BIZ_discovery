@@ -11,11 +11,23 @@ class PlaceController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        // TODO: List all public active places
+        $data = Place::where('is_active', true)->paginate(10);
+        return response()->json([
+            'message'=>'retrieved succesfully',
+            'data'=>$data,
+        ],200);
     }
 
     public function show(Place $place): JsonResponse
     {
-        // TODO: Show place details
+        if($place->is_active == false){
+            abort(404, 'place not found');
+
+        }
+        $place->load(['operatingHours', 'menuSections.items']);
+        return response()->json([
+            'message'=>'retrieved succesfully',
+            'data'=>$place,
+        ],200);
     }
 }
