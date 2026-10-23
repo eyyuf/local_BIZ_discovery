@@ -14,7 +14,16 @@ class StorePlaceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // TODO: Define validation rules for storing a place
+            'name'=>['required','string'],
+            'description'=>['nullable','string'],
+            'address'=>['required', 'string'],
+            'phone'=>['required','string'],
+            'website'=>['nullable', 'url', 'max:255'],
+            'latitude'=> ['nullable', 'numeric', 'between:-90,90'],
+            'longitude'=> ['nullable', 'numeric', 'between:-180,180'],        
+            'is_active'   => ['sometimes', 'boolean'],
+
         ];
     }
+    
 }
