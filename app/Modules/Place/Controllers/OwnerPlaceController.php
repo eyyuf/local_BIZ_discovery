@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Modules\Place\Controllers;
+use Illuminate\Support\Facades\Gate;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Place\Actions\CreatePlaceAction;
@@ -15,21 +16,38 @@ class OwnerPlaceController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        // TODO: List places owned by the authenticated user
+        $data=$request->user()->places()->paginate(10);
+        return response()->json([
+            'message'=>'retrieved succesfully',
+            'data'=>$data,
+        ],200);
     }
 
     public function store(StorePlaceRequest $request, CreatePlaceAction $action): JsonResponse
     {
-        // TODO: Store new place for owner
+        $place = $action->execute($request->user(),$request->validated());
+        return response()->json([
+            'message'=>'stored susccusfully',
+            'data'=>$place,
+        ],201);
     }
 
     public function update(UpdatePlaceRequest $request, Place $place, UpdatePlaceAction $action): JsonResponse
     {
-        // TODO: Update place details
+        Gate::authorize('update',$place);
+        $place=$action->execute($place, $request->validated());
+        return response()->json([
+            'message'=>'updated susccusfully',
+            'data'=>$place,
+        ],200);
     }
 
     public function destroy(Place $place): JsonResponse
     {
-        // TODO: Delete place
+        Gate::authorize('delete', $place);
+        $place->delete();
+        return response()->json([
+            'message'=>'deleted susccusfully',
+        ],200);
     }
 }
