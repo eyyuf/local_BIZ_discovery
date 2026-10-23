@@ -1,9 +1,0 @@
-<?php
-
-namespace App\Modules\Identity\Resources;
-
-use Illuminate\Http\Resources\Json\JsonResource;
-
-class UserResource extends JsonResource
-{
-}
