@@ -19,11 +19,11 @@ class MenuSection extends Model
 
     public function place(): BelongsTo
     {
-        return $this->BelongsTO(Place::class,'place_id');
+        return $this->belongsTo(Place::class, 'place_id');
     }
 
     public function items(): HasMany
     {
-        return $this->HasMany(MenuItem::class,'menu_section_id');
+        return $this->hasMany(MenuItem::class, 'menu_section_id');
     }
 }

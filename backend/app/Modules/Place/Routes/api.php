@@ -7,14 +7,14 @@ use App\Modules\Place\Controllers\PlaceController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
-Route::prefix('api/v1/places')->group(function () {
+Route::prefix('api/v1/places')->middleware('api')->group(function () {
     Route::get('/', [PlaceController::class, 'index']);
     Route::get('{place:slug}', [PlaceController::class, 'show']);
-    Route::get('{place}/menu', [MenuController::class, 'index']);
+    Route::get('{place:slug}/menu', [MenuController::class, 'index']);
 });
 
 // Business Owner routes (Protected by auth)
-Route::prefix('api/v1/owner/places')->middleware('auth:sanctum')->group(function () {
+Route::prefix('api/v1/owner/places')->middleware(['api', 'auth:sanctum'])->group(function () {
     Route::get('/', [OwnerPlaceController::class, 'index']);
     Route::post('/', [OwnerPlaceController::class, 'store']);
     Route::put('{place}', [OwnerPlaceController::class, 'update']);
