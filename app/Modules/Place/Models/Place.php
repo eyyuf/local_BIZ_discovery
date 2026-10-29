@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Facades\DB;
 
 class Place extends Model
 {
@@ -21,10 +22,22 @@ class Place extends Model
         'address',
         'latitude',
         'longitude',
+        'location',
         'phone',
         'website',
         'is_active',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $place) {
+            if ($place->latitude !== null && $place->longitude !== null) {
+                $place->location = DB::raw(
+                    "ST_SetSRID(ST_MakePoint({$place->longitude}, {$place->latitude}), 4326)"
+                );
+            }
+        });
+    }
 
     public function owner(): BelongsTo
     {

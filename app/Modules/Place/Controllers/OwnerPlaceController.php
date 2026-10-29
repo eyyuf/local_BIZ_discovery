@@ -48,6 +48,6 @@ class OwnerPlaceController extends Controller
         $place->delete();
         return response()->json([
             'message'=>'deleted susccusfully',
-        ],200);
+        ],204);
     }
 }
