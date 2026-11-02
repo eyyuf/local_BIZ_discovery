@@ -16,10 +16,8 @@ class GetSearchSuggestionsAction
      */
     public function execute(string $query, int $limit = 10): array
     {
-        
         $limit = max(1, min($limit, 15));
 
-     
         $categories = Category::query()
             ->where('is_active', true)
             ->where('name', 'ILIKE', "%{$query}%")
@@ -32,7 +30,6 @@ class GetSearchSuggestionsAction
                 'slug'  => $category->slug,
             ]);
 
-      
         $places = Place::query()
             ->where('is_active', true)
             ->where('name', 'ILIKE', "%{$query}%")
