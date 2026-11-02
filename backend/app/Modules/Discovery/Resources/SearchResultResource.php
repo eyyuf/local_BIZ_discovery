@@ -17,7 +17,7 @@ class SearchResultResource extends JsonResource
             'address'     => $this->address,
             'latitude'    => $this->latitude,
             'longitude'   => $this->longitude,
-            'distance_km' => $this->when(isset($this->distance_km), $this->distance_km),
+            'distance_km' => $this->when(isset($this->distance_km), round((float) $this->distance_km, 2)),
             'phone'       => $this->phone,
             'website'     => $this->website,
             'is_active'   => (bool) $this->is_active,

@@ -19,10 +19,9 @@ class BookmarkController extends Controller
             ->latest()
             ->paginate(10);
 
-        return response()->json([
-            'message' => 'retrieved successfully',
-            'data'    => BookmarkResource::collection($bookmarks),
-        ], 200);
+        return BookmarkResource::collection($bookmarks)
+            ->additional(['message' => 'retrieved successfully'])
+            ->response();
     }
 
     public function toggle(Request $request, Place $place, ToggleBookmarkAction $action): JsonResponse

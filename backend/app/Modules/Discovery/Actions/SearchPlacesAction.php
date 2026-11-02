@@ -7,6 +7,12 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class SearchPlacesAction
 {
+    /**
+     * Search and filter places using keyword, category, PostGIS location, open status, and sorting.
+     *
+     * @param array $filters
+     * @return LengthAwarePaginator
+     */
     public function execute(array $filters): LengthAwarePaginator
     {
         $query = Place::query()->where('is_active', true);
