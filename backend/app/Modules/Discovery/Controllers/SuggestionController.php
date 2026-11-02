@@ -11,6 +11,14 @@ class SuggestionController extends Controller
 {
     public function index(SuggestionRequest $request, GetSearchSuggestionsAction $action): JsonResponse
     {
-        // TODO: Return search typeahead suggestions
+        $query = $request->validated('q');
+        $limit = (int) $request->validated('limit', 10);
+
+        $data = $action->execute($query, $limit);
+
+        return response()->json([
+            'message' => 'Suggestions retrieved successfully',
+            'data'    => $data['suggestions'],
+        ], 200);
     }
 }
