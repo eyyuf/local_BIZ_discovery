@@ -15,9 +15,12 @@ class SearchResultResource extends JsonResource
             'slug'        => $this->slug,
             'description' => $this->description,
             'address'     => $this->address,
-            'latitude'    => $this->latitude,
-            'longitude'   => $this->longitude,
-            'distance_km' => $this->when(isset($this->distance_km), round((float) $this->distance_km, 2)),
+            'latitude'    => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude'   => $this->longitude !== null ? (float) $this->longitude : null,
+            'distance_km' => $this->when(
+                isset($this->distance_km),
+                fn () => round((float) $this->distance_km, 2)
+            ),
             'phone'       => $this->phone,
             'website'     => $this->website,
             'is_active'   => (bool) $this->is_active,

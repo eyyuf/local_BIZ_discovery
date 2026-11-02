@@ -9,6 +9,13 @@ class GetNearbyPlacesAction
 {
     public function execute(float $lat, float $lng, float $radiusKm = 5.0, int $limit = 20): Collection
     {
-        // TODO: Implement PostGIS nearby proximity query
+        return Place::query()
+            ->where('is_active', true)
+            ->withinRadius($lat, $lng, $radiusKm)
+            ->withDistanceTo($lat, $lng)
+            ->orderBy('distance_km', 'asc')
+            ->limit($limit)
+            ->with(['categories', 'amenities'])
+            ->get();
     }
 }

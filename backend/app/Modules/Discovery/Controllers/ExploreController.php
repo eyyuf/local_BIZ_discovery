@@ -4,13 +4,22 @@ namespace App\Modules\Discovery\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Discovery\Actions\GetExploreFeedAction;
+use App\Modules\Discovery\Requests\ExploreRequest;
+use App\Modules\Discovery\Resources\ExploreSectionResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class ExploreController extends Controller
 {
-    public function index(Request $request, GetExploreFeedAction $action): JsonResponse
+    /**
+     * Return curated explore sections.
+     */
+    public function index(ExploreRequest $request, GetExploreFeedAction $action): JsonResponse
     {
-        // TODO: Return curated explore sections
+        $lat = $request->filled('lat') ? (float) $request->validated('lat') : null;
+        $lng = $request->filled('lng') ? (float) $request->validated('lng') : null;
+
+        $sections = $action->execute($lat, $lng);
+
+        return ExploreSectionResource::collection($sections)->response();
     }
 }

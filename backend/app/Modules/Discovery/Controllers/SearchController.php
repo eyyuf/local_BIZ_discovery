@@ -30,6 +30,15 @@ class SearchController extends Controller
 
     public function nearby(NearbyPlacesRequest $request, GetNearbyPlacesAction $action): JsonResponse
     {
-        // TODO: Call action and return nearby places for map pins
+        $validated = $request->validated();
+
+        $places = $action->execute(
+            lat: (float) $validated['lat'],
+            lng: (float) $validated['lng'],
+            radiusKm: (float) ($validated['radius'] ?? 5.0),
+            limit: (int) ($validated['limit'] ?? 20),
+        );
+
+        return SearchResultResource::collection($places)->response();
     }
 }
