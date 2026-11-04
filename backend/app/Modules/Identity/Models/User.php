@@ -81,4 +81,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(\App\Modules\Social\Models\PostLike::class);
     }
+
+    public function dealClaims(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Social\Models\DealClaim::class);
+    }
 }
