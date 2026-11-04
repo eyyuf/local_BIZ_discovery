@@ -3,6 +3,7 @@
 use App\Modules\Discovery\DiscoveryServiceProvider;
 use App\Modules\Identity\IdentityServiceProvider;
 use App\Modules\Place\PlaceServiceProvider;
+use App\Modules\Social\SocialServiceProvider;
 use App\Providers\AppServiceProvider;
 
 return [
@@ -10,4 +11,5 @@ return [
     IdentityServiceProvider::class,
     PlaceServiceProvider::class,
     DiscoveryServiceProvider::class,
+    SocialServiceProvider::class,
 ];

@@ -71,4 +71,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsToMany(\App\Modules\Place\Models\Place::class, 'place_bookmarks');
     }
+
+    public function posts(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Social\Models\Post::class);
+    }
+
+    public function postLikes(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Social\Models\PostLike::class);
+    }
 }

@@ -104,4 +104,9 @@ class Place extends Model
     {
         return $this->hasMany(PlaceBookmark::class);
     }
+
+    public function posts(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Social\Models\Post::class);
+    }
 }
