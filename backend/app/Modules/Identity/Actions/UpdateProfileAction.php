@@ -2,25 +2,32 @@
 
 namespace App\Modules\Identity\Actions;
 
+use App\Modules\Identity\DTOs\UpdateProfileDTO;
 use App\Modules\Identity\Models\User;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 
 class UpdateProfileAction
 {
-    public function execute(User $user, array $data): User
+    public function execute(User $user, UpdateProfileDTO|array $data): User
     {
-        if (! empty($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
+        $dto = $data instanceof UpdateProfileDTO ? $data : UpdateProfileDTO::fromArray($data);
+
+        $payload = array_filter([
+            'name'  => $dto->name,
+            'email' => $dto->email,
+        ], fn ($val) => $val !== null);
+
+        if ($dto->password) {
+            $payload['password'] = Hash::make($dto->password);
         }
 
-        if (isset($data['avatar']) && $data['avatar'] instanceof UploadedFile) {
-            $data['avatar'] = $data['avatar']->store('avatars', 'public');
+        if ($dto->avatar) {
+            $payload['avatar'] = $dto->avatar->store('avatars', 'public');
         }
 
-        unset($data['current_password']);
-
-        $user->update($data);
+        if (! empty($payload)) {
+            $user->update($payload);
+        }
 
         return $user;
     }

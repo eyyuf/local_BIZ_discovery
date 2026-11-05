@@ -7,6 +7,8 @@ use App\Modules\Identity\Actions\LoginUserAction;
 use App\Modules\Identity\Actions\RegisterUserAction;
 use App\Modules\Identity\Actions\ResetPasswordAction;
 use App\Modules\Identity\Actions\SendPasswordResetLinkAction;
+use App\Modules\Identity\DTOs\LoginDTO;
+use App\Modules\Identity\DTOs\RegisterUserDTO;
 use App\Modules\Identity\Models\OAuthAccount;
 use App\Modules\Identity\Models\User;
 use App\Modules\Identity\Requests\ForgotPasswordRequest;
@@ -24,7 +26,7 @@ class AuthController extends Controller
 {
     public function register(RegisterRequest $request, RegisterUserAction $action)
     {
-        $user = $action->execute($request->validated());
+        $user = $action->execute(RegisterUserDTO::fromRequest($request));
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -36,7 +38,7 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request, LoginUserAction $action)
     {
-        $user = $action->execute($request->validated());
+        $user = $action->execute(LoginDTO::fromRequest($request));
         Auth::guard('web')->login($user, $request->boolean('remember', true));
         $token = $user->createToken('auth_token')->plainTextToken;
 
