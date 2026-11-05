@@ -109,4 +109,14 @@ class Place extends Model
     {
         return $this->hasMany(\App\Modules\Social\Models\Post::class);
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Review\Models\Review::class);
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Review\Models\Favorite::class);
+    }
 }
