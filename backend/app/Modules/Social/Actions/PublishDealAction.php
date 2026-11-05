@@ -15,23 +15,28 @@ class PublishDealAction
         private ?PlaceQueryInterface $placeQuery = null
     ) {}
 
-    public function execute(Place $place, User $author, CreatePostDTO|array $data): Post
+    public function execute(Place $place, User $author, CreatePostDTO $dto): Post
     {
-        $dto = $data instanceof CreatePostDTO ? $data : CreatePostDTO::fromArray($data);
-
-        if ($this->placeQuery && !$this->placeQuery->isPlaceOpen($place->id)) {
+        
+        if ($this->placeQuery && ! $this->placeQuery->isPlaceOpen($place->id)) {
             throw ValidationException::withMessages([
                 'place' => ['Cannot publish deals for an inactive or closed place.'],
             ]);
         }
 
-        $payload = array_merge($dto->toArray(), [
-            'place_id'    => $place->id,
-            'user_id'     => $author->id,
-            'is_active'   => true,
-            'likes_count' => 0,
+        return Post::create([
+            'place_id'            => $place->id,
+            'user_id'             => $author->id,
+            'title'               => $dto->title,
+            'content'             => $dto->content,
+            'deal_type'           => $dto->dealType,
+            'discount_percentage' => $dto->discountPercentage,
+            'discount_code'       => $dto->discountCode,
+            'image_url'           => $dto->imageUrl,
+            'max_claims'          => $dto->maxClaims,
+            'expires_at'          => $dto->expiresAt,
+            'is_active'           => true,
+            'likes_count'         => 0,
         ]);
-
-        return Post::create($payload);
     }
 }
