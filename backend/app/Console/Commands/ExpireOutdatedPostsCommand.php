@@ -20,3 +20,4 @@ class ExpireOutdatedPostsCommand extends Command
         return Command::SUCCESS;
     }
 }
+
