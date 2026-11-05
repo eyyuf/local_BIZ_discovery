@@ -12,12 +12,6 @@ class PostLikeController extends Controller
 {
     public function toggle(Request $request, Post $post, TogglePostLikeAction $action): JsonResponse
     {
-        $result = $action->execute($post, $request->user());
-
-        return response()->json([
-            'message'     => $result['liked'] ? 'Post liked successfully' : 'Post unliked successfully',
-            'liked'       => $result['liked'],
-            'likes_count' => $result['likes_count'],
-        ], 200);
+        // TODO: Toggle post like status
     }
 }
