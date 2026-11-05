@@ -2,6 +2,7 @@
 
 namespace App\Modules\Discovery\Actions;
 
+use App\Modules\Discovery\DTOs\SearchFilterDTO;
 use App\Modules\Place\Models\Place;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -10,11 +11,13 @@ class SearchPlacesAction
     /**
      * Search and filter places using keyword, category, PostGIS location, open status, and sorting.
      *
-     * @param array $filters
+     * @param SearchFilterDTO|array $filters
      * @return LengthAwarePaginator
      */
-    public function execute(array $filters): LengthAwarePaginator
+    public function execute(SearchFilterDTO|array $filters): LengthAwarePaginator
     {
+        $filters = $filters instanceof SearchFilterDTO ? $filters->toArray() : $filters;
+
         $query = Place::query()->where('is_active', true);
 
         if (!empty($filters['q'])) {

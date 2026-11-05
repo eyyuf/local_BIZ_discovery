@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Gate;
 use App\Http\Controllers\Controller;
 use App\Modules\Place\Actions\CreatePlaceAction;
 use App\Modules\Place\Actions\UpdatePlaceAction;
+use App\Modules\Place\DTOs\CreatePlaceDTO;
+use App\Modules\Place\DTOs\UpdatePlaceDTO;
 use App\Modules\Place\Models\Place;
 use App\Modules\Place\Requests\StorePlaceRequest;
 use App\Modules\Place\Requests\UpdatePlaceRequest;
@@ -25,7 +27,7 @@ class OwnerPlaceController extends Controller
 
     public function store(StorePlaceRequest $request, CreatePlaceAction $action): JsonResponse
     {
-        $place = $action->execute($request->user(),$request->validated());
+        $place = $action->execute($request->user(), CreatePlaceDTO::fromRequest($request));
         return response()->json([
             'message'=>'stored susccusfully',
             'data'=>$place,
@@ -35,7 +37,7 @@ class OwnerPlaceController extends Controller
     public function update(UpdatePlaceRequest $request, Place $place, UpdatePlaceAction $action): JsonResponse
     {
         Gate::authorize('update',$place);
-        $place=$action->execute($place, $request->validated());
+        $place=$action->execute($place, UpdatePlaceDTO::fromRequest($request));
         return response()->json([
             'message'=>'updated susccusfully',
             'data'=>$place,

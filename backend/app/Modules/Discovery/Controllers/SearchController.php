@@ -5,6 +5,8 @@ namespace App\Modules\Discovery\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Discovery\Actions\GetNearbyPlacesAction;
 use App\Modules\Discovery\Actions\SearchPlacesAction;
+use App\Modules\Discovery\DTOs\NearbySearchDTO;
+use App\Modules\Discovery\DTOs\SearchFilterDTO;
 use App\Modules\Discovery\Requests\NearbyPlacesRequest;
 use App\Modules\Discovery\Requests\SearchPlacesRequest;
 use App\Modules\Discovery\Resources\SearchResultResource;
@@ -21,7 +23,8 @@ class SearchController extends Controller
      */
     public function search(SearchPlacesRequest $request, SearchPlacesAction $action): JsonResponse
     {
-        $results = $action->execute($request->validated());
+        $dto = SearchFilterDTO::fromRequest($request);
+        $results = $action->execute($dto);
 
         return SearchResultResource::collection($results)
             ->additional(['message' => 'retrieved successfully'])
@@ -30,13 +33,13 @@ class SearchController extends Controller
 
     public function nearby(NearbyPlacesRequest $request, GetNearbyPlacesAction $action): JsonResponse
     {
-        $validated = $request->validated();
+        $dto = NearbySearchDTO::fromRequest($request);
 
         $places = $action->execute(
-            lat: (float) $validated['lat'],
-            lng: (float) $validated['lng'],
-            radiusKm: (float) ($validated['radius'] ?? 5.0),
-            limit: (int) ($validated['limit'] ?? 20),
+            lat: $dto->lat,
+            lng: $dto->lng,
+            radiusKm: $dto->radiusKm,
+            limit: $dto->limit,
         );
 
         return SearchResultResource::collection($places)->response();
