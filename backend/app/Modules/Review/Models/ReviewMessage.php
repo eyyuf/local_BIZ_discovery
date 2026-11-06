@@ -7,14 +7,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ReviewResponse extends Model
+class ReviewMessage extends Model
 {
     use HasFactory;
+
+    protected $table = 'review_messages';
 
     protected $fillable = [
         'review_id',
         'user_id',
-        'response',
+        'message',
     ];
 
     public function review(): BelongsTo

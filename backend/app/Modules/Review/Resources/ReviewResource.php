@@ -12,16 +12,16 @@ class ReviewResource extends JsonResource
         return [
             'id'           => $this->id,
             'place_id'     => $this->place_id,
-            'rating'       => (int) $this->rating,
             'comment'      => $this->comment,
             'is_published' => (bool) $this->is_published,
-            'created_at'   => $this->created_at?->toIso8601String(),
+            'created_at'   => $this->created_at?->toISOString(),
+            'updated_at'   => $this->updated_at?->toISOString(),
             'author'       => [
-                'id'    => $this->author?->id,
-                'name'  => $this->author?->name,
+                'id'     => $this->author?->id,
+                'name'   => $this->author?->name,
                 'avatar' => $this->author?->avatar,
             ],
-            'response'     => new ReviewResponseResource($this->whenLoaded('response')),
+            'messages'     => ReviewMessageResource::collection($this->whenLoaded('messages')),
         ];
     }
 }

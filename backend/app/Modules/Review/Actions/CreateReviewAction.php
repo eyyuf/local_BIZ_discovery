@@ -4,16 +4,40 @@ namespace App\Modules\Review\Actions;
 
 use App\Modules\Identity\Models\User;
 use App\Modules\Place\Models\Place;
-use App\Modules\Review\DTOs\CreateReviewDTO;
 use App\Modules\Review\Models\Review;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Validation\ValidationException;
 
 class CreateReviewAction
 {
     /**
      * Execute review creation logic.
+     *
+     * @param Place $place
+     * @param User $author
+     * @param array $data Validated data containing 'comment'
+     * @return Review
+     *
+     * @throws AuthorizationException
+     * @throws ValidationException
      */
-    public function execute(Place $place, User $author, CreateReviewDTO $dto): Review
+    public function execute(Place $place, User $author, array $data): Review
     {
-        // TODO: Implement review creation and rating recalculation logic
+        if ((int) $author->id === (int) $place->user_id) {
+            throw new AuthorizationException('You cannot review your own place.');
+        }
+
+        if (! $place->is_active) {
+            throw ValidationException::withMessages([
+                'place' => ['Cannot submit reviews for an inactive place.'],
+            ]);
+        }
+
+        return Review::create([
+            'place_id'     => $place->id,
+            'user_id'      => $author->id,
+            'comment'      => $data['comment'],
+            'is_published' => true,
+        ]);
     }
 }

@@ -4,7 +4,7 @@ namespace App\Modules\Review\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreResponseRequest extends FormRequest
+class UpdateReviewMessageRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,14 +14,15 @@ class StoreResponseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'response' => ['required', 'string', 'max:2000'],
+            'message' => ['required', 'string', 'max:2000'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'response.required' => 'Response text is required.',
+            'message.required' => 'Message text is required.',
+            'message.max'      => 'Message text cannot exceed 2000 characters.',
         ];
     }
 }

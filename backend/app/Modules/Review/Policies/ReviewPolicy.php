@@ -10,24 +10,36 @@ class ReviewPolicy
 {
     /**
      * Determine whether the user can create a review for the place.
-     * Rule: User cannot review their own place, and cannot double-review.
+     * Business rules:
+     * - Place must be active.
+     * - Place owner cannot review their own place.
+     * - Multiple written reviews from the same user for the same place are allowed.
      */
     public function create(User $user, Place $place): bool
     {
-        // Business owners cannot review their own business
+        if (! $place->is_active) {
+            return false;
+        }
+
         if ((int) $user->id === (int) $place->user_id) {
             return false;
         }
 
-        // Prevent duplicate review
-        return ! Review::where('place_id', $place->id)
-            ->where('user_id', $user->id)
-            ->exists();
+        return true;
+    }
+
+    /**
+     * Determine whether the user can update the review.
+     * Rule: Only the review author can update their review.
+     */
+    public function update(User $user, Review $review): bool
+    {
+        return (int) $user->id === (int) $review->user_id;
     }
 
     /**
      * Determine whether the user can delete the review.
-     * Rule: Only author or admin can delete the review.
+     * Rule: Only the review author can delete their review.
      */
     public function delete(User $user, Review $review): bool
     {

@@ -11,6 +11,6 @@ class DeleteReviewAction
      */
     public function execute(Review $review): bool
     {
-        // TODO: Implement review deletion and rating recalculation logic
+        return (bool) $review->delete();
     }
 }

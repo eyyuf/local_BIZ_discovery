@@ -7,7 +7,7 @@ use App\Modules\Place\Models\Place;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Review extends Model
 {
@@ -16,13 +16,11 @@ class Review extends Model
     protected $fillable = [
         'place_id',
         'user_id',
-        'rating',
         'comment',
         'is_published',
     ];
 
     protected $casts = [
-        'rating'       => 'integer',
         'is_published' => 'boolean',
     ];
 
@@ -36,8 +34,8 @@ class Review extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function response(): HasOne
+    public function messages(): HasMany
     {
-        return $this->hasOne(ReviewResponse::class);
+        return $this->hasMany(ReviewMessage::class);
     }
 }

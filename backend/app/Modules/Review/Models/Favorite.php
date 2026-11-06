@@ -12,18 +12,20 @@ class Favorite extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'place_id',
-        'user_id',
-    ];
+    protected $table = 'favorites';
 
-    public function place(): BelongsTo
-    {
-        return $this->belongsTo(Place::class);
-    }
+    protected $fillable = [
+        'user_id',
+        'place_id',
+    ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function place(): BelongsTo
+    {
+        return $this->belongsTo(Place::class);
     }
 }

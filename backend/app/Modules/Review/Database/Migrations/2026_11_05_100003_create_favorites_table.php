@@ -10,11 +10,12 @@ return new class extends Migration
     {
         Schema::create('favorites', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('place_id')->constrained('places')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('place_id')->constrained('places')->cascadeOnDelete();
             $table->timestamps();
 
-            $table->unique(['place_id', 'user_id']); // One favorite per user per place
+            $table->unique(['user_id', 'place_id']);
+            $table->index('place_id');
         });
     }
 

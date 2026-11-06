@@ -8,19 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('review_responses', function (Blueprint $table) {
+        Schema::create('review_messages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('review_id')->constrained('reviews')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->text('response');
+            $table->text('message');
             $table->timestamps();
 
-            $table->unique('review_id'); // One owner response per review
+            $table->index('review_id');
+            $table->index('user_id');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('review_responses');
+        Schema::dropIfExists('review_messages');
     }
 };

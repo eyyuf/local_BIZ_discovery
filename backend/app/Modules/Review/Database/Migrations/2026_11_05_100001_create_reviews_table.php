@@ -12,13 +12,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('place_id')->constrained('places')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->unsignedTinyInteger('rating'); // 1 to 5 stars
-            $table->text('comment')->nullable();
+            $table->text('comment');
             $table->boolean('is_published')->default(true);
             $table->timestamps();
 
-            $table->unique(['place_id', 'user_id']); // One review per user per place
             $table->index(['place_id', 'is_published']);
+            $table->index('user_id');
         });
     }
 
