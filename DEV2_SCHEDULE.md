@@ -92,3 +92,94 @@
    - Search by category filters properly.
    - Search with radius and sorting works accurately.
 
+---
+---
+
+# 🌐 Developer 2 — Frontend Implementation Schedule (Identity, Social & Review Modules)
+
+**Sprint Focus:** User Identity & Sessions, Deals & Voucher Wallet, Ratings & Community Reviews  
+**Frontend Modules Owned:**
+* `frontend/src/modules/identity/`
+* `frontend/src/modules/social/`
+* `frontend/src/modules/reviews/`
+* `frontend/src/api/client.js` & `AuthContext`
+
+**Feature Branch:** `feature/frontend-social-reviews` (branched from `develop`)  
+**Target Merge Branch:** `develop`
+
+---
+
+## 📋 Task Breakdown & Deadlines
+
+| Task # | Feature | Files Involved | Detailed Sub-Tasks / Steps | Backend API Consumed |
+| :---: | :--- | :--- | :--- | :--- |
+| **1** | **Identity, Auth & User Profile** | • `src/api/client.js`<br>• `src/modules/identity/api/identityApi.js`<br>• `src/modules/identity/context/AuthContext.jsx`<br>• `src/modules/identity/pages/LoginPage.jsx`<br>• `src/modules/identity/pages/RegisterPage.jsx`<br>• `src/modules/identity/pages/ProfilePage.jsx`<br>• `src/modules/identity/components/SavedBookmarksList.jsx`<br>• `src/modules/identity/hooks/useAuth.js` | 1. Setup Axios interceptor with `Authorization: Bearer <token>`.<br>2. Build `AuthContext` (login, logout, currentUser, token state).<br>3. Login & Register screens with field validation & error handling.<br>4. Profile screen with user information & "Saved Places" list. | `POST /api/v1/identity/login`<br>`POST /api/v1/identity/register`<br>`GET /api/v1/identity/profile`<br>`GET /api/v1/discovery/bookmarks`<br>`POST /api/v1/identity/logout` |
+| **2** | **Social Deals & Voucher Claims** | • `src/modules/social/api/socialApi.js`<br>• `src/modules/social/pages/DealsFeedPage.jsx`<br>• `src/modules/social/components/DealCard.jsx`<br>• `src/modules/social/components/ClaimVoucherModal.jsx`<br>• `src/modules/social/pages/MyClaimsPage.jsx`<br>• `src/modules/social/components/PostLikeButton.jsx`<br>• `src/modules/social/components/CreateDealModal.jsx`<br>• `src/modules/social/hooks/useDealFeed.js`<br>• `src/modules/social/hooks/useDealClaim.js` | 1. Connect `socialApi` to backend endpoints.<br>2. Build dedicated Deals Feed (`/deals`) with category filter.<br>3. DealCard with countdown timer, discount pill, and like toggle.<br>4. Claim Voucher modal showing voucher code & expiry.<br>5. "My Claims" wallet page (`/my-claims`) listing active & redeemed vouchers.<br>6. Business Owner "Publish Deal" modal. | `GET /api/v1/social/deals`<br>`POST /api/v1/social/posts/{post}/claim`<br>`POST /api/v1/social/posts/{post}/like`<br>`GET /api/v1/social/my-claims`<br>`POST /api/v1/social/places/{place}/posts` |
+| **3** | **Reviews & Rating System** | • `src/modules/reviews/api/reviewApi.js`<br>• `src/modules/reviews/components/PlaceRatingSummary.jsx`<br>• `src/modules/reviews/components/ReviewList.jsx`<br>• `src/modules/reviews/components/ReviewCard.jsx`<br>• `src/modules/reviews/components/WriteReviewModal.jsx`<br>• `src/modules/reviews/components/ReviewReplyThread.jsx`<br>• `src/modules/reviews/hooks/usePlaceReviews.js` | 1. Implement `reviewApi` for fetching & submitting reviews.<br>2. Rating breakdown widget (average stars, total reviews bar).<br>3. Reviews list component with pagination.<br>4. "Write a Review" modal with 1–5 interactive star rating selector.<br>5. Owner reply display & reply submission component. | `GET /api/v1/reviews/places/{place}`<br>`POST /api/v1/reviews/places/{place}`<br>`POST /api/v1/reviews/{review}/messages`<br>`DELETE /api/v1/reviews/{review}` |
+| **4** | **Testing & Branch Integration** | • End-to-end token flow checks<br>• Pull request to `develop` | 1. Verify Sanctum token auto-injection & 401 redirect to Login.<br>2. Test deal claiming flow end-to-end with voucher generation.<br>3. Test submitting a review and seeing instant list update.<br>4. Open PR and merge `feature/frontend-social-reviews` into `develop`. | Full integration test pass |
+
+---
+
+## 🛠️ Step-by-Step Technical Instructions
+
+### Task 1: API Client & Identity Module
+1. **Axios Client:** `src/api/client.js`
+   ```javascript
+   import axios from 'axios';
+
+   export const apiClient = axios.create({
+     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
+     headers: {
+       'Content-Type': 'application/json',
+       'Accept': 'application/json',
+     },
+   });
+
+   apiClient.interceptors.request.use((config) => {
+     const token = localStorage.getItem('auth_token');
+     if (token) {
+       config.headers.Authorization = `Bearer ${token}`;
+     }
+     return config;
+   });
+   ```
+2. **AuthContext:** `src/modules/identity/context/AuthContext.jsx`
+   * Manages `{ user, token, isAuthenticated, login, register, logout }`.
+   * Persists token to `localStorage`.
+   * Exposes `useAuth()` hook for easy consumption across components.
+
+---
+
+### Task 2: Social Deals & Vouchers Flow
+1. **API Implementation:** `src/modules/social/api/socialApi.js`
+   * Connect all empty functions (`fetchDeals`, `claimDeal`, `toggleLike`, `getMyClaims`, `createPost`) to `apiClient`.
+2. **Claim Voucher Flow:**
+   * Clicking "Claim Voucher" on `DealCard` triggers `useDealClaim()`.
+   * Sends `POST /api/v1/social/posts/{post}/claim`.
+   * Pops up `ClaimVoucherModal` displaying the unique `voucher_code` (e.g. `DEAL-ABC1234`), instructions, and expiration timestamp.
+   * Updates voucher count dynamically without page reload.
+3. **My Claims Wallet (`MyClaimsPage.jsx`):**
+   * Accessible from user navbar dropdown.
+   * Displays claimed vouchers grouped into "Active" and "Redeemed / Expired" tabs.
+
+---
+
+### Task 3: Reviews & Ratings System
+1. **API:** `src/modules/reviews/api/reviewApi.js`
+   ```javascript
+   export const reviewApi = {
+     getPlaceReviews: (placeId, page = 1) => apiClient.get(`/reviews/places/${placeId}`, { params: { page } }),
+     submitReview: (placeId, data) => apiClient.get ? apiClient.post(`/reviews/places/${placeId}`, data) : null,
+     replyToReview: (reviewId, message) => apiClient.post(`/reviews/${reviewId}/messages`, { message }),
+     deleteReview: (reviewId) => apiClient.delete(`/reviews/${reviewId}`),
+   };
+   ```
+2. **PlaceRatingSummary.jsx:**
+   * Displays prominent large star rating (e.g. `4.8 ★`) and rating count.
+   * Renders bar progress distribution (5★, 4★, 3★, 2★, 1★).
+3. **WriteReviewModal.jsx:**
+   * Interactive hoverable star selector (1 to 5 stars).
+   * Title and review text input with character counter.
+   * Submits and refreshes the parent review list automatically.
+
+

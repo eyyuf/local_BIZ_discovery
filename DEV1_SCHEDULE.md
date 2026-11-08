@@ -69,3 +69,79 @@
    - Category show returns category + associated places.
    - Explore feed returns all 3 structured sections.
 
+---
+---
+
+# 🌐 Developer 1 — Frontend Implementation Schedule (Discovery & Places Modules)
+
+**Sprint Focus:** Consumer Exploration, Interactive Map, Filtered Search, and Place Profile Showcase  
+**Frontend Modules Owned:**
+* `frontend/src/modules/discovery/`
+* `frontend/src/modules/places/`
+* `frontend/src/shared/` (Map components, Place cards)
+
+**Feature Branch:** `feature/frontend-discovery-places` (branched from `develop`)  
+**Target Merge Branch:** `develop`
+
+---
+
+## 📋 Task Breakdown & Deadlines
+
+| Task # | Feature | Files Involved | Detailed Sub-Tasks / Steps | Backend API Consumed |
+| :---: | :--- | :--- | :--- | :--- |
+| **1** | **Explore & Home Screen** | • `src/modules/discovery/api/discoveryApi.js`<br>• `src/modules/discovery/pages/ExplorePage.jsx`<br>• `src/modules/discovery/components/CategoryChips.jsx`<br>• `src/modules/discovery/components/ExploreFeedSection.jsx`<br>• `src/modules/discovery/hooks/useExploreFeed.js` | 1. Implement `discoveryApi.getExploreFeed()` & `getCategories()`.<br>2. Build hero banner with quick search trigger.<br>3. Horizontal category pills/carousel navigation.<br>4. Section renderers: Popular Nearby, Featured Categories, New Additions. | `GET /api/v1/discovery/explore`<br>`GET /api/v1/discovery/categories` |
+| **2** | **Interactive Map & Search Engine** | • `src/modules/discovery/pages/SearchResultsPage.jsx`<br>• `src/modules/discovery/components/MapContainer.jsx`<br>• `src/modules/discovery/components/AutocompleteInput.jsx`<br>• `src/modules/discovery/components/SearchFiltersSidebar.jsx`<br>• `src/modules/discovery/components/PlaceResultCard.jsx`<br>• `src/modules/discovery/hooks/useSearchPlaces.js` | 1. Implement typeahead autocomplete suggestions drop-down.<br>2. Integrate interactive map (Leaflet / Mapbox) with clickable pins.<br>3. Build filter sidebar (radius slider, category dropdown, "Open Now" toggle).<br>4. Result cards with real-time distance badge & bookmark button. | `GET /api/v1/discovery/search`<br>`GET /api/v1/discovery/suggestions`<br>`GET /api/v1/discovery/nearby` |
+| **3** | **Place Profile & Menu Showcase** | • `src/modules/places/api/placeApi.js`<br>• `src/modules/places/pages/PlaceDetailPage.jsx`<br>• `src/modules/places/components/PlaceHeader.jsx`<br>• `src/modules/places/components/OperatingHoursModal.jsx`<br>• `src/modules/places/components/MenuSectionList.jsx`<br>• `src/modules/places/components/MenuItemCard.jsx`<br>• `src/modules/places/hooks/usePlaceDetails.js` | 1. Implement `placeApi.getPlace(slug/id)` & `getMenu(placeId)`.<br>2. Place hero with cover photo, tags, directions button, and phone click.<br>3. "Open Now" dynamic status badge with weekly hours accordion.<br>4. Categorized menu item tabs with dietary tags & pricing cards. | `GET /api/v1/places/{place}`<br>`GET /api/v1/places/{place}/menu` |
+| **4** | **Testing & Branch Integration** | • End-to-end flow checks<br>• Pull request to `develop` | 1. Verify responsive UI (Mobile + Desktop).<br>2. Test map pin click to Place Detail page transition.<br>3. Open PR and merge `feature/frontend-discovery-places` into `develop`. | Full integration test pass |
+
+---
+
+## 🛠️ Step-by-Step Technical Instructions
+
+### Task 1: Discovery API & Explore Feed
+1. **API:** `src/modules/discovery/api/discoveryApi.js`
+   ```javascript
+   export const discoveryApi = {
+     getExploreFeed: (coords) => apiClient.get('/discovery/explore', { params: coords }),
+     getCategories: () => apiClient.get('/discovery/categories'),
+     getCategoryBySlug: (slug) => apiClient.get(`/discovery/categories/${slug}`),
+     searchPlaces: (params) => apiClient.get('/discovery/search', { params }),
+     getSuggestions: (q) => apiClient.get('/discovery/suggestions', { params: { q } }),
+     getNearbyPlaces: (coords) => apiClient.get('/discovery/nearby', { params: coords }),
+   };
+   ```
+2. **Hook:** `useExploreFeed.js`
+   * Manages `{ sections, categories, loading, error }`.
+   * Automatically requests user's browser geolocation (if permitted) to pass coordinates for `nearby_popular`.
+
+---
+
+### Task 2: Search & Interactive Map
+1. **Autocomplete Typeahead:**
+   * Debounces user input by 300ms.
+   * Renders grouped suggestions (`places` vs `categories`).
+   * Clicking a suggestion navigates to `/search?q=...` or `/categories/:slug`.
+2. **Map Component (`MapContainer.jsx`):**
+   * Renders map centered on current search coordinate or user's position.
+   * Drops custom markers with price/rating badges.
+   * Synchronizes map bounds (`viewport`) with search results.
+
+---
+
+### Task 3: Place Profile Details & Menus
+1. **API:** `src/modules/places/api/placeApi.js`
+   ```javascript
+   export const placeApi = {
+     getPlace: (idOrSlug) => apiClient.get(`/places/${idOrSlug}`),
+     getMenu: (placeId) => apiClient.get(`/places/${placeId}/menu`),
+     getMyPlaces: () => apiClient.get('/owner/places'),
+   };
+   ```
+2. **PlaceDetailPage.jsx:**
+   * Left column: Hero photos, address, map preview, operating hours breakdown, action buttons (Directions, Call, Share, Bookmark).
+   * Center tabs:
+     * Tab 1: **Menu** (rendered via `MenuSectionList.jsx`).
+     * Tab 2: **Deals** (imports `DealCard` from Dev 2's `social` module).
+     * Tab 3: **Reviews** (imports `ReviewList` & `RatingSummary` from Dev 2's `reviews` module).
+
+
