@@ -68,7 +68,14 @@ export function RegisterPage() {
       });
       navigate('/', { replace: true });
     } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Registration failed. Please check your information.';
+      let msg = 'Registration failed. Please check your information.';
+      if (err.response?.data?.errors) {
+        msg = Object.values(err.response.data.errors).flat().join(' ');
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      } else if (err.message) {
+        msg = err.message;
+      }
       setError(msg);
       gsap.fromTo(
         '.error-shake',
@@ -255,3 +262,4 @@ export function RegisterPage() {
 }
 
 export default RegisterPage;
+

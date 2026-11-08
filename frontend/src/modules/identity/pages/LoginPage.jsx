@@ -53,7 +53,14 @@ export function LoginPage() {
       await login({ email, password, remember });
       navigate(from, { replace: true });
     } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Invalid email or password. Please try again.';
+      let msg = 'Invalid email or password. Please try again.';
+      if (err.response?.data?.errors) {
+        msg = Object.values(err.response.data.errors).flat().join(' ');
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      } else if (err.message) {
+        msg = err.message;
+      }
       setError(msg);
       gsap.fromTo(
         '.error-shake',
@@ -184,3 +191,4 @@ export function LoginPage() {
 }
 
 export default LoginPage;
+
