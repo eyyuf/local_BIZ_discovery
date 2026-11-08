@@ -11,14 +11,17 @@ use App\Modules\Place\DTOs\UpdatePlaceDTO;
 use App\Modules\Place\Models\Place;
 use App\Modules\Place\Requests\StorePlaceRequest;
 use App\Modules\Place\Requests\UpdatePlaceRequest;
+use App\Modules\Review\Contracts\ReviewQueryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class OwnerPlaceController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ReviewQueryInterface $reviewQuery): JsonResponse
     {
-        $data=$request->user()->places()->paginate(10);
+        $data = $request->user()->places()->paginate(10);
+        $reviewQuery->attachRatingSummaries($data);
+
         return response()->json([
             'message'=>'retrieved succesfully',
             'data'=>$data,
