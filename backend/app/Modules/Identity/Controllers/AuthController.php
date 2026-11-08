@@ -117,8 +117,8 @@ class AuthController extends Controller
             ]);
         }
 
-        // 4. Redirect to the right API endpoint (/api/v1/auth/me) with token cookie & query param
-        return redirect()->to('/api/v1/auth/me?token=' . $token)
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        return redirect()->to($frontendUrl . '/oauth/callback?token=' . $token)
             ->withCookie(cookie('auth_token', $token, 60 * 24 * 7, '/', null, false, false));
     }
 

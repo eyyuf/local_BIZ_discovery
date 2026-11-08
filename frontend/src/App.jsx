@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider } from '@/modules/identity';
-import { LoginPage, RegisterPage, ProfilePage } from '@/modules/identity';
+import { LoginPage, RegisterPage, ProfilePage, OAuthCallbackPage } from '@/modules/identity';
 import { Navbar } from '@/shared/components/Navbar';
 import { Footer } from '@/shared/components/Footer';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
@@ -65,6 +65,7 @@ export function App() {
               <Route path="/" element={<HomePagePlaceholder />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
               <Route
                 path="/profile"
                 element={

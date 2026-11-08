@@ -51,6 +51,20 @@ export function AuthProvider({ children }) {
     return authUser;
   };
 
+  const loginWithToken = async (authToken) => {
+    localStorage.setItem('auth_token', authToken);
+    setToken(authToken);
+    try {
+      const res = await identityApi.getProfile();
+      const userData = res.data || res.user || res;
+      setUser(userData);
+      localStorage.setItem('auth_user', JSON.stringify(userData));
+      return userData;
+    } catch {
+      return null;
+    }
+  };
+
   const register = async (payload) => {
     const res = await identityApi.register(payload);
     const authToken = res.token;
@@ -91,6 +105,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(token && user),
     isLoading,
     login,
+    loginWithToken,
     register,
     logout,
     updateProfile,
