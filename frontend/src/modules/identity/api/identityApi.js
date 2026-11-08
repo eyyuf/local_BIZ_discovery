@@ -35,6 +35,11 @@ export const identityApi = {
     const response = await apiClient.post(`/discovery/bookmarks/${placeId}`);
     return response.data;
   },
+
+  getGoogleAuthUrl: async () => {
+    const response = await apiClient.get('/auth/google/redirect');
+    return response.data?.url || '/api/v1/auth/google/redirect';
+  },
 };
 
 export default identityApi;
