@@ -11,6 +11,7 @@ readonly class UpdateProfileDTO
         public ?string $name = null,
         public ?string $email = null,
         public ?string $password = null,
+        public ?string $role = null,
         public ?UploadedFile $avatar = null,
     ) {}
 
@@ -20,6 +21,7 @@ readonly class UpdateProfileDTO
             name: $request->has('name') ? (string) $request->validated('name') : null,
             email: $request->has('email') ? (string) $request->validated('email') : null,
             password: $request->has('password') ? (string) $request->validated('password') : null,
+            role: $request->has('role') ? (string) $request->validated('role') : null,
             avatar: $request->file('avatar'),
         );
     }
@@ -30,6 +32,7 @@ readonly class UpdateProfileDTO
             name: $data['name'] ?? null,
             email: $data['email'] ?? null,
             password: $data['password'] ?? null,
+            role: $data['role'] ?? null,
             avatar: isset($data['avatar']) && $data['avatar'] instanceof UploadedFile ? $data['avatar'] : null,
         );
     }
