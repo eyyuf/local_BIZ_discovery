@@ -4,6 +4,7 @@ namespace App\Modules\Review\Actions;
 
 use App\Modules\Identity\Models\User;
 use App\Modules\Place\Models\Place;
+use App\Modules\Review\Models\PlaceRating;
 use App\Modules\Review\Models\Review;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
@@ -15,7 +16,7 @@ class CreateReviewAction
      *
      * @param Place $place
      * @param User $author
-     * @param array $data Validated data containing 'comment'
+     * @param array $data Validated data containing 'rating' and 'comment'
      * @return Review
      *
      * @throws AuthorizationException
@@ -33,9 +34,23 @@ class CreateReviewAction
             ]);
         }
 
+        $rating = (int) $data['rating'];
+
+        // Synchronize or update the place_ratings table to keep aggregation in sync
+        PlaceRating::updateOrCreate(
+            [
+                'place_id' => $place->id,
+                'user_id'  => $author->id,
+            ],
+            [
+                'rating'   => $rating,
+            ]
+        );
+
         return Review::create([
             'place_id'     => $place->id,
             'user_id'      => $author->id,
+            'rating'       => $rating,
             'comment'      => $data['comment'],
             'is_published' => true,
         ]);

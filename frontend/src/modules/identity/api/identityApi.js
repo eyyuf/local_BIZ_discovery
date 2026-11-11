@@ -22,7 +22,10 @@ export const identityApi = {
   },
 
   updateProfile: async (payload) => {
-    const response = await apiClient.post('/auth/profile', payload);
+    const isFormData = typeof FormData !== 'undefined' && payload instanceof FormData;
+    const response = await apiClient.post('/auth/profile', payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+    });
     return response.data;
   },
 

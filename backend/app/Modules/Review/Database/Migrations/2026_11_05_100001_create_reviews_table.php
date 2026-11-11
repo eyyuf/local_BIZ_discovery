@@ -13,12 +13,17 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('place_id')->constrained('places')->cascadeOnDelete();
                 $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->unsignedTinyInteger('rating');
                 $table->text('comment');
                 $table->boolean('is_published')->default(true);
                 $table->timestamps();
 
                 $table->index(['place_id', 'is_published']);
                 $table->index('user_id');
+            });
+        } elseif (!Schema::hasColumn('reviews', 'is_published')) {
+            Schema::table('reviews', function (Blueprint $table) {
+                $table->boolean('is_published')->default(true);
             });
         }
     }

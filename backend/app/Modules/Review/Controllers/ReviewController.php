@@ -20,6 +20,21 @@ use Illuminate\Support\Facades\Gate;
 class ReviewController extends Controller
 {
     /**
+     * Display a paginated listing of reviews written by the authenticated user.
+     */
+    public function userReviews(Request $request): JsonResponse
+    {
+        $perPage = min(max((int) $request->query('per_page', 15), 1), 100);
+        $reviews = Review::query()
+            ->where('user_id', $request->user()->id)
+            ->with(['place'])
+            ->latest()
+            ->paginate($perPage);
+
+        return ReviewResource::collection($reviews)->response();
+    }
+
+    /**
      * Display a paginated listing of published reviews for a place.
      */
     public function index(Request $request, Place $place, ListPlaceReviewsAction $action): JsonResponse

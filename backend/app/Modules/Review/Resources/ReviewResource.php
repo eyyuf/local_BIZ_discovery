@@ -12,7 +12,18 @@ class ReviewResource extends JsonResource
         return [
             'id'           => $this->id,
             'place_id'     => $this->place_id,
+            'place'        => $this->whenLoaded('place', function () {
+                return [
+                    'id'      => $this->place?->id,
+                    'name'    => $this->place?->name,
+                    'slug'    => $this->place?->slug,
+                    'address' => $this->place?->address,
+                ];
+            }),
             'comment'      => $this->comment,
+            'rating'       => $this->rating ?? \App\Modules\Review\Models\PlaceRating::where('place_id', $this->place_id)
+                ->where('user_id', $this->user_id)
+                ->value('rating'),
             'is_published' => (bool) $this->is_published,
             'created_at'   => $this->created_at?->toISOString(),
             'updated_at'   => $this->updated_at?->toISOString(),

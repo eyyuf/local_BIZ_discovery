@@ -45,6 +45,17 @@ class Place extends Model
         });
     }
 
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field) {
+            return $this->where($field, $value)->first();
+        }
+
+        return is_numeric($value)
+            ? $this->where('id', $value)->first()
+            : $this->where('slug', $value)->first();
+    }
+
     /**
      * PostGIS: calculate distance in kilometers using ST_Distance.
      */

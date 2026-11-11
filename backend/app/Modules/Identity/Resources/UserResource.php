@@ -18,6 +18,8 @@ class UserResource extends JsonResource
             'avatar' => $this->avatar
                 ? (str_starts_with($this->avatar, 'http') ? $this->avatar : asset('storage/' . $this->avatar))
                 : $this->oauthAccounts->first()?->avatar,
+            'reviews_count' => $this->reviews()->count(),
+            'bookmarks_count' => $this->bookmarks()->count(),
         ];
 
     }

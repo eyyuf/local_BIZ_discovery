@@ -6,8 +6,9 @@ import { PlaceAtmosphereGallery } from '../components/PlaceAtmosphereGallery';
 import { WeeklySchedule } from '../components/WeeklySchedule';
 import { PlaceLocation } from '../components/PlaceLocation';
 import { PlaceDirectContact } from '../components/PlaceDirectContact';
+import { PlaceReviewsSection } from '@/modules/reviews/components/PlaceReviewsSection';
 import { getPlacePhotos } from '@/shared/utils/placeImages';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Image as ImageIcon, Clock, MapPin, MessageSquare } from 'lucide-react';
 
 export function PlaceDetailPage() {
   const { slug } = useParams();
@@ -90,23 +91,65 @@ export function PlaceDetailPage() {
         onPhotoChange={setActivePhotoIndex}
       />
 
+      {/* Anchor Navigation Bar */}
+      <div className="sticky top-16 z-30 bg-[#0D0D0C]/90 backdrop-blur-md border-b border-white/[0.08] py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <a
+            href="#overview-section"
+            className="px-4 py-1.5 rounded-full text-xs font-semibold border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30 transition whitespace-nowrap flex items-center gap-1.5"
+          >
+            <ImageIcon className="w-3.5 h-3.5 text-white/70" />
+            <span>Atmosphere</span>
+          </a>
+          <a
+            href="#schedule-section"
+            className="px-4 py-1.5 rounded-full text-xs font-semibold border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30 transition whitespace-nowrap flex items-center gap-1.5"
+          >
+            <Clock className="w-3.5 h-3.5 text-white/70" />
+            <span>Schedule</span>
+          </a>
+          <a
+            href="#location-section"
+            className="px-4 py-1.5 rounded-full text-xs font-semibold border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30 transition whitespace-nowrap flex items-center gap-1.5"
+          >
+            <MapPin className="w-3.5 h-3.5 text-white/70" />
+            <span>Map &amp; Contact</span>
+          </a>
+          <a
+            href="#reviews-section"
+            className="px-4 py-1.5 rounded-full text-xs font-semibold border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:border-amber-400 transition whitespace-nowrap flex items-center gap-1.5 shadow-sm"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
+            <span>Reviews</span>
+          </a>
+        </div>
+      </div>
+
       {/* Main Container for Details: Balanced 2-Column Desktop Editorial Grid */}
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-8 sm:mt-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Atmosphere Gallery & Weekly Operating Schedule (7 cols) */}
-          <div className="lg:col-span-7 space-y-8">
-            <PlaceAtmosphereGallery
-              place={place}
-              photos={photos}
-              activePhotoIndex={activePhotoIndex}
-              onSelectPhoto={setActivePhotoIndex}
-            />
+          {/* Left Column: Atmosphere Gallery, Weekly Schedule & Reviews (7 cols) */}
+          <div className="lg:col-span-7 space-y-12">
+            <div id="overview-section" className="scroll-mt-28">
+              <PlaceAtmosphereGallery
+                place={place}
+                photos={photos}
+                activePhotoIndex={activePhotoIndex}
+                onSelectPhoto={setActivePhotoIndex}
+              />
+            </div>
 
-            <WeeklySchedule operatingHours={place.operating_hours || []} />
+            <div id="schedule-section" className="scroll-mt-28">
+              <WeeklySchedule operatingHours={place.operating_hours || []} />
+            </div>
+
+            <div id="reviews-section" className="scroll-mt-28">
+              <PlaceReviewsSection place={place} />
+            </div>
           </div>
 
           {/* Right Column: Interactive Map & Direct Contact Actions (5 cols) */}
-          <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-8">
+          <div id="location-section" className="lg:col-span-5 space-y-8 lg:sticky lg:top-32 scroll-mt-28">
             <PlaceLocation place={place} />
 
             <PlaceDirectContact place={place} />
