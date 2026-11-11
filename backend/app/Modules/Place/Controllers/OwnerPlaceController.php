@@ -14,6 +14,7 @@ use App\Modules\Place\Requests\UpdatePlaceRequest;
 use App\Modules\Review\Contracts\ReviewQueryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class OwnerPlaceController extends Controller
 {
@@ -41,6 +42,7 @@ class OwnerPlaceController extends Controller
     {
         Gate::authorize('update',$place);
         $place=$action->execute($place, UpdatePlaceDTO::fromRequest($request));
+        Cache::forget("place_{$place->id}");
         return response()->json([
             'message'=>'updated susccusfully',
             'data'=>$place,
