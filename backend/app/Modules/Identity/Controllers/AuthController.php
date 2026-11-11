@@ -4,9 +4,11 @@ namespace App\Modules\Identity\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Identity\Actions\LoginUserAction;
+use App\Modules\Identity\Actions\MagicLoginAction;
 use App\Modules\Identity\Actions\RegisterUserAction;
 use App\Modules\Identity\Actions\ResetPasswordAction;
 use App\Modules\Identity\Actions\SendPasswordResetLinkAction;
+use App\Modules\Identity\Actions\UpgradeToOwnerAction;
 use App\Modules\Identity\DTOs\LoginDTO;
 use App\Modules\Identity\DTOs\RegisterUserDTO;
 use App\Modules\Identity\Models\OAuthAccount;
@@ -15,6 +17,7 @@ use App\Modules\Identity\Requests\ForgotPasswordRequest;
 use App\Modules\Identity\Requests\LoginRequest;
 use App\Modules\Identity\Requests\RegisterRequest;
 use App\Modules\Identity\Requests\ResetPasswordRequest;
+use App\Modules\Identity\Requests\UpgradeToOwnerRequest;
 use App\Modules\Identity\Resources\UserResource;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
@@ -186,5 +189,35 @@ class AuthController extends Controller
         $request->user()->sendEmailVerificationNotification();
 
         return response()->json(['message' => 'Verification link sent!']);
+    }
+
+    public function magicLogin(Request $request, $id, MagicLoginAction $action)
+    {
+        $user = $action->execute($request, $id);
+        Auth::guard('web')->login($user, true);
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        if ($request->wantsJson() && ! $request->acceptsHtml()) {
+            return response()->json([
+                'message' => 'Logged in successfully',
+                'token'   => $token,
+                'user'    => new UserResource($user),
+            ]);
+        }
+
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        return redirect()->to($frontendUrl . '/oauth/callback?token=' . $token)
+            ->withCookie(cookie('auth_token', $token, 60 * 24 * 7, '/', null, false, false));
+    }
+
+    public function upgradeToOwner(UpgradeToOwnerRequest $request, UpgradeToOwnerAction $action)
+    {
+        $result = $action->execute($request->user(), $request->validated());
+
+        return response()->json([
+            'message' => 'Upgraded to business owner successfully',
+            'user'    => new UserResource($result['user']),
+            'place'   => $result['place'],
+        ]);
     }
 }

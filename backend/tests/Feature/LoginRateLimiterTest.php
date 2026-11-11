@@ -22,7 +22,7 @@ class LoginRateLimiterTest extends TestCase
 
         RateLimiter::clear('test-ratelimit@example.com|127.0.0.1');
 
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 4; $i++) {
             $response = $this->postJson('/api/v1/auth/login', [
                 'email' => 'test-ratelimit@example.com',
                 'password' => 'wrong-password',
@@ -37,8 +37,9 @@ class LoginRateLimiterTest extends TestCase
             'password' => 'wrong-password',
         ]);
 
-        $blockedResponse->assertStatus(429);
+        $blockedResponse->assertStatus(423);
         $blockedResponse->assertJsonValidationErrors(['email']);
+        $this->assertNotNull($user->fresh()->locked_at);
     }
 
     public function test_successful_login_clears_rate_limiter(): void

@@ -60,12 +60,10 @@ class GoogleOAuthTest extends TestCase
 
         $response = $this->get('/api/v1/auth/google/callback');
 
-        // 1. Should redirect to /api/v1/auth/me?token=...
+        // 1. Should redirect to /oauth/callback?token=...
         $response->assertStatus(302);
         $location = $response->headers->get('Location');
-        $this->assertTrue(
-            str_contains($location, '/oauth/callback?token=') || str_contains($location, '/api/v1/auth/me?token=')
-        );
+        $this->assertStringContainsString('/oauth/callback?token=', $location);
 
         // 2. User should exist in database
         $user = User::where('email', $email)->first();
