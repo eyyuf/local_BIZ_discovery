@@ -40,6 +40,21 @@ export const identityApi = {
     const response = await apiClient.get('/auth/google/redirect');
     return response.data?.url || '/api/v1/auth/google/redirect';
   },
+
+  forgotPassword: async (email) => {
+    const response = await apiClient.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  resetPassword: async ({ token, email, password, password_confirmation }) => {
+    const response = await apiClient.post('/auth/reset-password', {
+      token,
+      email,
+      password,
+      password_confirmation,
+    });
+    return response.data;
+  },
 };
 
 export default identityApi;

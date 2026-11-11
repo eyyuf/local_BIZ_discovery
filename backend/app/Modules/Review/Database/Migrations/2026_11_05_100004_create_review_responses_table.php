@@ -8,16 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('review_messages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('review_id')->constrained('reviews')->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->text('message');
-            $table->timestamps();
+        if (!Schema::hasTable('review_messages')) {
+            Schema::create('review_messages', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('review_id')->constrained('reviews')->cascadeOnDelete();
+                $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->text('message');
+                $table->timestamps();
 
-            $table->index('review_id');
-            $table->index('user_id');
-        });
+                $table->index('review_id');
+                $table->index('user_id');
+            });
+        }
     }
 
     public function down(): void

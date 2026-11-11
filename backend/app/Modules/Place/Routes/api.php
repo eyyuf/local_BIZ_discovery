@@ -4,6 +4,7 @@ use App\Modules\Place\Controllers\MenuController;
 use App\Modules\Place\Controllers\OperatingHourController;
 use App\Modules\Place\Controllers\OwnerPlaceController;
 use App\Modules\Place\Controllers\PlaceController;
+use App\Modules\Place\Controllers\PlaceImageController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -11,6 +12,7 @@ Route::prefix('api/v1/places')->middleware('api')->group(function () {
     Route::get('/', [PlaceController::class, 'index']);
     Route::get('{place:slug}', [PlaceController::class, 'show']);
     Route::get('{place:slug}/menu', [MenuController::class, 'index']);
+    Route::get('{place:slug}/images', [PlaceImageController::class, 'index']);
 });
 
 // Business Owner routes (Protected by auth)
@@ -19,6 +21,12 @@ Route::prefix('api/v1/owner/places')->middleware(['api', 'auth:sanctum'])->group
     Route::post('/', [OwnerPlaceController::class, 'store']);
     Route::put('{place}', [OwnerPlaceController::class, 'update']);
     Route::delete('{place}', [OwnerPlaceController::class, 'destroy']);
+
+    // Place Images Management (Cloudinary)
+    Route::get('{place}/images', [PlaceImageController::class, 'index']);
+    Route::post('{place}/images', [PlaceImageController::class, 'store']);
+    Route::post('{place}/images/{placeImage}/cover', [PlaceImageController::class, 'setCover']);
+    Route::delete('{place}/images/{placeImage}', [PlaceImageController::class, 'destroy']);
 
     // Operating hours
     Route::put('{place}/operating-hours', [OperatingHourController::class, 'update']);

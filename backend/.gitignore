@@ -63,3 +63,6 @@ Thumbs.db
 /auth.json
 Homestead.json
 Homestead.yaml
+
+
+tests/

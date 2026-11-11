@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 
 class Place extends Model
@@ -118,5 +119,15 @@ class Place extends Model
     public function favorites(): HasMany
     {
         return $this->hasMany(\App\Modules\Review\Models\Favorite::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(PlaceImage::class)->orderBy('display_order')->orderBy('id');
+    }
+
+    public function coverImage(): HasOne
+    {
+        return $this->hasOne(PlaceImage::class)->where('is_cover', true);
     }
 }

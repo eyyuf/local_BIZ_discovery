@@ -26,6 +26,10 @@ class PlaceDetailResource extends JsonResource
             'updated_at'      => $this->updated_at?->toISOString(),
             'operating_hours' => OperatingHourResource::collection($this->whenLoaded('operatingHours')),
             'menu_sections'   => $this->whenLoaded('menuSections'),
+            'images'          => PlaceImageResource::collection($this->whenLoaded('images')),
+            'cover_image'     => $this->relationLoaded('images')
+                ? ($this->images->firstWhere('is_cover', true)?->url ?? $this->images->first()?->url)
+                : null,
         ];
     }
 }

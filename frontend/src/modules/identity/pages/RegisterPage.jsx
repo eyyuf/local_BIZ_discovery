@@ -1,12 +1,7 @@
-import React, { useState, useRef, useEffect, useId } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { 
-  Mail, Lock, User, Briefcase, Eye, EyeOff, UserPlus, 
-  AlertCircle, Compass, Sparkles, Check, CheckCircle2,
-  Tag, MapPin, ShieldCheck, ArrowRight
-} from 'lucide-react';
-import gsap from 'gsap';
+import { Mail, Lock, User, Eye, EyeOff, Compass, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
 
 export function RegisterPage() {
   const { register, isAuthenticated } = useAuth();
@@ -16,59 +11,15 @@ export function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
-  const [role, setRole] = useState('customer'); // 'customer' | 'owner'
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const containerRef = useRef(null);
 
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '.form-enter',
-        { opacity: 0, y: 18 },
-        { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, ease: 'power2.out' }
-      );
-      gsap.fromTo(
-        '.showcase-enter',
-        { opacity: 0, x: -20 },
-        { opacity: 1, x: 0, duration: 0.7, ease: 'power3.out', delay: 0.1 }
-      );
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  const getPasswordStrength = () => {
-    if (!password) return { level: 0, label: '', color: 'bg-slate-200' };
-    let score = 0;
-    if (password.length >= 8) score++;
-    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-
-    switch (score) {
-      case 1:
-        return { level: 1, label: 'Weak', color: 'bg-red-500' };
-      case 2:
-        return { level: 2, label: 'Fair', color: 'bg-amber-500' };
-      case 3:
-        return { level: 3, label: 'Good', color: 'bg-emerald-500' };
-      case 4:
-        return { level: 4, label: 'Strong', color: 'bg-emerald-600' };
-      default:
-        return { level: 1, label: 'Weak', color: 'bg-red-500' };
-    }
-  };
-
-  const strength = getPasswordStrength();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,7 +43,6 @@ export function RegisterPage() {
         email,
         password,
         password_confirmation: passwordConfirmation,
-        role,
       });
       navigate('/', { replace: true });
     } catch (err) {
@@ -105,250 +55,163 @@ export function RegisterPage() {
         msg = err.message;
       }
       setError(msg);
-      gsap.fromTo(
-        '.error-shake',
-        { x: -8 },
-        { x: 0, duration: 0.4, ease: 'elastic.out(1, 0.3)' }
-      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div ref={containerRef} className="min-h-[calc(100vh-4rem)] auth-bg-canvas flex items-center justify-center p-4 sm:p-6 lg:p-10">
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-        
-        {/* Left Column: Brand & Value Showcase (Desktop) */}
-        <div className="showcase-enter hidden lg:flex lg:col-span-5 flex-col justify-between space-y-8">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-6">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              Neighborhood First
-            </div>
-            <h1 className="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Join the Local Network That Powers Your City.
-            </h1>
-            <p className="text-sm text-slate-600 mt-4 leading-relaxed">
-              Connect directly with verified independent cafes, eateries, and boutiques. Discover deals and support neighborhood businesses.
-            </p>
+    <div className="relative min-h-screen w-full bg-[#0D0D0C] text-[#F5F2EA] flex flex-col justify-between overflow-x-hidden selection:bg-white/20 selection:text-white">
+      {/* Background Photography with Deep Obsidian Contrast Overlay */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-45 transform scale-105 pointer-events-none transition-transform duration-1000"
+        style={{
+          backgroundImage: `url('/assets/bozena-shiro.jpg')`,
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-black/60 pointer-events-none" />
+      <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/40 to-black pointer-events-none" />
+
+      {/* Top Bar Navigation */}
+      <header className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 flex items-center justify-between">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-xs font-semibold text-white/90 hover:border-white hover:text-white hover:bg-black/60 transition active:scale-95"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Discovery Home</span>
+        </Link>
+
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <div className="text-right">
+            <span className="font-extrabold text-base tracking-tight text-white font-display block leading-none">
+              Local Spot
+            </span>
+            <span className="text-[9px] tracking-widest text-[#AAA69C] uppercase font-mono mt-1 block">
+              Addis Ababa &amp; Beyond
+            </span>
           </div>
-
-          {/* Social Proof Mini-Cards */}
-          <div className="space-y-3.5">
-            <div className="production-card rounded-2xl p-4 flex items-center gap-3.5 border-slate-200/80">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                <MapPin className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-900">Geospatial Nearby Search</p>
-                <p className="text-[11px] text-slate-500">Live distance and open-now status on hundreds of local spots</p>
-              </div>
-            </div>
-
-            <div className="production-card rounded-2xl p-4 flex items-center gap-3.5 border-slate-200/80">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                <Tag className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-900">Exclusive Voucher Claims</p>
-                <p className="text-[11px] text-slate-500">Claim QR/code vouchers directly from neighborhood merchants</p>
-              </div>
-            </div>
-
-            <div className="production-card rounded-2xl p-4 flex items-center gap-3.5 border-slate-200/80">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-900">Verified Community Feedback</p>
-                <p className="text-[11px] text-slate-500">Real ratings from authentic local consumers with merchant replies</p>
-              </div>
-            </div>
+          <div className="w-8 h-8 rounded-full border border-white/20 bg-[#151513] flex items-center justify-center text-white group-hover:border-white transition">
+            <Compass className="w-4 h-4" />
           </div>
+        </Link>
+      </header>
 
-          <div className="pt-4 border-t border-slate-200/60 flex items-center gap-3 text-xs text-slate-500">
-            <div className="flex -space-x-2">
-              <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center ring-2 ring-white">A</div>
-              <div className="w-7 h-7 rounded-full bg-slate-800 text-white font-bold text-[10px] flex items-center justify-center ring-2 ring-white">K</div>
-              <div className="w-7 h-7 rounded-full bg-emerald-400 text-white font-bold text-[10px] flex items-center justify-center ring-2 ring-white">M</div>
-            </div>
-            <span>Join <strong>1,400+</strong> local explorers and merchants</span>
-          </div>
-        </div>
-
-        {/* Right Column: Registration Card */}
-        <div className="lg:col-span-7">
-          <div className="production-card rounded-3xl p-6 sm:p-9 relative overflow-hidden">
-            {/* Top accent light */}
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-brand-500 to-teal-400" />
-
-            {/* Header */}
-            <div className="form-enter mb-6 text-center sm:text-left">
-              <div className="inline-flex lg:hidden items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
-                <Compass className="w-3.5 h-3.5 text-emerald-600" />
-                Join LocalSpot
+      {/* Main Content: Split Composition */}
+      <main className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex-1 flex items-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+          {/* Left Column: Glass Form Container */}
+          <div className="lg:col-span-6 max-w-md w-full mx-auto lg:mx-0">
+            <div className="glass-container rounded-3xl p-6 sm:p-9 relative">
+              {/* Header */}
+              <div className="mb-6">
+                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight font-display">
+                  Create Account
+                </h1>
+                <p className="text-xs sm:text-sm text-[#AAA69C] mt-1.5 leading-relaxed">
+                  Join Local Spot to bookmark places, rate experiences, and list businesses.
+                </p>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Create your account
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Get started in less than a minute. Choose how you want to use the platform.
-              </p>
-            </div>
 
-            {/* Google OAuth Button */}
-            <div className="form-enter mb-5">
-              <a
-                href="/api/v1/auth/google/redirect"
-                className="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-700 font-bold text-xs sm:text-sm shadow-xs transition flex items-center justify-center gap-3 cursor-pointer"
-              >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
-                <span>Continue with Google</span>
-              </a>
-            </div>
-
-            {/* Divider */}
-            <div className="form-enter relative my-5">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200/80" />
+              {/* Social Google OAuth Button */}
+              <div className="mb-5">
+                <a
+                  href="/api/v1/auth/google/redirect"
+                  className="w-full h-11 px-4 rounded-full border border-white/20 bg-black/40 hover:bg-black/70 hover:border-white text-white font-semibold text-xs tracking-wide shadow-sm transition flex items-center justify-center gap-3 backdrop-blur-md active:scale-[0.98]"
+                >
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  <span>Sign up with Google</span>
+                </a>
               </div>
-              <div className="relative flex justify-center text-[10px] uppercase tracking-wider">
-                <span className="bg-white px-2.5 text-slate-400 font-bold">Or register with email</span>
-              </div>
-            </div>
 
-            {error && (
-              <div className="error-shake mb-6 p-3.5 rounded-xl bg-red-50/90 border border-red-200 text-red-700 text-xs sm:text-sm flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-600" />
-                <span className="font-medium leading-relaxed">{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Interactive Role Cards */}
-              <div className="form-enter">
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Account Type
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div
-                    onClick={() => setRole('customer')}
-                    className={`cursor-pointer rounded-2xl p-3.5 border transition-all duration-200 relative flex items-start gap-3 ${
-                      role === 'customer'
-                        ? 'border-emerald-600 bg-emerald-50/50 shadow-sm ring-1 ring-emerald-600/30'
-                        : 'border-slate-200 bg-white/70 hover:border-slate-300 hover:bg-slate-50/80'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                      role === 'customer' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      <Compass className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-slate-900">Local Explorer</span>
-                        {role === 'customer' && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                        Discover spots, claim deals & write reviews
-                      </p>
-                    </div>
-                  </div>
-
-                  <div
-                    onClick={() => setRole('owner')}
-                    className={`cursor-pointer rounded-2xl p-3.5 border transition-all duration-200 relative flex items-start gap-3 ${
-                      role === 'owner'
-                        ? 'border-emerald-600 bg-emerald-50/50 shadow-sm ring-1 ring-emerald-600/30'
-                        : 'border-slate-200 bg-white/70 hover:border-slate-300 hover:bg-slate-50/80'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                      role === 'owner' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      <Briefcase className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-slate-900">Business Owner</span>
-                        {role === 'owner' && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                        List businesses, manage menus & publish deals
-                      </p>
-                    </div>
-                  </div>
+              {/* Minimal Divider */}
+              <div className="relative my-5 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10" />
                 </div>
+                <span className="relative px-3 bg-[#131311] text-[10px] uppercase font-mono tracking-widest text-[#AAA69C]/80">
+                  Or Register with Email
+                </span>
               </div>
 
-              {/* Full Name */}
-              <div className="form-enter">
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Kidus Yonas"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
-                  />
+              {/* Error Notice */}
+              {error && (
+                <div className="mb-5 p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-400" />
+                  <span className="font-medium leading-relaxed">{error}</span>
                 </div>
-              </div>
+              )}
 
-              {/* Email Address */}
-              <div className="form-enter">
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@company.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
-                  />
-                </div>
-              </div>
-
-              {/* Passwords in Two-Column Grid */}
-              <div className="form-enter grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* Registration Form */}
+              <form onSubmit={handleSubmit} className="space-y-3.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Password
+                  <label htmlFor="reg-name" className="sr-only">
+                    Full Name
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#AAA69C]">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <input
+                      id="reg-name"
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Full Name"
+                      className="w-full h-11 pl-11 pr-4 rounded-xl bg-black/40 border border-white/15 text-[#F5F2EA] text-xs placeholder:text-[#AAA69C]/60 backdrop-blur-md focus:outline-none focus:border-white transition"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="reg-email" className="sr-only">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#AAA69C]">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <input
+                      id="reg-email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Email Address"
+                      className="w-full h-11 pl-11 pr-4 rounded-xl bg-black/40 border border-white/15 text-[#F5F2EA] text-xs placeholder:text-[#AAA69C]/60 backdrop-blur-md focus:outline-none focus:border-white transition"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="reg-password" className="sr-only">
+                    Password (min 8 characters)
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#AAA69C]">
                       <Lock className="w-4 h-4" />
                     </div>
                     <input
+                      id="reg-password"
                       type={showPassword ? 'text' : 'password'}
                       required
+                      minLength={8}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Min. 8 characters"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                      placeholder="Password (min 8 characters)"
+                      className="w-full h-11 pl-11 pr-11 rounded-xl bg-black/40 border border-white/15 text-[#F5F2EA] text-xs placeholder:text-[#AAA69C]/60 backdrop-blur-md focus:outline-none focus:border-white transition"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#AAA69C] hover:text-white transition"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -356,73 +219,78 @@ export function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label htmlFor="reg-confirm" className="sr-only">
                     Confirm Password
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#AAA69C]">
                       <Lock className="w-4 h-4" />
                     </div>
                     <input
+                      id="reg-confirm"
                       type={showPassword ? 'text' : 'password'}
                       required
                       value={passwordConfirmation}
                       onChange={(e) => setPasswordConfirmation(e.target.value)}
-                      placeholder="Re-type password"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                      placeholder="Confirm Password"
+                      className="w-full h-11 pl-11 pr-4 rounded-xl bg-black/40 border border-white/15 text-[#F5F2EA] text-xs placeholder:text-[#AAA69C]/60 backdrop-blur-md focus:outline-none focus:border-white transition"
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Dynamic Password Strength Indicator */}
-              {password && (
-                <div className="form-enter pt-1">
-                  <div className="flex items-center justify-between text-[11px] mb-1">
-                    <span className="text-slate-500 font-medium">Password strength</span>
-                    <span className="font-bold text-slate-700">{strength.label}</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-1.5 h-1.5 w-full">
-                    <div className={`rounded-full ${strength.level >= 1 ? strength.color : 'bg-slate-200'}`} />
-                    <div className={`rounded-full ${strength.level >= 2 ? strength.color : 'bg-slate-200'}`} />
-                    <div className={`rounded-full ${strength.level >= 3 ? strength.color : 'bg-slate-200'}`} />
-                    <div className={`rounded-full ${strength.level >= 4 ? strength.color : 'bg-slate-200'}`} />
-                  </div>
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full h-11 rounded-full border border-white/30 bg-white/10 hover:bg-white hover:text-black text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer active:scale-[0.98]"
+                  >
+                    {isSubmitting ? (
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <span>Complete Registration</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
                 </div>
-              )}
+              </form>
 
-              {/* Submit Button */}
-              <div className="form-enter pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4" />
-                      Create Account
-                      <ArrowRight className="w-4 h-4 ml-1 opacity-70" />
-                    </>
-                  )}
-                </button>
+              {/* Bottom Login Link */}
+              <div className="mt-6 pt-4 border-t border-white/10 text-center">
+                <p className="text-xs text-[#AAA69C]">
+                  Already have an account?{' '}
+                  <Link
+                    to="/login"
+                    className="font-bold text-white hover:underline transition"
+                  >
+                    Sign In
+                  </Link>
+                </p>
               </div>
-            </form>
-
-            {/* Footer Sign-in link */}
-            <div className="form-enter mt-6 pt-5 border-t border-slate-100 text-center">
-              <p className="text-xs text-slate-500">
-                Already part of LocalSpot?{' '}
-                <Link to="/login" className="font-bold text-emerald-600 hover:text-emerald-700 transition">
-                  Sign in here
-                </Link>
-              </p>
             </div>
           </div>
+
+          {/* Right Column: Editorial Cultural Message */}
+          <div className="hidden lg:flex lg:col-span-6 flex-col justify-center space-y-4 pl-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-black/40 text-[10px] font-mono uppercase tracking-widest text-white/90 w-fit backdrop-blur-md">
+              Culinary &amp; Local Escapes
+            </div>
+            <h2 className="text-4xl xl:text-5xl font-black text-white tracking-tight leading-tight font-display">
+              Ethiopia's finest culinary spots &amp; boutique stays.
+            </h2>
+            <p className="text-sm xl:text-base text-[#AAA69C] leading-relaxed max-w-lg">
+              Discover verified dining, artisanal coffee roasters, and scenic highland getaways.
+            </p>
+          </div>
         </div>
-      </div>
+      </main>
+
+      {/* Bottom Sub-footer */}
+      <footer className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#AAA69C]/80 font-mono">
+        <div>Bole &bull; Kazanchis &bull; Bishoftu &bull; Piassa</div>
+        <div>Local Spot Ethiopia &copy; 2026</div>
+      </footer>
     </div>
   );
 }

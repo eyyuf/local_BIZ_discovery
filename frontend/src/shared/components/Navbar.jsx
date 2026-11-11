@@ -1,222 +1,324 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/modules/identity';
-import { Compass, Tag, Bookmark, User, LogOut, LogIn, UserPlus, Menu, X, Ticket, ChevronDown } from 'lucide-react';
+import {
+  Compass,
+  Search,
+  LayoutGrid,
+  MapPin,
+  Bookmark,
+  Building2,
+  User,
+  LogOut,
+  X,
+  Menu,
+} from 'lucide-react';
+import { QuickFilters } from '@/modules/discovery/components/QuickFilters';
+import { NearMeFloatingPill } from '@/modules/discovery/components/NearMeFloatingPill';
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+
+  const isHome = location.pathname === '/';
+  const authPaths = ['/login', '/register', '/signup', '/oauth', '/forgot-password', '/reset-password'];
+  const isAuthPage = authPaths.some((p) => location.pathname.startsWith(p));
+  const isPlaceDetailPage = location.pathname.startsWith('/places/');
+
+  const activeFilter = searchParams.get('filter') || 'all';
+
+  const handleSelectFilter = (filterId) => {
+    if (!isHome) {
+      if (filterId === 'all') {
+        navigate('/');
+      } else {
+        navigate(`/?filter=${filterId}`);
+      }
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (filterId === 'all') {
+      nextParams.delete('filter');
+    } else {
+      nextParams.set('filter', filterId);
+    }
+    setSearchParams(nextParams);
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const prevScrollY = lastScrollYRef.current;
+
+      if (currentScrollY > 30) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+
+      if (currentScrollY < 120) {
+        setIsVisible(true);
+      } else if (currentScrollY > prevScrollY && currentScrollY - prevScrollY > 10) {
+        setIsVisible(false);
+      } else if (prevScrollY - currentScrollY > 10) {
+        setIsVisible(true);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Suppress completely on place detail and auth routes per architecture specification
+  if (isPlaceDetailPage || isAuthPage) {
+    return null;
+  }
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate('/search');
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
-    setProfileDropdownOpen(false);
     navigate('/');
   };
 
-  const isActive = (path) => location.pathname === path;
-
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 border-none outline-none ${
+        isVisible ? 'translate-y-0' : '-translate-y-full'
+      } ${
+        isScrolled
+          ? 'bg-[#0D0D0C]/90 backdrop-blur-md shadow-2xl shadow-black/80'
+          : isHome
+          ? 'bg-transparent'
+          : 'bg-[#0D0D0C]/90 backdrop-blur-md'
+      }`}
+    >
+      {/* Row 1: Primary Navigation Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-3 lg:gap-4">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/25 group-hover:scale-105 transition-transform">
-            <Compass className="w-5 h-5" />
+        <Link to="/" className="flex items-center gap-2 group shrink-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 bg-black/45 flex items-center justify-center text-white backdrop-blur-md group-hover:border-white transition">
+            <Compass className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-lg tracking-tight text-slate-900 leading-none">
-              Local<span className="text-emerald-600">Spot</span>
-            </span>
-            <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5">
-              Directory & Deals
-            </span>
-          </div>
+          <span className="font-extrabold text-base sm:text-lg tracking-tight text-white font-display flex items-center gap-1.5 whitespace-nowrap">
+            Local Spot
+            <span className="w-1.5 h-1.5 rounded-full bg-white/70 inline-block" />
+          </span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1.5 bg-slate-100/70 p-1 rounded-2xl border border-slate-200/60">
-          <Link
-            to="/"
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-              isActive('/')
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-            }`}
-          >
-            <Compass className="w-3.5 h-3.5 text-emerald-600" />
-            Explore
-          </Link>
-          <Link
-            to="/deals"
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-              isActive('/deals')
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-            }`}
-          >
-            <Tag className="w-3.5 h-3.5 text-emerald-600" />
-            Deals & Vouchers
-          </Link>
-        </nav>
+        {/* Global Search Input (Centered frosted pill) */}
+        <form onSubmit={handleSearchSubmit} className="flex-1 max-w-md mx-2 hidden md:block">
+          <div className="relative flex items-center">
+            <Search className="w-4 h-4 text-[#AAA69C] absolute left-4 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search spots, cafes, dining, hotels..."
+              aria-label="Search places"
+              className="w-full h-10 rounded-full border border-white/20 bg-black/50 pl-11 pr-4 text-xs text-[#F5F2EA] placeholder:text-[#AAA69C]/65 backdrop-blur-md focus:border-white focus:outline-none transition font-sans"
+            />
+          </div>
+        </form>
 
-        {/* User Actions */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* Navigation Quick Actions: Individual Frosted Pills */}
+        <nav className="hidden lg:flex items-center gap-2">
+          <Link
+            to="/search"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-xs font-semibold text-[#F5F2EA] hover:border-white hover:text-white transition"
+          >
+            <LayoutGrid className="w-3.5 h-3.5 text-[#AAA69C]" />
+            <span>Browse</span>
+          </Link>
+
+          <Link
+            to="/nearby"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-xs font-semibold text-[#F5F2EA] hover:border-white hover:text-white transition"
+          >
+            <MapPin className="w-3.5 h-3.5 text-[#AAA69C]" />
+            <span>Nearby</span>
+          </Link>
+
+          <Link
+            to="/saved"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-xs font-semibold text-[#F5F2EA] hover:border-white hover:text-white transition"
+          >
+            <Bookmark className="w-3.5 h-3.5 text-[#AAA69C]" />
+            <span>Collections</span>
+          </Link>
+
+          <Link
+            to="/login"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-xs font-semibold text-[#F5F2EA] hover:border-white hover:text-white transition"
+          >
+            <Building2 className="w-3.5 h-3.5 text-[#AAA69C]" />
+            <span>Business</span>
+          </Link>
+
+          {/* User / Sign In Pill */}
           {isAuthenticated ? (
-            <div className="relative">
-              <button
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-2.5 p-1.5 pr-3 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition shadow-xs cursor-pointer"
+            <div className="flex items-center gap-1.5 pl-1">
+              <Link
+                to="/profile"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/25 bg-black/45 backdrop-blur-md text-xs font-bold text-white hover:border-white transition"
               >
-                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                <div className="w-4 h-4 rounded-full bg-white/25 flex items-center justify-center text-[9px] text-white">
                   {user?.name?.[0]?.toUpperCase() || 'U'}
                 </div>
-                <div className="text-left">
-                  <span className="text-xs font-bold text-slate-800 max-w-[120px] truncate block leading-tight">
-                    {user?.name || 'Account'}
-                  </span>
-                  <span className="text-[10px] text-slate-400 capitalize block leading-none">
-                    {user?.role || 'Explorer'}
-                  </span>
-                </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <span className="max-w-[100px] truncate">{user?.name}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Sign Out"
+                className="p-1.5 rounded-full text-[#AAA69C] hover:text-white hover:bg-white/10 transition"
+              >
+                <LogOut className="w-4 h-4" />
               </button>
-
-              {profileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200/90 shadow-xl py-2 z-50">
-                  <div className="px-4 py-2.5 border-b border-slate-100 mb-1">
-                    <p className="text-xs font-bold text-slate-900 truncate">{user?.name}</p>
-                    <p className="text-[11px] text-slate-400 truncate mt-0.5">{user?.email}</p>
-                  </div>
-
-                  <Link
-                    to="/profile"
-                    onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
-                  >
-                    <User className="w-4 h-4 text-slate-400" />
-                    Profile & Bookmarks
-                  </Link>
-
-                  <Link
-                    to="/my-claims"
-                    onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
-                  >
-                    <Ticket className="w-4 h-4 text-slate-400" />
-                    My Claimed Vouchers
-                  </Link>
-
-                  <div className="my-1 border-t border-slate-100" />
-
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition text-left cursor-pointer"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Sign Out
-                  </button>
-                </div>
-              )}
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Link
-                to="/login"
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 transition flex items-center gap-1.5"
-              >
-                <LogIn className="w-3.5 h-3.5 text-slate-400" />
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 transition flex items-center gap-1.5"
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                Create Account
-              </Link>
-            </div>
+            <Link
+              to="/login"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-xs font-semibold text-[#F5F2EA] hover:border-white hover:text-white transition"
+            >
+              <User className="w-3.5 h-3.5 text-[#AAA69C]" />
+              <span>Sign in</span>
+            </Link>
           )}
-        </div>
+        </nav>
 
-        {/* Mobile menu toggle */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        {/* Mobile menu trigger */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <Link
+            to="/search"
+            aria-label="Search"
+            className="p-2 rounded-full border border-white/20 bg-black/40 text-[#AAA69C] hover:text-white transition"
+          >
+            <Search className="w-4 h-4" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+            className="p-2 rounded-full border border-white/20 bg-black/40 text-white hover:border-white transition"
+          >
+            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
+
+      {/* Row 2: Integrated Quick Filters and Near Me Pill on Homepage */}
+      {isHome && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 pt-0.5 flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <QuickFilters
+              activeFilter={activeFilter}
+              onSelectFilter={handleSelectFilter}
+            />
+          </div>
+          <div className="shrink-0 hidden md:block">
+            <NearMeFloatingPill />
+          </div>
+        </div>
+      )}
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-5 space-y-3">
-          <Link
-            to="/"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            <Compass className="w-4 h-4 text-emerald-600" />
-            Explore
-          </Link>
-          <Link
-            to="/deals"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            <Tag className="w-4 h-4 text-emerald-600" />
-            Deals & Vouchers
-          </Link>
+        <div className="lg:hidden border-none bg-[#0D0D0C]/95 backdrop-blur-2xl px-5 pt-3 pb-6 space-y-3">
+          <form onSubmit={handleSearchSubmit} className="mb-4">
+            <div className="relative flex items-center">
+              <Search className="w-4 h-4 text-[#AAA69C] absolute left-4 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search spots, cafes, dining, hotels..."
+                className="w-full h-10 rounded-full border border-white/20 bg-black/60 pl-11 pr-4 text-xs text-[#F5F2EA] placeholder:text-[#AAA69C]/65 focus:border-white focus:outline-none transition"
+              />
+            </div>
+          </form>
 
-          <div className="pt-3 border-t border-slate-100 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              to="/search"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
+            >
+              <LayoutGrid className="w-4 h-4 text-[#AAA69C]" />
+              <span>Browse All</span>
+            </Link>
+            <Link
+              to="/nearby"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
+            >
+              <MapPin className="w-4 h-4 text-[#AAA69C]" />
+              <span>Nearby Radar</span>
+            </Link>
+            <Link
+              to="/saved"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
+            >
+              <Bookmark className="w-4 h-4 text-[#AAA69C]" />
+              <span>Collections</span>
+            </Link>
+            <Link
+              to="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
+            >
+              <Building2 className="w-4 h-4 text-[#AAA69C]" />
+              <span>Business Listing</span>
+            </Link>
+          </div>
+
+          <div className="pt-2">
             {isAuthenticated ? (
-              <>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                 <Link
                   to="/profile"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="flex items-center gap-2 text-xs font-bold text-white"
                 >
-                  <User className="w-4 h-4 text-slate-400" />
-                  Profile ({user?.name})
-                </Link>
-                <Link
-                  to="/my-claims"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  <Ticket className="w-4 h-4 text-slate-400" />
-                  My Vouchers
+                  <User className="w-4 h-4 text-[#AAA69C]" />
+                  <span>{user?.name}</span>
                 </Link>
                 <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 text-left"
+                  type="button"
+                  onClick={handleLogout}
+                  className="text-xs text-red-400 font-semibold"
                 >
-                  <LogOut className="w-4 h-4" />
                   Sign Out
                 </button>
-              </>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-center py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-center py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-sm"
-                >
-                  Create Account
-                </Link>
               </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-2.5 rounded-full bg-white text-black text-xs font-bold flex items-center justify-center gap-2 shadow-lg"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Sign in to Local Spot</span>
+              </Link>
             )}
           </div>
         </div>
