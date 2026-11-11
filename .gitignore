@@ -1,0 +1,19 @@
+# Root and Global ignores
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE and Editor files
+.idea/
+.vscode/
+.fleet/
+.zed/
+
+# Dependencies
+node_modules/
+vendor/
+dist/
+frontend/dist/

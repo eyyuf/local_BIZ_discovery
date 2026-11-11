@@ -7,6 +7,8 @@ use App\Modules\Identity\Actions\LoginUserAction;
 use App\Modules\Identity\Actions\RegisterUserAction;
 use App\Modules\Identity\Actions\ResetPasswordAction;
 use App\Modules\Identity\Actions\SendPasswordResetLinkAction;
+use App\Modules\Identity\DTOs\LoginDTO;
+use App\Modules\Identity\DTOs\RegisterUserDTO;
 use App\Modules\Identity\Models\OAuthAccount;
 use App\Modules\Identity\Models\User;
 use App\Modules\Identity\Requests\ForgotPasswordRequest;
@@ -16,25 +18,28 @@ use App\Modules\Identity\Requests\ResetPasswordRequest;
 use App\Modules\Identity\Resources\UserResource;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+
 class AuthController extends Controller
 {
     public function register(RegisterRequest $request, RegisterUserAction $action)
-        {
-            $user = $action->execute($request->validated());
-            $token = $user->createToken('auth_token')->plainTextToken;
+    {
+        $user = $action->execute(RegisterUserDTO::fromRequest($request));
+        $token = $user->createToken('auth_token')->plainTextToken;
 
-            return response()->json([
-                'message' => 'Registered successfully',
+        return response()->json([
+            'message' => 'Registered successfully',
             'token'   => $token,
             'user'    => new UserResource($user),
         ], 201);
-        }
+    }
 
     public function login(LoginRequest $request, LoginUserAction $action)
-        {
-        $user = $action->execute($request->validated());
+    {
+        $user = $action->execute(LoginDTO::fromRequest($request));
+        Auth::guard('web')->login($user, $request->boolean('remember', true));
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -44,16 +49,28 @@ class AuthController extends Controller
         ]);
     }
 
-    public function redirectToGoogle()
+    public function redirectToGoogle(Request $request)
     {
-        $url= Socialite::driver('google')->Stateless()->redirect()->getTargetUrl();
-        return response()->json([
-            'url'=> $url,
-        ]);
+        $redirect = Socialite::driver('google')->stateless()->redirect();
 
+        if ($request->wantsJson() && ! $request->acceptsHtml()) {
+            return response()->json([
+                'url' => $redirect->getTargetUrl(),
+            ]);
+        }
+
+        return $redirect;
     }
-    public function handleGoogleCallback(){
-        $googleUser = Socialite::driver('google')->stateless()->user();
+
+    public function handleGoogleCallback(Request $request)
+    {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->user();
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Unable to authenticate with Google: ' . $e->getMessage(),
+            ], 422);
+        }
 
         $oauthAccount = OAuthAccount::where('provider', 'google')
             ->where('provider_id', $googleUser->getId())
@@ -61,38 +78,66 @@ class AuthController extends Controller
 
         if ($oauthAccount) {
             $user = $oauthAccount->user;
+            if ($googleUser->getAvatar()) {
+                $oauthAccount->update(['avatar' => $googleUser->getAvatar()]);
+            }
         } else {
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if (! $user) {
                 $user = User::create([
-                    'name' => $googleUser->getName(),
-                    'email' => $googleUser->getEmail(),
+                    'name'              => $googleUser->getName() ?? 'Google User',
+                    'email'             => $googleUser->getEmail(),
                     'email_verified_at' => now(),
-                    'password' => bcrypt(Str::random(16)),
+                    'password'          => bcrypt(Str::random(16)),
+                    'avatar'            => $googleUser->getAvatar(),
                 ]);
             }
 
             $user->oauthAccounts()->create([
-                'provider' => 'google',
+                'provider'    => 'google',
                 'provider_id' => $googleUser->getId(),
-                'avatar' => $googleUser->getAvatar(),
+                'avatar'      => $googleUser->getAvatar(),
             ]);
         }
 
+        // 1. Sign in really (session authentication)
+        Auth::guard('web')->login($user, true);
+
+        // 2. Generate Sanctum bearer token
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'message' => 'Logged in successfully',
-            'token' => $token,
-            'user' => $user,
-        ]);
+        // 3. If explicit API client requests JSON without HTML acceptance
+        if ($request->wantsJson() && ! $request->acceptsHtml()) {
+            return response()->json([
+                'message'      => 'Logged in successfully',
+                'token'        => $token,
+                'user'         => new UserResource($user),
+                'redirect_url' => url('/api/v1/auth/me?token=' . $token),
+            ]);
+        }
+
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        return redirect()->to($frontendUrl . '/oauth/callback?token=' . $token)
+            ->withCookie(cookie('auth_token', $token, 60 * 24 * 7, '/', null, false, false));
     }
-    public function logout(Request $request){
-        $request->user()->currentAccessToken()->delete();
+
+    public function logout(Request $request)
+    {
+        if ($request->user() && $request->user()->currentAccessToken()) {
+            $request->user()->currentAccessToken()->delete();
+        }
+
+        Auth::guard('web')->logout();
+
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
         return response()->json([
             'message' => 'Logged out successfully',
-        ]);
+        ])->withoutCookie('auth_token');
     }
 
     public function forgotPassword(ForgotPasswordRequest $request, SendPasswordResetLinkAction $action)
