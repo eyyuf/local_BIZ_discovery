@@ -12,15 +12,20 @@ class RegisterUserAction
     public function execute(RegisterUserDTO|array $data): User
     {
         $dto = $data instanceof RegisterUserDTO ? $data : RegisterUserDTO::fromArray($data);
+        $role = $dto->role ?: 'customer';
+        $isCustomer = ($role === 'customer');
 
         $user = User::create([
-            'name'     => $dto->name,
-            'email'    => $dto->email,
-            'password' => Hash::make($dto->password),
-            'role'     => $dto->role,
+            'name'              => $dto->name,
+            'email'             => $dto->email,
+            'password'          => Hash::make($dto->password),
+            'role'              => $role,
+            'email_verified_at' => $isCustomer ? now() : null,
         ]);
 
-        event(new Registered($user));
+        if (! $isCustomer) {
+            event(new Registered($user));
+        }
 
         return $user;
     }
