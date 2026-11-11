@@ -11,14 +11,18 @@ use App\Modules\Place\DTOs\UpdatePlaceDTO;
 use App\Modules\Place\Models\Place;
 use App\Modules\Place\Requests\StorePlaceRequest;
 use App\Modules\Place\Requests\UpdatePlaceRequest;
+use App\Modules\Review\Contracts\ReviewQueryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class OwnerPlaceController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ReviewQueryInterface $reviewQuery): JsonResponse
     {
-        $data=$request->user()->places()->paginate(10);
+        $data = $request->user()->places()->paginate(10);
+        $reviewQuery->attachRatingSummaries($data);
+
         return response()->json([
             'message'=>'retrieved succesfully',
             'data'=>$data,
@@ -38,6 +42,7 @@ class OwnerPlaceController extends Controller
     {
         Gate::authorize('update',$place);
         $place=$action->execute($place, UpdatePlaceDTO::fromRequest($request));
+        Cache::forget("place_{$place->id}");
         return response()->json([
             'message'=>'updated susccusfully',
             'data'=>$place,
