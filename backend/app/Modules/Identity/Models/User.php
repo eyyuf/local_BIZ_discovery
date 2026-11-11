@@ -26,6 +26,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'name',
         'email',
+        'role',
         'password',
         'avatar'
     ];
@@ -60,5 +61,45 @@ class User extends Authenticatable implements MustVerifyEmail
     public function places(): HasMany
     {
         return $this->hasMany(\App\Modules\Place\Models\Place::class);
+    }
+
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Discovery\Models\PlaceBookmark::class);
+    }
+
+    public function bookmarkedPlaces(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(\App\Modules\Place\Models\Place::class, 'place_bookmarks');
+    }
+
+    public function posts(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Social\Models\Post::class);
+    }
+
+    public function postLikes(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Social\Models\PostLike::class);
+    }
+
+    public function dealClaims(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Social\Models\DealClaim::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Review\Models\Review::class);
+    }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Review\Models\PlaceRating::class);
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Review\Models\Favorite::class);
     }
 }

@@ -17,6 +17,7 @@ class RegisterUserAction
             'name'     => $dto->name,
             'email'    => $dto->email,
             'password' => Hash::make($dto->password),
+            'role'     => $dto->role,
         ]);
 
         event(new Registered($user));

@@ -15,6 +15,7 @@ class UpdateProfileAction
         $payload = array_filter([
             'name'  => $dto->name,
             'email' => $dto->email,
+            'role'  => $dto->role,
         ], fn ($val) => $val !== null);
 
         if ($dto->password) {
@@ -22,7 +23,8 @@ class UpdateProfileAction
         }
 
         if ($dto->avatar) {
-            $payload['avatar'] = $dto->avatar->store('avatars', 'public');
+            $path = $dto->avatar->store('local_biz/avatars', 'cloudinary');
+            $payload['avatar'] = \Illuminate\Support\Facades\Storage::disk('cloudinary')->url($path);
         }
 
         if (! empty($payload)) {
