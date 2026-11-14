@@ -90,9 +90,7 @@ export const placesApi = {
 
   // Menu Management
   getPlaceMenu: async (placeIdOrSlug) => {
-    const response = await apiClient.get(`/owner/places/${placeIdOrSlug}/menu`).catch(() =>
-      apiClient.get(`/places/${placeIdOrSlug}/menu`)
-    );
+    const response = await apiClient.get(`/places/${placeIdOrSlug}/menu`);
     return response.data?.data || response.data || [];
   },
 

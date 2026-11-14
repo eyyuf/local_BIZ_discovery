@@ -40,18 +40,6 @@ export function PlaceDetailPage() {
         const data = await placesApi.getPlace(slug);
         if (!isMounted) return;
 
-        // If menu_sections are not populated or empty, fallback to getPlaceMenu
-        if (!data.menu_sections || data.menu_sections.length === 0) {
-          try {
-            const menuData = await placesApi.getPlaceMenu(data.id || slug);
-            if (menuData && Array.isArray(menuData) && menuData.length > 0) {
-              data.menu_sections = menuData;
-            }
-          } catch {
-            // graceful fallback
-          }
-        }
-
         setPlace(data);
         const venuePhotos = getPlacePhotos(data);
         setPhotos(venuePhotos);

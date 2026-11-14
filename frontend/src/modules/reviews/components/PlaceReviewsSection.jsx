@@ -20,57 +20,87 @@ export function PlaceReviewsSection({ place }) {
   const [hasMore, setHasMore] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
-  const fetchReviewsAndRatings = useCallback(async (pageNum = 1) => {
-    if (!place?.id) return;
-    setIsLoading(true);
-    try {
-      const [reviewsRes, ratingRes] = await Promise.all([
-        reviewApi.getPlaceReviews(place.id, pageNum),
-        reviewApi.getPlaceRating(place.id).catch(() => null),
-      ]);
-
-      const reviewData = reviewsRes?.data || [];
-      if (pageNum === 1) {
-        setReviews(reviewData);
-      } else {
-        setReviews((prev) => [...prev, ...reviewData]);
-      }
-
-      setHasMore(Boolean(reviewsRes?.links?.next));
-
-      if (ratingRes) {
-        setRatingSummary({
-          average_rating: ratingRes.average_rating ?? place.average_rating ?? null,
-          total_ratings: ratingRes.total_ratings ?? reviewData.length,
-        });
-      }
-
-      // Check if user's review is present in fetched reviews
-      if (user) {
-        const foundInPage = reviewData.find(
-          (r) => Number(r.author?.id) === Number(user.id)
-        );
-        if (foundInPage) {
-          setExistingUserReview(foundInPage);
-        } else if (pageNum === 1) {
-          // If not in first page, check user's reviews list
-          try {
-            const userRes = await reviewApi.getUserReviews(1, 50);
-            const found = userRes?.data?.find(
-              (r) => Number(r.place_id || r.place?.id) === Number(place.id)
-            );
-            if (found) setExistingUserReview(found);
-          } catch {
-            // Ignore unauthenticated or query error
-          }
-        }
-      }
-    } catch {
-      // Graceful fallback to existing place rating attributes if review fetching fails
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (place) {
+      setRatingSummary((prev) => ({
+        average_rating: prev.average_rating ?? place.average_rating ?? null,
+        total_ratings: prev.total_ratings || place.total_ratings || 0,
+      }));
     }
-  }, [place?.id, place?.average_rating, place?.total_ratings, user]);
+  }, [place?.average_rating, place?.total_ratings]);
+
+  const fetchReviewsAndRatings = useCallback(
+    async (pageNum = 1, forceRefreshRating = false) => {
+      if (!place?.id) return;
+      setIsLoading(true);
+      try {
+        // Only fetch place rating if explicitly requested (e.g. after review save or deletion)
+        // On initial page load (pageNum === 1 && !forceRefreshRating), we use place.average_rating and place.total_ratings
+        const promises = [reviewApi.getPlaceReviews(place.id, pageNum)];
+        if (forceRefreshRating) {
+          promises.push(reviewApi.getPlaceRating(place.id).catch(() => null));
+        }
+
+        const [reviewsRes, ratingRes] = await Promise.all(promises);
+
+        const reviewData = reviewsRes?.data || [];
+        if (pageNum === 1) {
+          setReviews(reviewData);
+        } else {
+          setReviews((prev) => [...prev, ...reviewData]);
+        }
+
+        const hasNextPage = Boolean(reviewsRes?.links?.next);
+        setHasMore(hasNextPage);
+
+        if (ratingRes) {
+          setRatingSummary({
+            average_rating: ratingRes.average_rating ?? place.average_rating ?? null,
+            total_ratings: ratingRes.total_ratings ?? reviewData.length,
+          });
+        }
+
+        // Check if user's review is present in fetched reviews
+        if (user) {
+          const foundInPage = reviewData.find(
+            (r) =>
+              Number(r.author?.id) === Number(user.id) ||
+              Number(r.user_id) === Number(user.id)
+          );
+          if (foundInPage) {
+            setExistingUserReview(foundInPage);
+          } else if (pageNum === 1) {
+            // Only query user's reviews if place has more review pages (buried on later page)
+            // If there is no next page, ALL reviews for this place are on page 1, so the user definitely has not reviewed this place.
+            if (hasNextPage) {
+              try {
+                const userRes = await reviewApi.getUserReviews(1, 15);
+                const found = userRes?.data?.find(
+                  (r) => Number(r.place_id || r.place?.id) === Number(place.id)
+                );
+                if (found) {
+                  setExistingUserReview(found);
+                } else {
+                  setExistingUserReview(null);
+                }
+              } catch {
+                // Ignore unauthenticated or query error
+              }
+            } else {
+              setExistingUserReview(null);
+            }
+          }
+        } else {
+          setExistingUserReview(null);
+        }
+      } catch {
+        // Graceful fallback to existing place rating attributes if review fetching fails
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [place?.id, place?.average_rating, place?.total_ratings, user]
+  );
 
   useEffect(() => {
     fetchReviewsAndRatings(1);
@@ -78,17 +108,38 @@ export function PlaceReviewsSection({ place }) {
 
   // Determine if current user already has a review for this place
   const userReviewFromList = user
-    ? reviews.find((r) => Number(r.author?.id) === Number(user.id))
+    ? reviews.find(
+        (r) =>
+          Number(r.author?.id) === Number(user.id) ||
+          Number(r.user_id) === Number(user.id)
+      )
     : null;
   const existingReview = userReviewFromList || existingUserReview;
 
-  const handleToggleForm = () => {
+  const handleToggleForm = async () => {
     if (showReviewForm) {
       setShowReviewForm(false);
       setEditingReview(null);
     } else {
-      if (existingReview) {
-        setEditingReview(existingReview);
+      let targetReview = existingReview;
+      // If user review wasn't in page 1 and there are multiple pages, verify before opening form
+      if (!targetReview && user && hasMore && !existingUserReview) {
+        try {
+          const userRes = await reviewApi.getUserReviews(1, 25);
+          const found = userRes?.data?.find(
+            (r) => Number(r.place_id || r.place?.id) === Number(place.id)
+          );
+          if (found) {
+            setExistingUserReview(found);
+            targetReview = found;
+          }
+        } catch {
+          // Ignore
+        }
+      }
+
+      if (targetReview) {
+        setEditingReview(targetReview);
       } else {
         setEditingReview(null);
       }
@@ -112,7 +163,7 @@ export function PlaceReviewsSection({ place }) {
     );
     setEditingReview(null);
     setTimeout(() => setFeedbackMsg(null), 4000);
-    fetchReviewsAndRatings(1);
+    fetchReviewsAndRatings(1, true);
   };
 
   const handleDeleteReview = async (reviewId) => {
@@ -125,7 +176,7 @@ export function PlaceReviewsSection({ place }) {
       setShowReviewForm(false);
       setFeedbackMsg('Review removed.');
       setTimeout(() => setFeedbackMsg(null), 3000);
-      fetchReviewsAndRatings(1);
+      fetchReviewsAndRatings(1, true);
     } catch {
       alert('Unable to delete review. Please try again.');
     }
