@@ -43,6 +43,146 @@ export function NearbyPage() {
 
   const radiusOptions = [2, 5, 10, 25];
 
+  // Mobile Bottom Sheet interaction states: 'collapsed' | 'expanded'
+  const [sheetState, setSheetState] = useState('collapsed');
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const startYRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const didDragRef = useRef(false);
+  const dragSourceRef = useRef(null);
+  const listRef = useRef(null);
+
+  // Desktop detection for layout switching
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Gesture handling for mobile bottom sheet
+  const handleDragStart = (clientY, source) => {
+    if (isDesktop) return;
+    startYRef.current = clientY;
+    dragSourceRef.current = source;
+    isDraggingRef.current = false;
+    didDragRef.current = false;
+  };
+
+  const handleDragMove = useCallback(
+    (clientY) => {
+      if (isDesktop || !startYRef.current) return;
+      const deltaY = clientY - startYRef.current;
+
+      // When dragging from places list: only allow downward drag if scrolled to top
+      if (dragSourceRef.current === 'list' && sheetState === 'expanded') {
+        const scrollTop = listRef.current ? listRef.current.scrollTop : 0;
+        if (scrollTop > 0 || deltaY < 0) {
+          return;
+        }
+      }
+
+      if (Math.abs(deltaY) > 8) {
+        isDraggingRef.current = true;
+        didDragRef.current = true;
+        setIsDragging(true);
+
+        // Add resistance when pulling beyond bounds
+        if (sheetState === 'collapsed' && deltaY > 0) {
+          setDragY(deltaY * 0.2);
+        } else if (sheetState === 'expanded' && deltaY < 0) {
+          setDragY(deltaY * 0.2);
+        } else {
+          setDragY(deltaY);
+        }
+      }
+    },
+    [isDesktop, sheetState]
+  );
+
+  const handleDragEnd = useCallback(() => {
+    if (isDesktop) return;
+    if (isDraggingRef.current) {
+      if (sheetState === 'collapsed' && dragY < -35) {
+        setSheetState('expanded');
+      } else if (sheetState === 'expanded' && dragY > 35) {
+        setSheetState('collapsed');
+      }
+    }
+    setIsDragging(false);
+    setDragY(0);
+    startYRef.current = 0;
+    isDraggingRef.current = false;
+    dragSourceRef.current = null;
+    setTimeout(() => {
+      didDragRef.current = false;
+    }, 100);
+  }, [isDesktop, sheetState, dragY]);
+
+  // Window-level move and end listeners to ensure smooth dragging even outside handle
+  useEffect(() => {
+    if (isDesktop) return;
+
+    const onPointerMove = (e) => {
+      if (startYRef.current) {
+        handleDragMove(e.clientY);
+      }
+    };
+
+    const onPointerUp = () => {
+      if (startYRef.current) {
+        handleDragEnd();
+      }
+    };
+
+    const onTouchMove = (e) => {
+      if (startYRef.current && e.touches && e.touches[0]) {
+        handleDragMove(e.touches[0].clientY);
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (startYRef.current) {
+        handleDragEnd();
+      }
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd);
+
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isDesktop, handleDragMove, handleDragEnd]);
+
+  // Prevent link navigation if the action was a swipe/drag gesture
+  const handleCardClick = (e) => {
+    if (didDragRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const collapsedVisibleHeight = 280;
+  const mobileTransform = isDragging
+    ? sheetState === 'collapsed'
+      ? `translateY(calc(100% - ${collapsedVisibleHeight}px + ${dragY}px))`
+      : `translateY(${Math.max(0, dragY)}px)`
+    : sheetState === 'collapsed'
+      ? `translateY(calc(100% - ${collapsedVisibleHeight}px))`
+      : 'translateY(0px)';
+
   // Request browser geolocation without hardcoded fallback coordinates
   const requestLocation = useCallback(() => {
     if (typeof window === 'undefined' || !navigator.geolocation) {
@@ -138,31 +278,26 @@ export function NearbyPage() {
   }, [coords, radius]);
 
   return (
-    <div className="min-h-screen bg-[#0D0D0C] text-[#F5F2EA] pt-24 sm:pt-28 pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[#0D0D0C] text-[#F5F2EA] pt-16 sm:pt-20 lg:pt-24 pb-16 px-3 sm:px-6 lg:px-8 max-w-7xl xl:max-w-[1560px] mx-auto space-y-3 sm:space-y-4">
+      {/* Top Compact Navigation & Status Bar */}
+      <div className="flex items-center justify-between gap-2.5 bg-[#151518]/90 backdrop-blur-md border border-white/[0.08] rounded-2xl px-3.5 py-2 sm:py-2.5 shadow-md">
+        <div className="flex items-center gap-2.5 min-w-0">
           <Link
             to="/"
-            className="p-2 rounded-full border border-white/20 bg-black/40 text-[#AAA69C] hover:text-white transition"
+            className="p-1.5 rounded-full border border-white/20 bg-black/40 text-[#AAA69C] hover:text-white transition shrink-0"
             aria-label="Back to home"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-white">
-              Live Proximity Radar
-            </h1>
-            <p className="text-xs text-[#AAA69C] mt-0.5">
-              Center:{' '}
-              <span className="text-white font-medium">
-                {coords
-                  ? `GPS: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`
-                  : locationStatus === 'requesting'
-                  ? 'Detecting GPS location...'
-                  : 'Location not set'}
-              </span>
-            </p>
+          <div className="text-xs text-[#AAA69C] truncate">
+            <span className="hidden sm:inline">Center: </span>
+            <span className="text-white font-mono font-medium text-[11px] sm:text-xs">
+              {coords
+                ? `GPS: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`
+                : locationStatus === 'requesting'
+                ? 'Detecting GPS location...'
+                : 'Location not set'}
+            </span>
           </div>
         </div>
 
@@ -170,41 +305,21 @@ export function NearbyPage() {
           type="button"
           onClick={requestLocation}
           disabled={locationStatus === 'requesting'}
-          className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/30 bg-white/10 hover:bg-white hover:text-black text-xs font-bold transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/25 bg-white/10 hover:bg-white hover:text-black text-xs font-bold transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
         >
           <LocateFixed
             className={`w-3.5 h-3.5 text-emerald-400 ${
               locationStatus === 'requesting' ? 'animate-spin' : ''
             }`}
           />
-          <span>{locationStatus === 'requesting' ? 'Locating...' : 'Update Location'}</span>
+          <span className="hidden sm:inline">
+            {locationStatus === 'requesting' ? 'Locating...' : 'Update Location'}
+          </span>
+          <span className="sm:hidden">
+            {locationStatus === 'requesting' ? '...' : 'Update'}
+          </span>
         </button>
       </div>
-
-      {/* Radius Selector Controls (rendered only when valid coordinates exist) */}
-      {coords && (
-        <div className="flex items-center justify-between gap-3 pt-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-[#AAA69C]/80 shrink-0">Radius:</span>
-            <div className="flex items-center gap-1.5">
-              {radiusOptions.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRadius(r)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition active:scale-95 ${
-                    radius === r
-                      ? 'border border-emerald-400 bg-emerald-500/20 text-emerald-300 font-bold'
-                      : 'border border-white/10 bg-black/30 text-[#AAA69C] hover:text-white hover:border-white/30'
-                  }`}
-                >
-                  {r} km
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Geolocation State 1: Requesting location */}
       {locationStatus === 'requesting' && !coords && (
@@ -277,27 +392,122 @@ export function NearbyPage() {
 
       {/* Geolocation State 4: Location obtained and coordinates active */}
       {coords && (
-        <>
-          {/* Interactive Proximity Map powered by CARTO */}
-          <div className="w-full">
-            <LeafletMap
-              lat={coords.lat}
-              lng={coords.lng}
-              name="Current GPS Location"
-              address={`GPS: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`}
-              zoom={13}
-              radius={radius}
-              markers={places}
-              showCenterPin={true}
-              className="!h-[340px] sm:!h-[420px]"
-            />
+        <div className="relative h-[calc(100vh-7.5rem)] h-[calc(100dvh-7.5rem)] sm:h-[calc(100vh-8.5rem)] sm:h-[calc(100dvh-8.5rem)] min-h-[500px] rounded-2xl overflow-hidden border border-white/[0.08] lg:border-0 lg:h-auto lg:min-h-0 lg:overflow-visible lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start">
+          {/* Map Column: Mounted in the background on mobile, stationary right column (~58%) on desktop */}
+          <div className="absolute inset-0 z-0 w-full h-full lg:relative lg:inset-auto lg:order-2 lg:col-span-7 xl:col-span-7 lg:sticky lg:top-20 lg:h-[calc(100vh-6.5rem)] lg:space-y-2.5 lg:flex lg:flex-col lg:z-auto">
+            {/* Desktop Radius Selector Controls positioned directly above map (hidden on mobile, rendered inside sheet on mobile) */}
+            <div className="hidden lg:flex items-center gap-2 bg-[#151518] border border-white/[0.08] rounded-xl px-3.5 py-2 shrink-0">
+              <span className="text-xs font-mono text-[#AAA69C]/80 shrink-0">Radius:</span>
+              <div className="flex items-center gap-1.5 overflow-x-auto">
+                {radiusOptions.map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRadius(r)}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition active:scale-95 cursor-pointer ${
+                      radius === r
+                        ? 'border border-emerald-400 bg-emerald-500/20 text-emerald-300 font-bold'
+                        : 'border border-white/10 bg-black/30 text-[#AAA69C] hover:text-white hover:border-white/30'
+                    }`}
+                  >
+                    {r} km
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Leaflet Map: full viewport container on mobile, flex-1 on desktop */}
+            <div className="w-full h-full lg:flex-1 lg:h-full lg:min-h-[320px]">
+              <LeafletMap
+                lat={coords.lat}
+                lng={coords.lng}
+                name="Current GPS Location"
+                address={`GPS: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`}
+                zoom={13}
+                radius={radius}
+                markers={places}
+                showCenterPin={true}
+                className="!h-full w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
+              />
+            </div>
           </div>
 
-          {/* Nearby Results List */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white font-display">
-                Places Within Proximity ({places.length})
+          {/* Left Column / Draggable Bottom Sheet: Foreground sheet on mobile (~98% when expanded, 280px when collapsed), left column (~42%) on desktop */}
+          <div
+            className={`absolute inset-x-0 bottom-0 z-20 h-[calc(100%-0.5rem)] rounded-t-[28px] bg-[#151518] border-t border-x border-white/[0.12] shadow-2xl flex flex-col px-3.5 sm:px-5 pt-1.5 pb-3 lg:relative lg:inset-auto lg:bottom-auto lg:z-auto lg:order-1 lg:col-span-5 xl:col-span-5 lg:h-auto lg:max-h-[calc(100vh-6.5rem)] lg:rounded-none lg:bg-transparent lg:border-0 lg:p-0 lg:shadow-none lg:space-y-3.5 ${
+              isDesktop ? 'lg:!transform-none' : ''
+            }`}
+            style={
+              isDesktop
+                ? undefined
+                : {
+                    transform: mobileTransform,
+                    transition: isDragging
+                      ? 'none'
+                      : 'transform 320ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  }
+            }
+          >
+            {/* Mobile Sheet Drag Handle Bar (touch-action none, acts as primary drag handle and toggle) */}
+            <div
+              className="pt-1.5 pb-2 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none lg:hidden"
+              onPointerDown={(e) => handleDragStart(e.clientY, 'handle')}
+              onTouchStart={(e) => handleDragStart(e.touches[0].clientY, 'handle')}
+              onClick={() => setSheetState((s) => (s === 'collapsed' ? 'expanded' : 'collapsed'))}
+              role="button"
+              aria-label={sheetState === 'collapsed' ? 'Expand places sheet' : 'Collapse places sheet'}
+            >
+              <div className="w-12 h-1.5 bg-white/30 hover:bg-white/50 active:bg-white/70 rounded-full transition-colors mb-1" />
+            </div>
+
+            {/* Mobile Radius Filter Row positioned at the top of results sheet */}
+            <div
+              className="lg:hidden flex items-center justify-between gap-2 pb-2 overflow-x-auto no-scrollbar border-b border-white/[0.06] shrink-0"
+              onPointerDown={(e) => {
+                if (e.target.tagName !== 'BUTTON') {
+                  handleDragStart(e.clientY, 'header');
+                }
+              }}
+              onTouchStart={(e) => {
+                if (e.target.tagName !== 'BUTTON') {
+                  handleDragStart(e.touches[0].clientY, 'header');
+                }
+              }}
+            >
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-xs font-mono text-[#AAA69C]/80 shrink-0">Radius:</span>
+                {radiusOptions.map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRadius(r)}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition active:scale-95 cursor-pointer shrink-0 ${
+                      radius === r
+                        ? 'border border-emerald-400 bg-emerald-500/20 text-emerald-300 font-bold'
+                        : 'border border-white/10 bg-black/30 text-[#AAA69C] hover:text-white hover:border-white/30'
+                    }`}
+                  >
+                    {r} km
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSheetState((s) => (s === 'collapsed' ? 'expanded' : 'collapsed'))}
+                className="text-[11px] font-mono text-[#AAA69C] hover:text-white px-2.5 py-1 rounded-full border border-white/10 bg-white/5 shrink-0 cursor-pointer transition active:scale-95"
+              >
+                {sheetState === 'collapsed' ? 'Expand ↑' : 'Collapse ↓'}
+              </button>
+            </div>
+
+            {/* Results Header within Column */}
+            <div
+              className="flex items-center justify-between py-2 border-b border-white/[0.06] shrink-0 cursor-grab active:cursor-grabbing lg:cursor-default select-none"
+              onPointerDown={(e) => handleDragStart(e.clientY, 'header')}
+              onTouchStart={(e) => handleDragStart(e.touches[0].clientY, 'header')}
+            >
+              <h2 className="text-base font-bold text-white font-display">
+                Nearby Places ({places.length})
               </h2>
               <span className="text-xs font-mono text-emerald-400">
                 within {radius} km
@@ -333,7 +543,22 @@ export function NearbyPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              <div
+                ref={listRef}
+                className="flex-1 overflow-y-auto lg:overflow-y-auto lg:pr-3 space-y-3.5 pt-2 pb-8 overscroll-contain"
+                onPointerDown={(e) => {
+                  if (sheetState === 'collapsed') {
+                    handleDragStart(e.clientY, 'list');
+                  }
+                }}
+                onTouchStart={(e) => {
+                  if (sheetState === 'collapsed') {
+                    handleDragStart(e.touches[0].clientY, 'list');
+                  } else if (listRef.current && listRef.current.scrollTop === 0) {
+                    handleDragStart(e.touches[0].clientY, 'list');
+                  }
+                }}
+              >
                 {places.map((place) => {
                   const photo = getPlacePrimaryPhoto(place);
                   const categoryLabel = getCategoryLabel(place);
@@ -345,10 +570,11 @@ export function NearbyPage() {
                     <Link
                       key={place.id || place.slug}
                       to={`/places/${place.slug}`}
-                      className="group block h-full bg-[#151518] border border-white/[0.08] hover:border-white/25 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                      onClick={handleCardClick}
+                      className="group block bg-[#151518] border border-white/[0.08] hover:border-white/25 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5 flex flex-col text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                     >
-                      {/* Image container: full width, consistent aspect ratio */}
-                      <div className="relative w-full aspect-[16/10] sm:aspect-[4/3] overflow-hidden bg-[#1D1C19]">
+                      {/* Image container: full width, compact 16:9 aspect ratio */}
+                      <div className="relative w-full aspect-[16/9] overflow-hidden bg-[#1D1C19]">
                         <img
                           src={photo}
                           alt={place.name}
@@ -377,13 +603,13 @@ export function NearbyPage() {
                         </div>
                       </div>
 
-                      {/* Metadata below image in normal document flow */}
-                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                      {/* Metadata below image in normal document flow - compact padding & spacing */}
+                      <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2">
                         <div>
                           {/* Name and Rating */}
                           <div className="flex items-start justify-between gap-2">
                             <h3
-                              className="text-base sm:text-lg font-bold text-white group-hover:text-amber-400 transition truncate leading-snug"
+                              className="text-sm sm:text-base font-bold text-white group-hover:text-amber-400 transition truncate leading-snug"
                               title={place.name}
                             >
                               {place.name}
@@ -403,7 +629,7 @@ export function NearbyPage() {
 
                           {/* Address / Location */}
                           {place.address && (
-                            <div className="flex items-center gap-1.5 text-xs text-[#AAA69C] mt-1.5">
+                            <div className="flex items-center gap-1.5 text-xs text-[#AAA69C] mt-1">
                               <MapPin className="w-3.5 h-3.5 text-[#AAA69C] shrink-0" />
                               <span className="truncate">{place.address}</span>
                             </div>
@@ -411,7 +637,7 @@ export function NearbyPage() {
                         </div>
 
                         {/* Bottom row: Category & Distance */}
-                        <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs mt-3">
+                        <div className="pt-2.5 border-t border-white/[0.08] flex items-center justify-between text-xs mt-2">
                           {categoryLabel && (
                             <span className="px-2.5 py-0.5 rounded-full bg-white/[0.08] text-white/90 text-[11px] font-semibold border border-white/10 truncate max-w-[140px]">
                               {categoryLabel}
@@ -432,7 +658,7 @@ export function NearbyPage() {
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

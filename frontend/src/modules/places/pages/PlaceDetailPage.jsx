@@ -33,7 +33,6 @@ export function PlaceDetailPage() {
     let isMounted = true;
     setIsLoading(true);
     setError(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     async function loadPlace() {
       try {

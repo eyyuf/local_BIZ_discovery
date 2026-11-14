@@ -19,6 +19,7 @@ import placesApi from '@/modules/places/api/placesApi';
 import discoveryApi from '@/modules/discovery/api/discoveryApi';
 import { LeafletMap } from '@/shared/map/LeafletMap';
 import { PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
+import { ImageCropModal } from '@/shared/components/ImageCropModal';
 
 const DAYS_OF_WEEK = [
   { index: 1, name: 'Monday' },
@@ -64,6 +65,9 @@ export function BusinessCreatePage() {
   const fileInputRef = useRef(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [selectedRawFile, setSelectedRawFile] = useState(null);
+  const [rawImageSrc, setRawImageSrc] = useState(null);
 
   // Geolocation State
   const [geoLoading, setGeoLoading] = useState(false);
@@ -168,20 +172,51 @@ export function BusinessCreatePage() {
 
     if (!file.type.startsWith('image/')) {
       setFormError('Please select a valid image file (PNG, JPG, WebP).');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
       setFormError('Photo size must be under 5MB.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
+    if (rawImageSrc) {
+      URL.revokeObjectURL(rawImageSrc);
+    }
+    const tempUrl = URL.createObjectURL(file);
+    setSelectedRawFile(file);
+    setRawImageSrc(tempUrl);
+    setCropModalOpen(true);
+    setFormError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCropConfirm = (croppedFile, previewUrl) => {
     if (imagePreview) {
       URL.revokeObjectURL(imagePreview);
     }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImageFile(croppedFile);
+    setImagePreview(previewUrl);
+    setCropModalOpen(false);
+    if (rawImageSrc) {
+      URL.revokeObjectURL(rawImageSrc);
+      setRawImageSrc(null);
+    }
+    setSelectedRawFile(null);
     setFormError(null);
+  };
+
+  const handleCropCancel = () => {
+    setCropModalOpen(false);
+    if (rawImageSrc) {
+      URL.revokeObjectURL(rawImageSrc);
+      setRawImageSrc(null);
+    }
+    setSelectedRawFile(null);
   };
 
   const handleRemovePhoto = () => {
@@ -190,6 +225,11 @@ export function BusinessCreatePage() {
       URL.revokeObjectURL(imagePreview);
       setImagePreview(null);
     }
+    if (rawImageSrc) {
+      URL.revokeObjectURL(rawImageSrc);
+      setRawImageSrc(null);
+    }
+    setSelectedRawFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -758,6 +798,22 @@ export function BusinessCreatePage() {
           </div>
         </form>
       </div>
+
+      {/* Place Cover Image Crop Modal */}
+      <ImageCropModal
+        isOpen={cropModalOpen}
+        imageSrc={rawImageSrc}
+        originalFile={selectedRawFile}
+        title="Adjust Venue Cover Photo"
+        defaultAspect={16 / 9}
+        aspectPresets={[
+          { label: '16:9 (Cover)', value: 16 / 9 },
+          { label: '4:3', value: 4 / 3 },
+          { label: 'Free', value: undefined },
+        ]}
+        onClose={handleCropCancel}
+        onConfirm={handleCropConfirm}
+      />
     </div>
   );
 }

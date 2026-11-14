@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { MapPin, AlertCircle } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
+import { MapPin } from 'lucide-react';
 
 /**
  * High-performance CARTO Basemaps Leaflet integration.
@@ -23,11 +24,17 @@ export function LeafletMap({
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersLayerRef = useRef(null);
+  const pendingBoundsRef = useRef(null);
   const [mapError, setMapError] = useState(false);
 
   // Validate coordinates
   const validCenterLat = !isNaN(parseFloat(lat)) ? parseFloat(lat) : 9.0225;
   const validCenterLng = !isNaN(parseFloat(lng)) ? parseFloat(lng) : 38.831;
+
+  // Validate zoom level
+  const validZoom = !isNaN(parseInt(zoom, 10))
+    ? Math.max(1, Math.min(19, parseInt(zoom, 10)))
+    : 14;
 
   // Filter valid place markers
   const validMarkers = (markers || []).filter(
@@ -50,7 +57,7 @@ export function LeafletMap({
       if (!mapInstanceRef.current) {
         const map = L.map(mapContainerRef.current, {
           center: [validCenterLat, validCenterLng],
-          zoom: zoom,
+          zoom: validZoom,
           zoomControl: true,
           attributionControl: true,
         });
@@ -80,10 +87,17 @@ export function LeafletMap({
         markersLayerRef.current = L.layerGroup().addTo(map);
         mapInstanceRef.current = map;
 
-        // Invalidate size after DOM mount
+        // Ensure Leaflet resizes properly after initial mount and layout settlement
         setTimeout(() => {
-          map.invalidateSize();
-        }, 150);
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.invalidateSize({ debounceMoveend: true });
+          }
+        }, 100);
+        setTimeout(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.invalidateSize({ debounceMoveend: true });
+          }
+        }, 350);
       }
 
       const map = mapInstanceRef.current;
@@ -209,14 +223,25 @@ export function LeafletMap({
           markersLayer.addLayer(centerMarker);
         }
 
-        // Fit map bounds to encompass all valid elements (circle, place markers, and center pin)
+        // Fit map bounds safely (padding is [25, 25], total 50px required width and height)
         if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [25, 25], maxZoom: 16 });
+          map.invalidateSize({ debounceMoveend: true });
+          const containerSize = map.getSize();
+          if (containerSize && containerSize.x > 50 && containerSize.y > 50) {
+            map.fitBounds(bounds, { padding: [25, 25], maxZoom: 16 });
+            pendingBoundsRef.current = null;
+          } else {
+            // Container dimensions not yet calculated or 0; defer bounds fitting to ResizeObserver
+            pendingBoundsRef.current = bounds;
+            map.setView([validCenterLat, validCenterLng], validZoom);
+          }
         } else {
-          map.setView([validCenterLat, validCenterLng], zoom);
+          pendingBoundsRef.current = null;
+          map.setView([validCenterLat, validCenterLng], validZoom);
         }
       } else {
         // Case B: Single place marker (e.g. PlaceLocation details view or interactive place creation picker)
+        pendingBoundsRef.current = null;
         const isDraggable = Boolean(draggableMarker);
         const singleMarker = L.marker([validCenterLat, validCenterLng], {
           icon: createPlaceIcon(),
@@ -245,7 +270,7 @@ export function LeafletMap({
         }
 
         markersLayer.addLayer(singleMarker);
-        map.setView([validCenterLat, validCenterLng], zoom);
+        map.setView([validCenterLat, validCenterLng], validZoom);
 
         if (isDraggable && onLocationSelect) {
           map.off('click');
@@ -269,7 +294,43 @@ export function LeafletMap({
         markersLayerRef.current.clearLayers();
       }
     };
-  }, [lat, lng, name, address, markers, zoom, showCenterPin, onSelectMarker, draggableMarker, onLocationSelect, hasCoordinates, radius]);
+  }, [lat, lng, name, address, markers, validZoom, showCenterPin, onSelectMarker, draggableMarker, onLocationSelect, hasCoordinates, radius]);
+
+  // ResizeObserver to handle layout shifts, container size changes, and deferred fitBounds
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container || typeof ResizeObserver === 'undefined') return;
+
+    let rafId = null;
+
+    const observer = new ResizeObserver(() => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const map = mapInstanceRef.current;
+        if (!map) return;
+
+        // Invalidate size on container dimension change
+        map.invalidateSize({ debounceMoveend: true });
+
+        // Apply pending deferred bounds if container now has valid dimensions
+        if (pendingBoundsRef.current) {
+          const size = map.getSize();
+          if (size && size.x > 50 && size.y > 50) {
+            const boundsToApply = pendingBoundsRef.current;
+            pendingBoundsRef.current = null;
+            map.fitBounds(boundsToApply, { padding: [25, 25], maxZoom: 16 });
+          }
+        }
+      });
+    });
+
+    observer.observe(container);
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      observer.disconnect();
+    };
+  }, []);
 
   // Teardown map instance on component unmount
   useEffect(() => {
@@ -284,7 +345,7 @@ export function LeafletMap({
   if (!hasCoordinates || mapError) {
     return (
       <div
-        className={`w-full h-[280px] sm:h-[340px] rounded-2xl overflow-hidden bg-[#16161A] border border-white/10 flex flex-col items-center justify-center p-6 text-center space-y-2 ${className}`}
+        className={`w-full h-full min-h-[280px] sm:min-h-[340px] rounded-2xl overflow-hidden bg-[#16161A] border border-white/10 flex flex-col items-center justify-center p-6 text-center space-y-2 ${className}`}
       >
         <MapPin className="w-8 h-8 text-[#AAA69C]/60" />
         <p className="text-xs font-mono text-[#AAA69C]">
@@ -297,7 +358,7 @@ export function LeafletMap({
   return (
     <div
       ref={mapContainerRef}
-      className={`w-full h-[280px] sm:h-[340px] rounded-2xl overflow-hidden bg-[#16161A] border border-white/10 relative z-10 shadow-lg ${className}`}
+      className={`w-full h-full min-h-[280px] sm:min-h-[340px] rounded-2xl overflow-hidden bg-[#16161A] border border-white/10 relative z-10 shadow-lg ${className}`}
     />
   );
 }

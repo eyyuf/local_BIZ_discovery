@@ -21,10 +21,12 @@ import { Navbar } from '@/shared/components/Navbar';
 import { Footer } from '@/shared/components/Footer';
 import { MobileBottomNav } from '@/shared/components/MobileBottomNav';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
+import { ScrollToTop } from '@/shared/components/ScrollToTop';
 
 export function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <BookmarkProvider>
           <div className="min-h-screen flex flex-col bg-[#0D0D0C] text-[#F5F2EA] font-sans antialiased selection:bg-white/20 selection:text-white">

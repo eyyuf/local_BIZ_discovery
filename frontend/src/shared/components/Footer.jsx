@@ -6,11 +6,9 @@ import { useAuth } from '@/modules/identity';
 export function Footer() {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
-  const authPaths = ['/login', '/register', '/signup', '/oauth', '/forgot-password', '/reset-password'];
-  const isAuthPage = authPaths.some((p) => location.pathname.startsWith(p));
-  const isPlaceDetailPage = location.pathname.startsWith('/places/');
 
-  if (isAuthPage || isPlaceDetailPage) {
+  // Display footer exclusively on the homepage ("/")
+  if (location.pathname !== '/') {
     return null;
   }
   const neighborhoods = [

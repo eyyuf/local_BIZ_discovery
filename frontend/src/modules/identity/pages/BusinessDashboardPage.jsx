@@ -32,6 +32,7 @@ import placesApi from '@/modules/places/api/placesApi';
 import discoveryApi from '@/modules/discovery/api/discoveryApi';
 import { LeafletMap } from '@/shared/map/LeafletMap';
 import { getPlacePrimaryPhoto, getPlacePhotos, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
+import { ImageCropModal } from '@/shared/components/ImageCropModal';
 
 const DAYS_OF_WEEK = [
   { index: 1, name: 'Monday' },
@@ -80,6 +81,9 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const photoInputRef = useRef(null);
+  const [galleryCropModalOpen, setGalleryCropModalOpen] = useState(false);
+  const [galleryRawFile, setGalleryRawFile] = useState(null);
+  const [galleryRawSrc, setGalleryRawSrc] = useState(null);
 
   // Tab 4: Menu State
   const [menuSections, setMenuSections] = useState([]);
@@ -103,6 +107,9 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
   const [isSavingItem, setIsSavingItem] = useState(false);
   const itemPhotoInputRef = useRef(null);
   const [isUploadingItemPhoto, setIsUploadingItemPhoto] = useState(false);
+  const [itemCropModalOpen, setItemCropModalOpen] = useState(false);
+  const [itemRawFile, setItemRawFile] = useState(null);
+  const [itemRawSrc, setItemRawSrc] = useState(null);
 
   // Tab 5: Operating Hours State
   const [schedule, setSchedule] = useState(
@@ -312,24 +319,43 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
   // ----------------------------------------------------
   // Tab 3 Handlers: Photos Management
   // ----------------------------------------------------
-  const handleUploadPhoto = async (e) => {
+  const handleSelectGalleryPhoto = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
       alert('Please select a valid image (PNG, JPG, WebP).');
+      if (photoInputRef.current) photoInputRef.current.value = '';
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
       alert('Photo must be under 5MB.');
+      if (photoInputRef.current) photoInputRef.current.value = '';
       return;
+    }
+
+    if (galleryRawSrc) {
+      URL.revokeObjectURL(galleryRawSrc);
+    }
+    const tempUrl = URL.createObjectURL(file);
+    setGalleryRawFile(file);
+    setGalleryRawSrc(tempUrl);
+    setGalleryCropModalOpen(true);
+    if (photoInputRef.current) photoInputRef.current.value = '';
+  };
+
+  const handleGalleryCropConfirm = async (croppedFile, previewUrl) => {
+    setGalleryCropModalOpen(false);
+    if (galleryRawSrc) {
+      URL.revokeObjectURL(galleryRawSrc);
+      setGalleryRawSrc(null);
     }
 
     setIsUploadingPhoto(true);
     try {
       const isFirst = placeImages.length === 0;
-      await placesApi.uploadPlaceImage(id, file, isFirst);
-      showNotification('Photo uploaded to Cloudinary successfully!');
+      await placesApi.uploadPlaceImage(id, croppedFile, isFirst);
+      showNotification('Photo cropped and uploaded to Cloudinary successfully!');
       fetchImages();
       fetchPlaceDetails();
     } catch (err) {
@@ -337,8 +363,18 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       alert(err.response?.data?.message || 'Could not upload photo.');
     } finally {
       setIsUploadingPhoto(false);
-      if (photoInputRef.current) photoInputRef.current.value = '';
+      URL.revokeObjectURL(previewUrl);
+      setGalleryRawFile(null);
     }
+  };
+
+  const handleGalleryCropCancel = () => {
+    setGalleryCropModalOpen(false);
+    if (galleryRawSrc) {
+      URL.revokeObjectURL(galleryRawSrc);
+      setGalleryRawSrc(null);
+    }
+    setGalleryRawFile(null);
   };
 
   const handleSetCoverPhoto = async (imageId) => {
@@ -449,31 +485,60 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
     setShowItemModal(true);
   };
 
-  const handleUploadItemPhoto = async (e) => {
+  const handleSelectItemPhoto = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
       alert('Please select an image file (PNG, JPG, WebP).');
+      if (itemPhotoInputRef.current) itemPhotoInputRef.current.value = '';
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
       alert('Item photo must be under 5MB.');
+      if (itemPhotoInputRef.current) itemPhotoInputRef.current.value = '';
       return;
+    }
+
+    if (itemRawSrc) {
+      URL.revokeObjectURL(itemRawSrc);
+    }
+    const tempUrl = URL.createObjectURL(file);
+    setItemRawFile(file);
+    setItemRawSrc(tempUrl);
+    setItemCropModalOpen(true);
+    if (itemPhotoInputRef.current) itemPhotoInputRef.current.value = '';
+  };
+
+  const handleItemCropConfirm = async (croppedFile, previewUrl) => {
+    setItemCropModalOpen(false);
+    if (itemRawSrc) {
+      URL.revokeObjectURL(itemRawSrc);
+      setItemRawSrc(null);
     }
 
     setIsUploadingItemPhoto(true);
     try {
-      const url = await placesApi.uploadMedia(file);
+      const url = await placesApi.uploadMedia(croppedFile);
       setItemFormData((prev) => ({ ...prev, image_url: url }));
-      showNotification('Dish photo uploaded to Cloudinary!');
+      showNotification('Dish photo cropped and uploaded to Cloudinary!');
     } catch (err) {
       console.error('Dish photo upload error', err);
       alert('Could not upload item photo.');
     } finally {
       setIsUploadingItemPhoto(false);
-      if (itemPhotoInputRef.current) itemPhotoInputRef.current.value = '';
+      URL.revokeObjectURL(previewUrl);
+      setItemRawFile(null);
     }
+  };
+
+  const handleItemCropCancel = () => {
+    setItemCropModalOpen(false);
+    if (itemRawSrc) {
+      URL.revokeObjectURL(itemRawSrc);
+      setItemRawSrc(null);
+    }
+    setItemRawFile(null);
   };
 
   const handleSaveItem = async (e) => {
@@ -1209,7 +1274,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                       ref={photoInputRef}
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
-                      onChange={handleUploadPhoto}
+                      onChange={handleSelectGalleryPhoto}
                       className="hidden"
                     />
                     <button
@@ -1604,7 +1669,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                             ref={itemPhotoInputRef}
                             type="file"
                             accept="image/png,image/jpeg,image/webp"
-                            onChange={handleUploadItemPhoto}
+                            onChange={handleSelectItemPhoto}
                             className="hidden"
                           />
 
@@ -1938,6 +2003,39 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
           </div>
         </div>
       </div>
+      {/* Gallery Image Crop Modal */}
+      <ImageCropModal
+        isOpen={galleryCropModalOpen}
+        imageSrc={galleryRawSrc}
+        originalFile={galleryRawFile}
+        title="Crop Gallery Photograph"
+        defaultAspect={4 / 3}
+        aspectPresets={[
+          { label: '4:3 (Gallery)', value: 4 / 3 },
+          { label: '16:9 (Cover)', value: 16 / 9 },
+          { label: '1:1 (Square)', value: 1 / 1 },
+          { label: 'Free', value: undefined },
+        ]}
+        onClose={handleGalleryCropCancel}
+        onConfirm={handleGalleryCropConfirm}
+      />
+
+      {/* Menu Item Dish Crop Modal */}
+      <ImageCropModal
+        isOpen={itemCropModalOpen}
+        imageSrc={itemRawSrc}
+        originalFile={itemRawFile}
+        title="Crop Dish Photograph"
+        defaultAspect={16 / 10}
+        aspectPresets={[
+          { label: '16:10 (Dish)', value: 16 / 10 },
+          { label: '4:3', value: 4 / 3 },
+          { label: '1:1 (Square)', value: 1 / 1 },
+          { label: 'Free', value: undefined },
+        ]}
+        onClose={handleItemCropCancel}
+        onConfirm={handleItemCropConfirm}
+      />
     </div>
   );
 }
