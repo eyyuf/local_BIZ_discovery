@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import identityApi from '../api/identityApi';
+import { useBookmarks } from '@/modules/bookmarks';
 import { Bookmark, MapPin, Trash2, Store, Star } from 'lucide-react';
+import { getPlacePrimaryPhoto, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 
 export function SavedBookmarksList() {
+  const { toggleBookmark } = useBookmarks();
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState(null);
@@ -28,7 +31,7 @@ export function SavedBookmarksList() {
   const handleRemove = async (placeId) => {
     setRemovingId(placeId);
     try {
-      await identityApi.toggleBookmark(placeId);
+      await toggleBookmark(placeId);
       setBookmarks((prev) => prev.filter((b) => (b.place_id || b.place?.id) !== placeId));
     } catch (err) {
       console.error('Failed to remove bookmark', err);
@@ -72,18 +75,23 @@ export function SavedBookmarksList() {
         const place = b.place || b;
         const placeId = place.id || b.place_id;
         const isRemoving = removingId === placeId;
+        const photo = getPlacePrimaryPhoto(place);
 
         return (
           <div
-            key={placeId}
+            key={b.id || placeId}
             className="bg-[#151518] border border-white/[0.08] hover:border-white/20 rounded-2xl p-4 flex items-start gap-3.5 group relative transition shadow-md"
           >
             <div className="w-16 h-16 rounded-xl bg-[#1D1C19] border border-white/10 shrink-0 overflow-hidden flex items-center justify-center text-[#AAA69C]">
-              {place.thumbnail_url || place.image_url ? (
+              {photo && photo !== PLACE_PLACEHOLDER ? (
                 <img
-                  src={place.thumbnail_url || place.image_url}
+                  src={photo}
                   alt={place.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = PLACE_PLACEHOLDER;
+                  }}
                 />
               ) : (
                 <Store className="w-7 h-7 text-[#AAA69C]/60" />

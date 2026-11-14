@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import SavedBookmarksList from '../components/SavedBookmarksList';
 import reviewApi from '@/modules/reviews/api/reviewApi';
+import placesApi from '@/modules/places/api/placesApi';
 import {
   User,
   Mail,
@@ -21,13 +22,36 @@ import {
   Loader2,
   X,
   Upload,
+  Building2,
+  Plus,
+  Phone,
+  MapPin,
+  Globe,
+  Navigation,
+  Image as ImageIcon,
+  Settings,
+  Edit,
 } from 'lucide-react';
 import gsap from 'gsap';
+import { getPlacePrimaryPhoto, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 
 export function ProfilePage() {
   const { user, logout, updateProfile } = useAuth();
+  const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState('bookmarks'); // 'bookmarks' | 'reviews' | 'details' | 'security'
+  const queryTab = new URLSearchParams(location.search).get('tab');
+  const [activeTab, setActiveTab] = useState(
+    queryTab && ['bookmarks', 'reviews', 'businesses', 'details', 'security'].includes(queryTab)
+      ? queryTab
+      : 'bookmarks'
+  ); // 'bookmarks' | 'reviews' | 'businesses' | 'details' | 'security'
+
+  useEffect(() => {
+    if (queryTab && ['bookmarks', 'reviews', 'businesses', 'details', 'security'].includes(queryTab)) {
+      setActiveTab(queryTab);
+    }
+  }, [queryTab]);
+
   const [name, setName] = useState(user?.name || '');
   const [isUpdating, setIsUpdating] = useState(false);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -46,6 +70,12 @@ export function ProfilePage() {
   const [reviewsPage, setReviewsPage] = useState(1);
   const [hasMoreReviews, setHasMoreReviews] = useState(false);
   const [reviewActionMsg, setReviewActionMsg] = useState(null);
+
+  // Business listings state
+  const [ownerPlaces, setOwnerPlaces] = useState([]);
+  const [isLoadingOwnerPlaces, setIsLoadingOwnerPlaces] = useState(false);
+  const [ownerPlacesError, setOwnerPlacesError] = useState(null);
+  const [businessActionMsg, setBusinessActionMsg] = useState(null);
 
   const containerRef = useRef(null);
 
@@ -90,6 +120,43 @@ export function ProfilePage() {
       fetchUserReviews(1);
     }
   }, [activeTab, fetchUserReviews]);
+
+  // Fetch businesses registered by user
+  const fetchOwnerPlaces = useCallback(async () => {
+    setIsLoadingOwnerPlaces(true);
+    setOwnerPlacesError(null);
+    try {
+      const res = await placesApi.getOwnerPlaces();
+      const rawData = res.data?.data || res.data || [];
+      setOwnerPlaces(Array.isArray(rawData) ? rawData : []);
+    } catch (err) {
+      console.error('Failed to load owner places', err);
+      setOwnerPlacesError('Could not load your registered business spots. Please try again.');
+      setOwnerPlaces([]);
+    } finally {
+      setIsLoadingOwnerPlaces(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'businesses') {
+      fetchOwnerPlaces();
+    }
+  }, [activeTab, fetchOwnerPlaces]);
+
+  // Delete business spot
+  const handleDeleteBusiness = async (placeId) => {
+    if (!window.confirm('Are you sure you want to delete this business listing?')) return;
+    try {
+      await placesApi.deleteOwnerPlace(placeId);
+      setOwnerPlaces((prev) => prev.filter((p) => p.id !== placeId));
+      setBusinessActionMsg('Business listing deleted successfully.');
+      setTimeout(() => setBusinessActionMsg(null), 4000);
+    } catch (err) {
+      console.error('Failed to delete place', err);
+      alert('Could not delete business. Please try again.');
+    }
+  };
 
   // Handle avatar file selection
   const handleFileChange = (e) => {
@@ -445,6 +512,24 @@ export function ProfilePage() {
 
           <button
             type="button"
+            onClick={() => setActiveTab('businesses')}
+            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${
+              activeTab === 'businesses'
+                ? 'border border-white bg-white/15 text-white shadow-sm'
+                : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
+            }`}
+          >
+            <Building2 className="w-4 h-4 text-white" />
+            <span>Businesses</span>
+            {ownerPlaces.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-white/20 text-[10px] font-mono">
+                {ownerPlaces.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('details')}
             className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${
               activeTab === 'details'
@@ -608,6 +693,213 @@ export function ProfilePage() {
                     </button>
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab: Business Listings */}
+        {activeTab === 'businesses' && (
+          <div className="profile-enter space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-black text-white font-display">Your Business Listings</h2>
+                <p className="text-xs text-[#AAA69C] mt-0.5">
+                  Manage your verified venues, update contact details, or register a new Ethiopian spot.
+                </p>
+              </div>
+
+              <Link
+                to="/profile/businesses/create"
+                className="px-4 py-2 rounded-full bg-white text-black text-xs font-bold hover:bg-[#F5F2EA] transition active:scale-95 flex items-center gap-2 self-start sm:self-auto cursor-pointer shadow-md"
+              >
+                <Plus className="w-3.5 h-3.5 text-black" />
+                <span>Register Business</span>
+              </Link>
+            </div>
+
+            {businessActionMsg && (
+              <div className="p-3.5 rounded-2xl bg-[#162B1E] border border-[#22C55E]/40 text-white text-xs flex items-center gap-2">
+                <Check className="w-4 h-4 text-[#22C55E] shrink-0" />
+                <span className="font-semibold">{businessActionMsg}</span>
+              </div>
+            )}
+
+            {isLoadingOwnerPlaces ? (
+              <div className="bg-[#151518] border border-white/[0.08] rounded-3xl p-10 text-center space-y-3">
+                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto" />
+                <p className="text-xs font-mono text-[#AAA69C]">Loading your listings...</p>
+              </div>
+            ) : ownerPlacesError ? (
+              <div className="p-8 text-center rounded-3xl border border-red-500/20 bg-red-950/20 space-y-3">
+                <p className="text-xs text-red-300">{ownerPlacesError}</p>
+                <button
+                  type="button"
+                  onClick={fetchOwnerPlaces}
+                  className="px-4 py-1.5 rounded-full border border-white/20 bg-white/10 text-xs font-semibold text-white hover:bg-white/20 transition cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : ownerPlaces.length === 0 ? (
+              <div className="bg-[#151518] border border-white/[0.08] rounded-3xl p-10 sm:p-12 text-center space-y-4 shadow-xl">
+                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-white">
+                  <Building2 className="w-7 h-7 text-white/80" />
+                </div>
+                <div className="space-y-1 max-w-md mx-auto">
+                  <h3 className="text-base font-bold text-white font-display">No Businesses Registered Yet</h3>
+                  <p className="text-xs text-[#AAA69C] leading-relaxed">
+                    Own or manage a local cafe, cultural restaurant, bakery, or boutique stay in Ethiopia? Register your spot to reach thousands of neighborhood explorers.
+                  </p>
+                </div>
+                <Link
+                  to="/profile/businesses/create"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-black font-extrabold text-xs hover:bg-[#F5F2EA] transition active:scale-95 cursor-pointer shadow-lg"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Register Your First Business</span>
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {ownerPlaces.map((place) => {
+                  const photosCount = (place.images && place.images.length) || (place.primary_photo_url ? 1 : 0);
+                  const dishesCount = place.menu_sections
+                    ? place.menu_sections.reduce((acc, s) => acc + (s.items?.length || 0), 0)
+                    : 0;
+
+                  return (
+                    <div
+                      key={place.id}
+                      className="p-5 sm:p-6 rounded-2xl bg-[#151518] border border-white/[0.08] hover:border-white/20 transition shadow-xl flex flex-col justify-between space-y-4"
+                    >
+                      <div>
+                        {/* Place Photo Header */}
+                        <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-[#18181B] mb-3 border border-white/[0.06]">
+                          <img
+                            src={getPlacePrimaryPhoto(place)}
+                            alt={place.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = PLACE_PLACEHOLDER;
+                            }}
+                          />
+                          <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono border border-white/10 bg-black/75 backdrop-blur-md text-[#AAA69C]">
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                place.is_active ? 'bg-emerald-400' : 'bg-zinc-500'
+                              }`}
+                            />
+                            <span>{place.is_active ? 'Live' : 'Draft'}</span>
+                          </span>
+                        </div>
+
+                        <div className="flex items-start justify-between gap-3">
+                          <Link
+                            to={`/places/${place.slug}`}
+                            className="text-base font-bold text-white hover:text-white/80 transition truncate leading-snug font-display"
+                          >
+                            {place.name}
+                          </Link>
+                        </div>
+
+                        {place.description && (
+                          <p className="text-xs text-[#AAA69C] mt-2 line-clamp-2 leading-relaxed">
+                            {place.description}
+                          </p>
+                        )}
+
+                        <div className="space-y-1.5 mt-3 pt-3 border-t border-white/[0.06] text-xs text-[#AAA69C]">
+                          {place.address && (
+                            <div className="flex items-center gap-2 truncate">
+                              <MapPin className="w-3.5 h-3.5 text-[#AAA69C]/80 shrink-0" />
+                              <span className="truncate">{place.address}</span>
+                            </div>
+                          )}
+                          {place.phone && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-3.5 h-3.5 text-[#AAA69C]/80 shrink-0" />
+                              <span>{place.phone}</span>
+                            </div>
+                          )}
+                          {place.website && (
+                            <div className="flex items-center gap-2 truncate">
+                              <Globe className="w-3.5 h-3.5 text-[#AAA69C]/80 shrink-0" />
+                              <a
+                                href={place.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#AAA69C] hover:text-white transition underline underline-offset-2 truncate"
+                              >
+                                {place.website}
+                              </a>
+                            </div>
+                          )}
+                          {place.latitude !== null && place.longitude !== null && (
+                            <div className="flex items-center gap-2 text-[11px] font-mono text-[#AAA69C]/80">
+                              <Navigation className="w-3 h-3 text-[#AAA69C]/60 shrink-0" />
+                              <span>
+                                GPS: {Number(place.latitude).toFixed(4)}, {Number(place.longitude).toFixed(4)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Quick Stats */}
+                        <div className="flex items-center gap-2 pt-3 mt-3 border-t border-white/[0.06]">
+                          <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[#AAA69C]">
+                            {photosCount} {photosCount === 1 ? 'Photo' : 'Photos'}
+                          </span>
+                          <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[#AAA69C]">
+                            {dishesCount} {dishesCount === 1 ? 'Dish' : 'Dishes'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Direct Card Actions */}
+                      <div className="pt-3 border-t border-white/[0.06] space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2">
+                          <Link
+                            to={`/profile/businesses/${place.id}`}
+                            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-[#F5F2EA] transition active:scale-95 shadow-md"
+                          >
+                            <Settings className="w-3.5 h-3.5" />
+                            <span>Manage</span>
+                          </Link>
+                          <Link
+                            to={`/profile/businesses/${place.id}/edit`}
+                            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 text-white text-xs font-semibold hover:bg-white/20 transition active:scale-95"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                            <span>Edit Info</span>
+                          </Link>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs pt-0.5">
+                          <Link
+                            to={`/places/${place.slug}`}
+                            className="inline-flex items-center gap-1 text-[#AAA69C] hover:text-white transition font-medium text-[11px]"
+                          >
+                            <span>View Public Listing</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBusiness(place.id)}
+                            className="inline-flex items-center gap-1 text-[#AAA69C] hover:text-red-400 transition cursor-pointer text-[11px]"
+                            title="Delete business"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

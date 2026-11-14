@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Compass, Sparkles } from 'lucide-react';
 import { useAuth } from '@/modules/identity';
 
 export function PersonalizedRadar() {
@@ -41,15 +42,14 @@ export function PersonalizedRadar() {
 
           {/* Right action & preview */}
           <div className="lg:col-span-4 flex flex-col items-center lg:items-end justify-center space-y-4">
-            <div className="relative w-48 h-28 rounded-2xl overflow-hidden border border-white/20 shadow-xl">
-              <img
-                src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600&auto=format&fit=crop"
-                alt="Curated Radar preview"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-              <div className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-black/60 border border-white/20 text-[10px] font-mono text-white backdrop-blur-md">
-                Curated Radar
+            <div className="relative w-48 h-28 rounded-2xl overflow-hidden border border-white/15 bg-gradient-to-br from-[#1C1C1F] to-[#121214] shadow-xl flex flex-col items-center justify-center p-4">
+              <div className="relative flex items-center justify-center w-12 h-12 rounded-full bg-white/[0.05] border border-white/10 mb-1">
+                <div className="absolute inset-0 rounded-full border border-amber-400/20 animate-ping opacity-75" />
+                <Compass className="w-6 h-6 text-amber-400" />
+              </div>
+              <div className="flex items-center gap-1 text-[11px] font-mono text-white/80 font-bold">
+                <Sparkles className="w-3 h-3 text-[#F5B301]" />
+                <span>Taste Radar</span>
               </div>
             </div>
 

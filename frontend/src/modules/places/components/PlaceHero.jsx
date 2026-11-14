@@ -13,6 +13,7 @@ import {
   Check,
 } from 'lucide-react';
 import { BookmarkButton } from '@/modules/bookmarks/components/BookmarkButton';
+import { PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 
 export function PlaceHero({
   place,
@@ -91,6 +92,11 @@ export function PlaceHero({
         src={currentPhoto}
         alt={place?.name || 'Place atmosphere'}
         className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-700 ease-out"
+        loading="eager"
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = PLACE_PLACEHOLDER;
+        }}
       />
 
       {/* Multi-tier gradient overlay for readability */}

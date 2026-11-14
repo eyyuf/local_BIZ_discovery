@@ -6,9 +6,18 @@ import { PlaceAtmosphereGallery } from '../components/PlaceAtmosphereGallery';
 import { WeeklySchedule } from '../components/WeeklySchedule';
 import { PlaceLocation } from '../components/PlaceLocation';
 import { PlaceDirectContact } from '../components/PlaceDirectContact';
+import { PlaceMenuCarousel } from '../components/PlaceMenuCarousel';
 import { PlaceReviewsSection } from '@/modules/reviews/components/PlaceReviewsSection';
 import { getPlacePhotos } from '@/shared/utils/placeImages';
-import { AlertCircle, ArrowLeft, Image as ImageIcon, Clock, MapPin, MessageSquare } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Image as ImageIcon,
+  Clock,
+  MapPin,
+  MessageSquare,
+  UtensilsCrossed,
+} from 'lucide-react';
 
 export function PlaceDetailPage() {
   const { slug } = useParams();
@@ -30,6 +39,18 @@ export function PlaceDetailPage() {
       try {
         const data = await placesApi.getPlace(slug);
         if (!isMounted) return;
+
+        // If menu_sections are not populated or empty, fallback to getPlaceMenu
+        if (!data.menu_sections || data.menu_sections.length === 0) {
+          try {
+            const menuData = await placesApi.getPlaceMenu(data.id || slug);
+            if (menuData && Array.isArray(menuData) && menuData.length > 0) {
+              data.menu_sections = menuData;
+            }
+          } catch {
+            // graceful fallback
+          }
+        }
 
         setPlace(data);
         const venuePhotos = getPlacePhotos(data);
@@ -81,6 +102,13 @@ export function PlaceDetailPage() {
     );
   }
 
+  const menuSections = place?.menu_sections || place?.menuSections || [];
+  const totalMenuItems = menuSections.reduce(
+    (acc, sec) => acc + (sec.items?.length || 0),
+    0
+  );
+  const hasMenuItems = totalMenuItems > 0;
+
   return (
     <div className="min-h-screen bg-[#0D0D0C] text-[#F5F2EA] pb-24 overflow-x-hidden">
       {/* 1. Immersive Hero Movement */}
@@ -94,6 +122,15 @@ export function PlaceDetailPage() {
       {/* Anchor Navigation Bar */}
       <div className="sticky top-16 z-30 bg-[#0D0D0C]/90 backdrop-blur-md border-b border-white/[0.08] py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {hasMenuItems && (
+            <a
+              href="#menu-section"
+              className="px-4 py-1.5 rounded-full text-xs font-semibold border border-white/20 bg-white/10 text-white hover:border-white transition whitespace-nowrap flex items-center gap-1.5 shadow-sm"
+            >
+              <UtensilsCrossed className="w-3.5 h-3.5 text-white/80" />
+              <span>Menu ({totalMenuItems})</span>
+            </a>
+          )}
           <a
             href="#overview-section"
             className="px-4 py-1.5 rounded-full text-xs font-semibold border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30 transition whitespace-nowrap flex items-center gap-1.5"
@@ -124,6 +161,13 @@ export function PlaceDetailPage() {
           </a>
         </div>
       </div>
+
+      {/* 2. Menu Section with Horizontal Sliding (Under Top Hero Image) */}
+      {hasMenuItems && (
+        <div id="menu-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 scroll-mt-28">
+          <PlaceMenuCarousel menuSections={menuSections} />
+        </div>
+      )}
 
       {/* Main Container for Details: Balanced 2-Column Desktop Editorial Grid */}
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-8 sm:mt-12">

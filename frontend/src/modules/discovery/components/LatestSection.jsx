@@ -37,9 +37,7 @@ export function LatestSection({ places = [] }) {
     return true;
   });
 
-  const displayPlaces = filteredPlaces.length > 0 ? filteredPlaces : places;
-
-  if (displayPlaces.length === 0) {
+  if (places.length === 0) {
     return null;
   }
 
@@ -97,16 +95,22 @@ export function LatestSection({ places = [] }) {
       </div>
 
       {/* Place Cards Horizontal Carousel */}
-      <div
-        ref={scrollContainerRef}
-        className="flex items-stretch gap-5 overflow-x-auto no-scrollbar scroll-smooth pb-4 pt-1"
-      >
-        {displayPlaces.map((place) => (
-          <div key={place.id || place.slug} className="w-[280px] sm:w-[310px] shrink-0">
-            <PlaceCard place={place} />
-          </div>
-        ))}
-      </div>
+      {filteredPlaces.length === 0 ? (
+        <div className="py-8 px-4 rounded-2xl border border-white/[0.06] bg-[#151518]/50 text-center text-xs text-[#AAA69C]">
+          No spots found in this category yet.
+        </div>
+      ) : (
+        <div
+          ref={scrollContainerRef}
+          className="flex items-stretch gap-5 overflow-x-auto no-scrollbar scroll-smooth pb-4 pt-1"
+        >
+          {filteredPlaces.map((place) => (
+            <div key={place.id || place.slug} className="w-[280px] sm:w-[310px] shrink-0">
+              <PlaceCard place={place} />
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

@@ -22,6 +22,7 @@ class GetCategoryPlacesAction
         return Place::query()
             ->where('is_active', true)
             ->whereHas('categories', fn ($query) => $query->whereIn('categories.id', $categoryIds))
+            ->with('images')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate($perPage);

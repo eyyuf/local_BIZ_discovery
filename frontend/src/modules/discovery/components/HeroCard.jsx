@@ -1,29 +1,44 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, ChevronRight } from 'lucide-react';
+import { MapPin, ChevronRight, Compass } from 'lucide-react';
+import { getPlacePrimaryPhoto, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 
 export function HeroCard({ place }) {
-  const heroSlug = place?.slug || 'crater-lake-traditional-kitchen';
-  const heroName = place?.name || 'Crater Lake Traditional Habesha Kitchen';
-  const heroLocation =
-    place?.address?.split(',')?.slice(-2)?.join(',')?.trim() || 'Bishoftu';
-  const bgImage = '/assets/bozena-shiro.jpg';
+  const hasPlace = Boolean(place && place.slug && place.name);
+
+  const heroSlug = hasPlace ? place.slug : null;
+  const heroName = hasPlace ? place.name : 'Discover Authentic Spots Across Ethiopia';
+  const heroLocation = hasPlace
+    ? (place.address?.split(',')?.slice(-2)?.join(',')?.trim() || place.address || 'Ethiopia')
+    : 'Local culinary, cafe & cultural spots';
+  const bgImage = hasPlace ? getPlacePrimaryPhoto(place) : '/assets/place-placeholder.svg';
 
   return (
-    <div className="relative w-full min-h-[580px] sm:min-h-[640px] lg:min-h-[700px] flex flex-col justify-end overflow-hidden bg-[#0D0D0C] select-none border-none">
-      {/* Edge-to-edge Full-Bleed Bozena Shiro in Black Clay Pot Photography */}
+    <div className="relative w-full min-h-[520px] sm:min-h-[580px] lg:min-h-[640px] flex flex-col justify-end overflow-hidden bg-[#0D0D0C] select-none border-none">
+      {/* Background Photography or Obsidian Atmosphere */}
       <img
         src={bgImage}
         alt={heroName}
-        className="absolute inset-0 w-full h-full object-cover object-[center_35%] pointer-events-none transform scale-100 hover:scale-105 transition-transform duration-1000 ease-out"
+        className="absolute inset-0 w-full h-full object-cover object-[center_35%] pointer-events-none transform scale-100 hover:scale-105 transition-transform duration-1000 ease-out opacity-90"
+        loading="eager"
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = PLACE_PLACEHOLDER;
+        }}
       />
 
-      {/* Clean subtle bottom gradient for text contrast - no top black borders */}
-      <div className="absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-[#0D0D0C] via-[#0D0D0C]/60 to-transparent pointer-events-none" />
-      <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-black/50 to-transparent pointer-events-none" />
+      {/* Clean subtle bottom gradient for text contrast */}
+      <div className="absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-[#0D0D0C] via-[#0D0D0C]/70 to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 left-0 w-full sm:w-2/3 bg-gradient-to-r from-black/70 via-black/30 to-transparent pointer-events-none" />
 
       {/* Hero Headline, Location, and Action at the bottom */}
       <div className="pb-12 sm:pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-20 space-y-4">
+        {hasPlace && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-white/20 text-[11px] font-mono uppercase tracking-wider text-[#F5B301] backdrop-blur-md">
+            <span>Featured Spotlight</span>
+          </div>
+        )}
+
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight text-border-letters font-display max-w-3xl">
           {heroName}
         </h1>
@@ -35,11 +50,20 @@ export function HeroCard({ place }) {
 
         <div className="pt-2 sm:pt-3">
           <Link
-            to={`/places/${heroSlug}`}
+            to={hasPlace ? `/places/${heroSlug}` : '/search'}
             className="inline-flex items-center gap-2 px-6 sm:px-7 py-3 rounded-full bg-white text-black font-extrabold text-xs sm:text-sm tracking-wide shadow-2xl hover:bg-[#F5F2EA] active:scale-95 transition-all cursor-pointer"
           >
-            <span>Explore Place</span>
-            <ChevronRight className="w-4 h-4 text-black" />
+            {hasPlace ? (
+              <>
+                <span>Explore Place</span>
+                <ChevronRight className="w-4 h-4 text-black" />
+              </>
+            ) : (
+              <>
+                <Compass className="w-4 h-4 text-black" />
+                <span>Explore All Spots</span>
+              </>
+            )}
           </Link>
         </div>
       </div>

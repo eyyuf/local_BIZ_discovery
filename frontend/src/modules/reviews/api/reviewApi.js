@@ -74,9 +74,26 @@ export const reviewApi = {
 
   /**
    * Update an existing review by its ID
+   * Accepts either:
+   *   updateReview(reviewId, { rating, comment })
+   * or
+   *   updateReview(reviewId, comment, rating)
    */
-  updateReview: async (reviewId, comment) => {
-    const response = await apiClient.put(`/reviews/${reviewId}`, { comment });
+  updateReview: async (reviewId, payloadOrComment, maybeRating) => {
+    let payload;
+    if (typeof payloadOrComment === 'object' && payloadOrComment !== null) {
+      payload = { ...payloadOrComment };
+      if (payload.rating !== undefined) {
+        payload.rating = Number(payload.rating);
+      }
+    } else {
+      payload = { comment: payloadOrComment };
+      if (maybeRating !== undefined) {
+        payload.rating = Number(maybeRating);
+      }
+    }
+
+    const response = await apiClient.put(`/reviews/${reviewId}`, payload);
     return response.data?.data || response.data;
   },
 };

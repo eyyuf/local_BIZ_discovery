@@ -6,4 +6,7 @@ export { default as ForgotPasswordPage } from './pages/ForgotPasswordPage';
 export { default as ResetPasswordPage } from './pages/ResetPasswordPage';
 export { default as ProfilePage } from './pages/ProfilePage';
 export { default as OAuthCallbackPage } from './pages/OAuthCallbackPage';
+export { BusinessCreatePage } from './pages/BusinessCreatePage';
+export { BusinessDashboardPage } from './pages/BusinessDashboardPage';
 export { default as SavedBookmarksList } from './components/SavedBookmarksList';
+

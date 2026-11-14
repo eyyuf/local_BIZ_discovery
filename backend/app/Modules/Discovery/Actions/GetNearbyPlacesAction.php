@@ -15,7 +15,7 @@ class GetNearbyPlacesAction
             ->withDistanceTo($lat, $lng)
             ->orderBy('distance_km', 'asc')
             ->limit($limit)
-            ->with(['categories', 'amenities'])
+            ->with(['categories', 'amenities', 'images'])
             ->get();
     }
 }

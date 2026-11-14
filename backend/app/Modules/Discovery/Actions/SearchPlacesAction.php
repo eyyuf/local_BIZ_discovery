@@ -18,7 +18,7 @@ class SearchPlacesAction
     {
         $filters = $filters instanceof SearchFilterDTO ? $filters->toArray() : $filters;
 
-        $query = Place::query()->where('is_active', true);
+        $query = Place::query()->where('is_active', true)->with('images');
 
         if (!empty($filters['q'])) {
             $searchTerm = $filters['q'];

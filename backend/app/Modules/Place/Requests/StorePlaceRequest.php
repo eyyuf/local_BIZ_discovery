@@ -22,7 +22,8 @@ class StorePlaceRequest extends FormRequest
             'latitude'=> ['nullable', 'numeric', 'between:-90,90'],
             'longitude'=> ['nullable', 'numeric', 'between:-180,180'],        
             'is_active'   => ['sometimes', 'boolean'],
-
+            'category_ids' => ['nullable', 'array'],
+            'category_ids.*' => ['integer', 'exists:categories,id'],
         ];
     }
     

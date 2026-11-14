@@ -19,6 +19,7 @@ Route::prefix('api/v1/places')->middleware('api')->group(function () {
 Route::prefix('api/v1/owner/places')->middleware(['api', 'auth:sanctum'])->group(function () {
     Route::get('/', [OwnerPlaceController::class, 'index']);
     Route::post('/', [OwnerPlaceController::class, 'store']);
+    Route::get('{place}', [OwnerPlaceController::class, 'show']);
     Route::put('{place}', [OwnerPlaceController::class, 'update']);
     Route::delete('{place}', [OwnerPlaceController::class, 'destroy']);
 
@@ -32,7 +33,10 @@ Route::prefix('api/v1/owner/places')->middleware(['api', 'auth:sanctum'])->group
     Route::put('{place}/operating-hours', [OperatingHourController::class, 'update']);
 
     // Menu Management
+    Route::get('{place}/menu', [MenuController::class, 'index']);
     Route::post('{place}/menu/sections', [MenuController::class, 'storeSection']);
+    Route::put('{place}/menu/sections/{menuSection}', [MenuController::class, 'updateSection']);
+    Route::delete('{place}/menu/sections/{menuSection}', [MenuController::class, 'destroySection']);
     Route::post('{place}/menu/items', [MenuController::class, 'storeItem']);
     Route::put('menu/items/{menuItem}', [MenuController::class, 'updateItem']);
     Route::delete('menu/items/{menuItem}', [MenuController::class, 'destroyItem']);

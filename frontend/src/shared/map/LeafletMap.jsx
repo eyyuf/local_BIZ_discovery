@@ -10,11 +10,14 @@ export function LeafletMap({
   lat = 9.0225,
   lng = 38.831,
   zoom = 14,
+  radius = null,
   name = '',
   address = '',
   markers = [],
   showCenterPin = true,
   onSelectMarker = null,
+  draggableMarker = false,
+  onLocationSelect = null,
   className = '',
 }) {
   const mapContainerRef = useRef(null);
@@ -123,55 +126,75 @@ export function LeafletMap({
           popupAnchor: [0, -12],
         });
 
-      const boundsPoints = [];
+      const isProximityMode = validMarkers.length > 0 || radius !== null;
 
-      // Case A: Render multiple place markers if provided
-      if (validMarkers.length > 0) {
-        validMarkers.forEach((place) => {
-          const pLat = parseFloat(place.latitude);
-          const pLng = parseFloat(place.longitude);
-          boundsPoints.push([pLat, pLng]);
+      if (isProximityMode) {
+        const bounds = L.latLngBounds([]);
 
-          const marker = L.marker([pLat, pLng], {
-            icon: createPlaceIcon(),
-            title: place.name,
+        // 1. Draw radius circle around center location if radius is provided
+        if (radius && !isNaN(parseFloat(radius)) && parseFloat(radius) > 0 && lat && lng) {
+          const radiusMeters = parseFloat(radius) * 1000;
+          const radiusCircle = L.circle([validCenterLat, validCenterLng], {
+            radius: radiusMeters,
+            color: '#22C55E',
+            fillColor: '#22C55E',
+            fillOpacity: 0.08,
+            weight: 1.5,
+            dashArray: '6, 8',
+            interactive: false,
           });
+          markersLayer.addLayer(radiusCircle);
+          bounds.extend(radiusCircle.getBounds());
+        }
 
-          const popupContent = `
-            <div style="font-family: Inter, sans-serif; min-width: 170px;">
-              <div style="font-size: 13px; font-weight: 700; color: #FFFFFF; margin-bottom: 2px;">
-                ${place.name}
+        // 2. Render place markers if provided
+        if (validMarkers.length > 0) {
+          validMarkers.forEach((place) => {
+            const pLat = parseFloat(place.latitude);
+            const pLng = parseFloat(place.longitude);
+            bounds.extend([pLat, pLng]);
+
+            const marker = L.marker([pLat, pLng], {
+              icon: createPlaceIcon(),
+              title: place.name,
+            });
+
+            const popupContent = `
+              <div style="font-family: Inter, sans-serif; min-width: 170px;">
+                <div style="font-size: 13px; font-weight: 700; color: #FFFFFF; margin-bottom: 2px;">
+                  ${place.name}
+                </div>
+                ${
+                  place.address
+                    ? `<div style="font-size: 11px; color: #AAA69C; margin-bottom: 4px;">${place.address}</div>`
+                    : ''
+                }
+                ${
+                  place.distance_km
+                    ? `<div style="font-size: 10px; font-family: monospace; color: #22C55E; margin-bottom: 6px;">${Number(place.distance_km).toFixed(1)} km away</div>`
+                    : ''
+                }
+                ${
+                  place.slug
+                    ? `<a href="/places/${place.slug}" class="carto-popup-btn">View Spot &rarr;</a>`
+                    : ''
+                }
               </div>
-              ${
-                place.address
-                  ? `<div style="font-size: 11px; color: #AAA69C; margin-bottom: 4px;">${place.address}</div>`
-                  : ''
-              }
-              ${
-                place.distance_km
-                  ? `<div style="font-size: 10px; font-family: monospace; color: #22C55E; margin-bottom: 6px;">${Number(place.distance_km).toFixed(1)} km away</div>`
-                  : ''
-              }
-              ${
-                place.slug
-                  ? `<a href="/places/${place.slug}" class="carto-popup-btn">View Spot &rarr;</a>`
-                  : ''
-              }
-            </div>
-          `;
+            `;
 
-          marker.bindPopup(popupContent);
+            marker.bindPopup(popupContent);
 
-          if (onSelectMarker) {
-            marker.on('click', () => onSelectMarker(place));
-          }
+            if (onSelectMarker) {
+              marker.on('click', () => onSelectMarker(place));
+            }
 
-          markersLayer.addLayer(marker);
-        });
+            markersLayer.addLayer(marker);
+          });
+        }
 
-        // Add search center pin if requested
+        // 3. Add search center pin if requested
         if (showCenterPin && lat && lng) {
-          boundsPoints.push([validCenterLat, validCenterLng]);
+          bounds.extend([validCenterLat, validCenterLng]);
           const centerMarker = L.marker([validCenterLat, validCenterLng], {
             icon: createCenterIcon(),
             title: name || 'Search Center',
@@ -180,35 +203,60 @@ export function LeafletMap({
             <div style="font-family: Inter, sans-serif; font-size: 12px; color: #F5F2EA;">
               <strong>${name || 'Search Center'}</strong>
               ${address ? `<br/><span style="color: #AAA69C;">${address}</span>` : ''}
+              ${radius ? `<br/><span style="color: #22C55E; font-family: monospace; font-size: 11px;">Search Radius: ${radius} km</span>` : ''}
             </div>
           `);
           markersLayer.addLayer(centerMarker);
         }
 
-        // Fit map bounds to encompass all valid markers
-        if (boundsPoints.length > 1) {
-          map.fitBounds(boundsPoints, { padding: [40, 40], maxZoom: 16 });
-        } else if (boundsPoints.length === 1) {
-          map.setView(boundsPoints[0], zoom);
+        // Fit map bounds to encompass all valid elements (circle, place markers, and center pin)
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [25, 25], maxZoom: 16 });
+        } else {
+          map.setView([validCenterLat, validCenterLng], zoom);
         }
       } else {
-        // Case B: Single place marker
+        // Case B: Single place marker (e.g. PlaceLocation details view or interactive place creation picker)
+        const isDraggable = Boolean(draggableMarker);
         const singleMarker = L.marker([validCenterLat, validCenterLng], {
           icon: createPlaceIcon(),
           title: name || 'Place Location',
+          draggable: isDraggable,
         });
 
-        if (name || address) {
+        if (isDraggable && onLocationSelect) {
+          singleMarker.on('dragend', (event) => {
+            const pos = event.target.getLatLng();
+            onLocationSelect({
+              lat: Number(pos.lat.toFixed(6)),
+              lng: Number(pos.lng.toFixed(6)),
+            });
+          });
+        }
+
+        if (name || address || isDraggable) {
           singleMarker.bindPopup(`
             <div style="font-family: Inter, sans-serif;">
-              <strong style="color: #FFFFFF; font-size: 13px;">${name}</strong>
+              <strong style="color: #FFFFFF; font-size: 13px;">${name || 'Selected Spot Location'}</strong>
               ${address ? `<br/><span style="color: #AAA69C; font-size: 11px;">${address}</span>` : ''}
+              ${isDraggable ? '<br/><span style="color: #F5B301; font-size: 10px; font-weight: bold;">Drag pin or click map to adjust</span>' : ''}
             </div>
           `);
         }
 
         markersLayer.addLayer(singleMarker);
         map.setView([validCenterLat, validCenterLng], zoom);
+
+        if (isDraggable && onLocationSelect) {
+          map.off('click');
+          map.on('click', (e) => {
+            singleMarker.setLatLng(e.latlng);
+            onLocationSelect({
+              lat: Number(e.latlng.lat.toFixed(6)),
+              lng: Number(e.latlng.lng.toFixed(6)),
+            });
+          });
+        }
       }
     } catch (err) {
       console.error('Failed to initialize CARTO Leaflet map', err);
@@ -221,7 +269,7 @@ export function LeafletMap({
         markersLayerRef.current.clearLayers();
       }
     };
-  }, [lat, lng, name, address, markers, zoom, showCenterPin, onSelectMarker, hasCoordinates]);
+  }, [lat, lng, name, address, markers, zoom, showCenterPin, onSelectMarker, draggableMarker, onLocationSelect, hasCoordinates, radius]);
 
   // Teardown map instance on component unmount
   useEffect(() => {

@@ -19,7 +19,7 @@ class OwnerPlaceController extends Controller
 {
     public function index(Request $request, ReviewQueryInterface $reviewQuery): JsonResponse
     {
-        $data = $request->user()->places()->paginate(10);
+        $data = $request->user()->places()->with('images')->paginate(10);
         $reviewQuery->attachRatingSummaries($data);
 
         return response()->json([
@@ -28,9 +28,26 @@ class OwnerPlaceController extends Controller
         ],200);
     }
 
+    public function show(Place $place): JsonResponse
+    {
+        Gate::authorize('update', $place);
+
+        $place->load(['operatingHours', 'menuSections.items', 'images', 'categories']);
+
+        return response()->json([
+            'message' => 'retrieved successfully',
+            'data'    => $place,
+        ], 200);
+    }
+
     public function store(StorePlaceRequest $request, CreatePlaceAction $action): JsonResponse
     {
         $place = $action->execute($request->user(), CreatePlaceDTO::fromRequest($request));
+        if ($request->has('category_ids') && is_array($request->input('category_ids'))) {
+            $place->categories()->sync($request->input('category_ids'));
+        }
+        $place->load(['categories', 'images']);
+
         return response()->json([
             'message'=>'stored susccusfully',
             'data'=>$place,
@@ -41,6 +58,11 @@ class OwnerPlaceController extends Controller
     {
         Gate::authorize('update',$place);
         $place=$action->execute($place, UpdatePlaceDTO::fromRequest($request));
+        if ($request->has('category_ids') && is_array($request->input('category_ids'))) {
+            $place->categories()->sync($request->input('category_ids'));
+        }
+        $place->load(['operatingHours', 'menuSections.items', 'images', 'categories']);
+
         return response()->json([
             'message'=>'updated susccusfully',
             'data'=>$place,
@@ -53,6 +75,6 @@ class OwnerPlaceController extends Controller
         $place->delete();
         return response()->json([
             'message'=>'deleted susccusfully',
-        ],204);
+        ],200);
     }
 }

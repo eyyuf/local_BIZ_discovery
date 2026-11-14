@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useRef } from 'react';
+import apiClient from '@/api/client';
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 
 /**
  * Reusable Image Upload Component with preview and Cloudinary integration.
@@ -22,6 +23,21 @@ export default function ImageUpload({
   const [preview, setPreview] = useState(value || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const objectUrlRef = useRef(null);
+
+  // Synchronize preview when external value changes
+  useEffect(() => {
+    setPreview(value || null);
+  }, [value]);
+
+  // Clean up any pending object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+    };
+  }, []);
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
@@ -40,7 +56,12 @@ export default function ImageUpload({
     }
 
     setError(null);
-    setPreview(URL.createObjectURL(file));
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+    }
+    const tempUrl = URL.createObjectURL(file);
+    objectUrlRef.current = tempUrl;
+    setPreview(tempUrl);
     setLoading(true);
 
     const formData = new FormData();
@@ -48,21 +69,27 @@ export default function ImageUpload({
     formData.append('folder', folder);
 
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
-      const response = await axios.post('/api/v1/media/upload', formData, {
+      const response = await apiClient.post('/media/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
-      const uploadedUrl = response.data.url;
+      const uploadedUrl = response.data?.url || response.data;
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
       setPreview(uploadedUrl);
       if (onChange) {
         onChange(uploadedUrl);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to upload image. Please try again.');
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
       setPreview(value || null);
     } finally {
       setLoading(false);
@@ -71,6 +98,10 @@ export default function ImageUpload({
 
   const handleRemove = (e) => {
     e.stopPropagation();
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
     setPreview(null);
     if (onChange) {
       onChange('');
@@ -85,6 +116,10 @@ export default function ImageUpload({
             src={preview}
             alt="Uploaded preview"
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = PLACE_PLACEHOLDER;
+            }}
           />
           {loading && (
             <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white">

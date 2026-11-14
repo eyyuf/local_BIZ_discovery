@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, ChevronLeft, ChevronRight, ArrowUpRight, Clock, Sparkles } from 'lucide-react';
 import { BookmarkButton } from '@/modules/bookmarks/components/BookmarkButton';
-import { getPlacePhotos } from '@/shared/utils/placeImages';
+import { getPlacePhotos, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 
 export function PlaceCard({ place, rank = null, className = '' }) {
   const photos = getPlacePhotos(place);
@@ -49,52 +49,40 @@ export function PlaceCard({ place, rank = null, className = '' }) {
     return 'Dining & Cafe';
   };
 
-  // Realistic rating score and review count
+  // Real rating score and review count only - no fabricated data
   const getRatingInfo = () => {
-    if (place?.average_rating && Number(place.average_rating) > 0) {
+    const rawRating = Number(place?.average_rating);
+    const rawCount = Number(place?.total_ratings);
+    if (!isNaN(rawRating) && rawRating > 0) {
       return {
-        rating: Number(place.average_rating).toFixed(1),
-        count: place.total_ratings || 18,
+        hasRating: true,
+        rating: rawRating.toFixed(1),
+        count: !isNaN(rawCount) && rawCount >= 0 ? rawCount : 0,
       };
     }
-    // Realistic deterministic variation to avoid generic copy-paste 4.8 (42)
-    const seed = (place?.slug || place?.name || 'spot')
-      .split('')
-      .reduce((acc, char) => acc + char.charCodeAt(0), place?.id || 1);
-    const ratingList = ['4.9', '4.8', '4.7', '4.6', '4.5', '4.8', '4.7'];
-    const countList = [185, 94, 142, 67, 88, 210, 53, 119, 76];
     return {
-      rating: ratingList[seed % ratingList.length],
-      count: countList[(seed * 5) % countList.length],
+      hasRating: false,
+      rating: null,
+      count: 0,
     };
   };
 
-  // Highlight snippet based on category
+  // Real snippet from place description or address - no fake keywords
   const getHighlightSnippet = () => {
-    const slug = (place?.slug || '').toLowerCase();
-    if (slug.includes('shiro') || slug.includes('crater') || slug.includes('kitchen') || slug.includes('habesha')) {
-      return 'Clay pot cooking & gazebo dining';
+    if (place?.description?.trim()) {
+      return place.description.trim();
     }
-    if (slug.includes('coffee') || slug.includes('roaster') || slug.includes('tomoca') || slug.includes('kaffa')) {
-      return 'Artisanal roasts & traditional ceremonial brew';
+    if (place?.address?.trim()) {
+      return place.address.trim();
     }
-    if (slug.includes('bakery') || slug.includes('crust') || slug.includes('pastry')) {
-      return 'Fresh daily stone-baked pastries';
-    }
-    if (slug.includes('resort') || slug.includes('inn') || slug.includes('stay') || slug.includes('kuriftu')) {
-      return 'Lakeside views & wellness spa';
-    }
-    if (slug.includes('fish') || slug.includes('bistro') || slug.includes('garden')) {
-      return 'Scenic garden seating & fresh catch';
-    }
-    return 'Verified neighborhood favorite';
+    return '';
   };
 
   const neighborhood = getNeighborhood();
   const categoryLabel = getCategoryLabel();
-  const { rating, count } = getRatingInfo();
+  const { hasRating, rating, count } = getRatingInfo();
   const highlightSnippet = getHighlightSnippet();
-  const isOpen = place?.is_open !== undefined ? Boolean(place.is_open) : true;
+  const isOpen = place?.is_open !== undefined ? Boolean(place.is_open) : null;
 
   // Clean description: 1 line max, no boilerplate
   const description = (place?.description || '').trim();
@@ -112,6 +100,10 @@ export function PlaceCard({ place, rank = null, className = '' }) {
             alt={place?.name || 'Local Spot'}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = PLACE_PLACEHOLDER;
+            }}
           />
 
           {/* Subtle bottom gradient scrim (bottom 25% only) */}
@@ -161,25 +153,29 @@ export function PlaceCard({ place, rank = null, className = '' }) {
             />
           </div>
 
-          {/* Open/Closed Badge (Bottom-Left Pill) */}
-          <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-xs font-semibold text-[#F5F5F7] border border-white/10 shadow-sm">
-            {isOpen ? (
-              <>
-                <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-                <span>Open now</span>
-              </>
-            ) : (
-              <>
-                <span className="w-2 h-2 rounded-full bg-red-400" />
-                <span>Closed</span>
-              </>
-            )}
-          </div>
+          {/* Open/Closed Badge (Bottom-Left Pill, only if status available) */}
+          {isOpen !== null && (
+            <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-xs font-semibold text-[#F5F5F7] border border-white/10 shadow-sm">
+              {isOpen ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+                  <span>Open now</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-red-400" />
+                  <span>Closed</span>
+                </>
+              )}
+            </div>
+          )}
 
-          {/* Photo Counter (Bottom-Right Pill) */}
-          <div className="absolute bottom-3 right-3 z-10 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[11px] font-mono text-[#F5F5F7] border border-white/10 shadow-sm">
-            {photoIndex + 1}/{totalPhotos}
-          </div>
+          {/* Photo Counter (Bottom-Right Pill, only if multiple photos) */}
+          {totalPhotos > 1 && (
+            <div className="absolute bottom-3 right-3 z-10 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[11px] font-mono text-[#F5F5F7] border border-white/10 shadow-sm">
+              {photoIndex + 1}/{totalPhotos}
+            </div>
+          )}
         </div>
 
         {/* 2. Structured, Concise Text Block (Yelp-style hierarchy in dark obsidian) */}
@@ -193,36 +189,44 @@ export function PlaceCard({ place, rank = null, className = '' }) {
               {place?.name}
             </h3>
 
-            {/* Line 2: Rating Stars + Numeric Rating + Review Count */}
+            {/* Line 2: Rating Stars + Numeric Rating + Review Count (Actual data only) */}
             <div className="flex items-center gap-2 pt-1">
-              <div className="flex items-center gap-0.5">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Star
-                    key={s}
-                    className="w-3.5 h-3.5 fill-[#F5B301] text-[#F5B301]"
-                  />
-                ))}
-              </div>
-              <span className="font-bold text-white text-xs">{rating}</span>
-              <span className="text-[#AAA69C] text-xs">({count} reviews)</span>
+              {hasRating ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 fill-[#F5B301] text-[#F5B301]" />
+                    <span className="font-bold text-white text-xs">{rating}</span>
+                  </div>
+                  <span className="text-[#AAA69C] text-xs">
+                    ({count} {count === 1 ? 'review' : 'reviews'})
+                  </span>
+                </>
+              ) : (
+                <div className="flex items-center gap-1.5 text-xs text-[#AAA69C]">
+                  <Star className="w-3 h-3 text-white/30" />
+                  <span className="text-white/50 text-[11px]">No reviews yet</span>
+                </div>
+              )}
             </div>
 
-            {/* Line 3: Category Pill Badge + Price + Neighborhood */}
+            {/* Line 3: Category Pill Badge + Neighborhood */}
             <div className="flex items-center gap-2 pt-1 text-xs text-[#AAA69C] flex-wrap">
               <span className="px-2 py-0.5 rounded-full bg-white/[0.08] text-white/90 text-[11px] font-semibold border border-white/10">
                 {categoryLabel}
               </span>
-              <span>&bull;</span>
-              <span className="text-white/80 font-medium">$$</span>
-              <span>&bull;</span>
-              <span className="truncate max-w-[130px]">{neighborhood}</span>
+              {neighborhood && (
+                <>
+                  <span>&bull;</span>
+                  <span className="truncate max-w-[150px]">{neighborhood}</span>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Line 4: Clean Highlight / Snippet */}
+          {/* Line 4: Clean Highlight / Snippet (from real description/address) */}
           <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
-            <span className="text-[#AAA69C] truncate max-w-[200px]" title={highlightSnippet}>
-              {highlightSnippet}
+            <span className="text-[#AAA69C] truncate max-w-[200px]" title={highlightSnippet || place?.name}>
+              {highlightSnippet || 'Local business'}
             </span>
 
             {/* Subtle Action Pill */}

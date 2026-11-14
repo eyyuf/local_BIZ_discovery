@@ -21,7 +21,9 @@ class UpdatePlaceRequest extends FormRequest
             'website'=>["nullable",'string','max:255'],
             'is_active'=>["sometimes",'boolean'],    
             'latitude'=>["nullable",'numeric','between:-90,90' ],
-            'longitude'=>["nullable",'numeric','between:-180,180' ]        
+            'longitude'=>["nullable",'numeric','between:-180,180' ],
+            'category_ids' => ['nullable', 'array'],
+            'category_ids.*' => ['integer', 'exists:categories,id'],
         ];
     }
 }

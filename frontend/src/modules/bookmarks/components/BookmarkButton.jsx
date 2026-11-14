@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Bookmark } from 'lucide-react';
-import { discoveryApi } from '@/modules/discovery/api/discoveryApi';
 import { useAuth } from '@/modules/identity';
+import { useBookmarks } from '../context/BookmarkContext';
 import { useNavigate } from 'react-router-dom';
 
 export function BookmarkButton({
@@ -12,8 +12,11 @@ export function BookmarkButton({
 }) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
+  const { isBookmarked: checkBookmarked, toggleBookmark } = useBookmarks();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Synchronized bookmark status from context, fallback to initial prop if placeId is not yet available
+  const isBookmarked = placeId ? checkBookmarked(placeId) : Boolean(initialBookmarked);
 
   const handleToggle = async (e) => {
     e.preventDefault();
@@ -24,16 +27,13 @@ export function BookmarkButton({
       return;
     }
 
-    if (isLoading) return;
+    if (!placeId || isLoading) return;
 
     setIsLoading(true);
-    const prev = isBookmarked;
-    setIsBookmarked(!prev); // Optimistic
-
     try {
-      await discoveryApi.toggleBookmark(placeId);
+      await toggleBookmark(placeId);
     } catch (err) {
-      setIsBookmarked(prev); // Revert on failure
+      console.error('Failed to toggle bookmark', err);
     } finally {
       setIsLoading(false);
     }
@@ -59,4 +59,3 @@ export function BookmarkButton({
 }
 
 export default BookmarkButton;
-

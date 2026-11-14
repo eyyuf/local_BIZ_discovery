@@ -12,7 +12,7 @@ return new class extends Migration
             Schema::create('place_images', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('place_id')->constrained('places')->cascadeOnDelete();
-                $table->string('image_path');
+                $table->text('image_path');
                 $table->boolean('is_cover')->default(false);
                 $table->integer('display_order')->default(0);
                 $table->timestamps();

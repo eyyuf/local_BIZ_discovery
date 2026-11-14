@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Compass, ShieldCheck, Building2 } from 'lucide-react';
+import { useAuth } from '@/modules/identity';
 
 export function Footer() {
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const authPaths = ['/login', '/register', '/signup', '/oauth', '/forgot-password', '/reset-password'];
   const isAuthPage = authPaths.some((p) => location.pathname.startsWith(p));
@@ -101,7 +103,7 @@ export function Footer() {
             </p>
             <div className="pt-1">
               <Link
-                to="/login"
+                to={isAuthenticated ? '/profile?tab=businesses' : '/login'}
                 className="inline-flex items-center gap-2 text-xs font-bold text-white hover:text-white/80 transition"
               >
                 <Building2 className="w-4 h-4 text-white/70" />

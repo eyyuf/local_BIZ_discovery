@@ -16,7 +16,7 @@ class UserResource extends JsonResource
             'email_verified_at'=>$this->email_verified_at,
             'created_at'=>$this->created_at,
             'avatar' => $this->avatar
-                ? (str_starts_with($this->avatar, 'http') ? $this->avatar : asset('storage/' . $this->avatar))
+                ? (str_starts_with($this->avatar, 'http') ? $this->avatar : \Illuminate\Support\Facades\Storage::disk('cloudinary')->url($this->avatar))
                 : $this->oauthAccounts->first()?->avatar,
             'reviews_count' => $this->reviews()->count(),
             'bookmarks_count' => $this->bookmarks()->count(),

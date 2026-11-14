@@ -165,14 +165,6 @@ export function Navbar() {
             <span>Collections</span>
           </Link>
 
-          <Link
-            to="/login"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-xs font-semibold text-[#F5F2EA] hover:border-white hover:text-white transition"
-          >
-            <Building2 className="w-3.5 h-3.5 text-[#AAA69C]" />
-            <span>Business</span>
-          </Link>
-
           {/* User / Sign In Pill */}
           {isAuthenticated ? (
             <div className="flex items-center gap-1.5 pl-1">
@@ -205,8 +197,8 @@ export function Navbar() {
           )}
         </nav>
 
-        {/* Mobile menu trigger */}
-        <div className="flex items-center gap-2 lg:hidden">
+        {/* Tablet menu trigger (visible only on tablet where bottom nav is hidden) */}
+        <div className="hidden md:flex lg:hidden items-center gap-2">
           <Link
             to="/search"
             aria-label="Search"
@@ -240,9 +232,9 @@ export function Navbar() {
         </div>
       )}
 
-      {/* Mobile Drawer */}
+      {/* Tablet Drawer (768px - 1023px) */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-none bg-[#0D0D0C]/95 backdrop-blur-2xl px-5 pt-3 pb-6 space-y-3">
+        <div className="hidden md:block lg:hidden border-none bg-[#0D0D0C]/95 backdrop-blur-2xl px-5 pt-3 pb-6 space-y-3">
           <form onSubmit={handleSearchSubmit} className="mb-4">
             <div className="relative flex items-center">
               <Search className="w-4 h-4 text-[#AAA69C] absolute left-4 pointer-events-none" />
@@ -256,38 +248,30 @@ export function Navbar() {
             </div>
           </form>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <Link
               to="/search"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
+              className="flex items-center justify-center gap-1.5 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
             >
               <LayoutGrid className="w-4 h-4 text-[#AAA69C]" />
-              <span>Browse All</span>
+              <span>Browse</span>
             </Link>
             <Link
               to="/nearby"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
+              className="flex items-center justify-center gap-1.5 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
             >
               <MapPin className="w-4 h-4 text-[#AAA69C]" />
-              <span>Nearby Radar</span>
+              <span>Nearby</span>
             </Link>
             <Link
               to="/saved"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
+              className="flex items-center justify-center gap-1.5 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
             >
               <Bookmark className="w-4 h-4 text-[#AAA69C]" />
-              <span>Collections</span>
-            </Link>
-            <Link
-              to="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
-            >
-              <Building2 className="w-4 h-4 text-[#AAA69C]" />
-              <span>Business Listing</span>
+              <span>Saved</span>
             </Link>
           </div>
 

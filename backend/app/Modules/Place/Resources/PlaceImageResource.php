@@ -12,6 +12,7 @@ class PlaceImageResource extends JsonResource
         return [
             'id'            => $this->id,
             'image_url'     => $this->url,
+            'url'           => $this->url,
             'is_cover'      => (bool) $this->is_cover,
             'display_order' => (int) $this->display_order,
             'created_at'    => $this->created_at?->toISOString(),

@@ -39,13 +39,9 @@ export function HomePage() {
         const combined = Array.from(combinedMap.values());
         setAllPlaces(combined);
 
-        // Identify Crater Lake Traditional Habesha Kitchen for the Hero
-        const craterLake =
-          combined.find((p) => p.slug === 'crater-lake-traditional-kitchen') ||
-          popular[0] ||
-          null;
-
-        setHeroPlace(craterLake);
+        // Select top real place from explore feed for the hero spotlight
+        const featuredSpot = popular[0] || additions[0] || combined[0] || null;
+        setHeroPlace(featuredSpot);
       } catch (err) {
         console.error('Failed to load explore feed', err);
       } finally {
