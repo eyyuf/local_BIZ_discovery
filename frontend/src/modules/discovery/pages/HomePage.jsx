@@ -1,0 +1,152 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { discoveryApi } from '../api/discoveryApi';
+import { HeroCard } from '../components/HeroCard';
+import { TrendingSection } from '../components/TrendingSection';
+import { LatestSection } from '../components/LatestSection';
+import { PersonalizedRadar } from '../components/PersonalizedRadar';
+import { TopRatedSection } from '../components/TopRatedSection';
+
+export function HomePage() {
+  const [searchParams] = useSearchParams();
+  const activeFilter = searchParams.get('filter') || 'all';
+
+  const [exploreSections, setExploreSections] = useState([]);
+  const [heroPlace, setHeroPlace] = useState(null);
+  const [allPlaces, setAllPlaces] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadData() {
+      try {
+        const sections = await discoveryApi.getExploreFeed();
+        if (!isMounted) return;
+
+        setExploreSections(sections || []);
+
+        const popular = sections.find((s) => s.key === 'nearby_popular')?.places || [];
+        const additions = sections.find((s) => s.key === 'new_additions')?.places || [];
+
+        // Combine unique places
+        const combinedMap = new Map();
+        [...popular, ...additions].forEach((p) => {
+          if (p && p.slug && !combinedMap.has(p.slug)) {
+            combinedMap.set(p.slug, p);
+          }
+        });
+        const combined = Array.from(combinedMap.values());
+        setAllPlaces(combined);
+
+        // Select top real place from explore feed for the hero spotlight
+        const featuredSpot = popular[0] || additions[0] || combined[0] || null;
+        setHeroPlace(featuredSpot);
+      } catch (err) {
+        console.error('Failed to load explore feed', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Filter places based on active navbar quick filter
+  const filteredPlaces = useMemo(() => {
+    if (!activeFilter || activeFilter === 'all') return allPlaces;
+
+    return allPlaces.filter((place) => {
+      const slug = (place?.slug || '').toLowerCase();
+      const address = (place?.address || '').toLowerCase();
+      const name = (place?.name || '').toLowerCase();
+
+      const catNames = Array.isArray(place?.categories)
+        ? place.categories.map((c) => (typeof c === 'object' ? c.name : c).toLowerCase()).join(' ')
+        : '';
+
+      if (activeFilter === 'open_now') {
+        return place.is_open !== false;
+      }
+      if (activeFilter === 'bole') {
+        return address.includes('bole') || slug.includes('bole');
+      }
+      if (activeFilter === 'kazanchis') {
+        return address.includes('kazanchis') || slug.includes('kazanchis');
+      }
+      if (activeFilter === 'bishoftu') {
+        return address.includes('bishoftu') || slug.includes('bishoftu');
+      }
+      if (activeFilter === 'cafes') {
+        return (
+          catNames.includes('cafe') ||
+          slug.includes('coffee') ||
+          slug.includes('roaster') ||
+          slug.includes('cafe') ||
+          name.includes('coffee') ||
+          name.includes('cafe')
+        );
+      }
+      if (activeFilter === 'restaurants' || activeFilter === 'cultural_dining') {
+        return (
+          catNames.includes('restaurant') ||
+          catNames.includes('bakery') ||
+          slug.includes('kitchen') ||
+          slug.includes('habesha') ||
+          slug.includes('bistro') ||
+          slug.includes('traditional') ||
+          slug.includes('grill') ||
+          slug.includes('fish') ||
+          slug.includes('restaurant') ||
+          name.includes('habesha') ||
+          name.includes('restaurant') ||
+          name.includes('kitchen') ||
+          name.includes('bistro')
+        );
+      }
+      if (activeFilter === 'hotels' || activeFilter === 'lakeside_stays') {
+        return (
+          catNames.includes('hotel') ||
+          slug.includes('resort') ||
+          slug.includes('inn') ||
+          slug.includes('hotel') ||
+          slug.includes('suites') ||
+          name.includes('hotel') ||
+          name.includes('resort') ||
+          address.includes('bishoftu')
+        );
+      }
+      return true;
+    });
+  }, [allPlaces, activeFilter]);
+
+  const trendingPlaces = filteredPlaces.slice(0, 10);
+  const latestPlaces = filteredPlaces.length > 5 ? filteredPlaces.slice(3) : filteredPlaces;
+
+  return (
+    <div className="min-h-screen bg-[#0D0D0C] text-[#F5F2EA] pb-24 overflow-x-hidden">
+      {/* 1. Full-Bleed Edge-to-Edge Hero (QuickFilters are now in Navbar) */}
+      <HeroCard place={heroPlace} />
+
+      {/* 2. Main Discovery Content Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16 mt-8 sm:mt-12 relative z-20">
+        {/* Trending Movement: Ranked 1–5 spots */}
+        <TrendingSection places={trendingPlaces} />
+
+        {/* Latest Movement: Horizontal carousel with category filters */}
+        <LatestSection places={latestPlaces} />
+
+        {/* Personalized Radar Movement: Curated taste banner */}
+        <PersonalizedRadar />
+
+        {/* Top Rated Movement: Carousel */}
+        <TopRatedSection places={trendingPlaces} />
+      </div>
+    </div>
+  );
+}
+
+export default HomePage;

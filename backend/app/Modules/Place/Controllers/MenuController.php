@@ -43,6 +43,43 @@ class MenuController extends Controller
         ], 201);
     }
 
+    public function updateSection(Request $request, Place $place, MenuSection $menuSection): JsonResponse
+    {
+        Gate::authorize('update', $place);
+
+        if ($menuSection->place_id !== $place->id) {
+            abort(404, 'Menu section does not belong to this place.');
+        }
+
+        $validated = $request->validate([
+            'name'          => ['sometimes', 'required', 'string', 'max:255'],
+            'display_order' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $menuSection->update($validated);
+
+        return response()->json([
+            'message' => 'menu section updated successfully',
+            'data'    => new MenuSectionResource($menuSection),
+        ], 200);
+    }
+
+    public function destroySection(Place $place, MenuSection $menuSection): JsonResponse
+    {
+        Gate::authorize('update', $place);
+
+        if ($menuSection->place_id !== $place->id) {
+            abort(404, 'Menu section does not belong to this place.');
+        }
+
+        $menuSection->items()->delete();
+        $menuSection->delete();
+
+        return response()->json([
+            'message' => 'menu section deleted successfully',
+        ], 200);
+    }
+
     public function storeItem(StoreMenuItemRequest $request, Place $place, CreateMenuItemAction $action): JsonResponse
     {
         Gate::authorize('update', $place);

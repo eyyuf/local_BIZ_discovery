@@ -12,7 +12,7 @@ class PlaceController extends Controller
 {
     public function index(ReviewQueryInterface $reviewQuery): JsonResponse
     {
-        $data = Place::where('is_active', true)->paginate(10);
+        $data = Place::where('is_active', true)->with(['images', 'categories'])->paginate(10);
         $reviewQuery->attachRatingSummaries($data);
 
         return response()->json([
@@ -28,7 +28,7 @@ class PlaceController extends Controller
         }
 
         $data = Cache::remember("place_{$place->id}", 3600, function () use ($place, $reviewQuery) {
-            $place->load(['operatingHours', 'menuSections.items']);
+            $place->load(['operatingHours', 'menuSections.items', 'images', 'categories']);
             $reviewQuery->attachRatingSummaries($place);
 
             return $place;

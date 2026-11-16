@@ -16,7 +16,7 @@ class BookmarkController extends Controller
     {
         $bookmarks = $request->user()
             ->bookmarks()
-            ->with('place')
+            ->with('place.images')
             ->latest()
             ->paginate(10);
 
