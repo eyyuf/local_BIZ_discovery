@@ -26,8 +26,11 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'name',
         'email',
+        'role',
+        'locked_at',
         'password',
-        'avatar'
+        'avatar',
+        'email_verified_at',
     ];
 
     /**
@@ -49,9 +52,15 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'locked_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
     public function oauthAccounts()
     {
         return $this->hasMany(OAuthAccount::class);

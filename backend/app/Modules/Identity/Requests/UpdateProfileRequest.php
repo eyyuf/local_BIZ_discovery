@@ -15,6 +15,7 @@ class UpdateProfileRequest extends FormRequest
             'name'=>['sometimes','string', 'max:255'],
             'email'=>['sometimes','email', 'max:255', Rule::unique('users', 'email')->ignore($this->user()->id)],
             'avatar'=>['sometimes','image','mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'role'=>['sometimes','string', 'in:customer,owner'],
             'current_password' => ['required_with:password', 'current_password'],
             'password'         => ['sometimes', 'string', 'min:8', 'confirmed'],
         ];

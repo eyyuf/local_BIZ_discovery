@@ -10,14 +10,18 @@ readonly class RegisterUserDTO
         public string $name,
         public string $email,
         public string $password,
+        public string $role = 'customer',
     ) {}
 
     public static function fromRequest(RegisterRequest $request): self
     {
+        $role = $request->validated('role');
+
         return new self(
             name: (string) $request->validated('name'),
             email: (string) $request->validated('email'),
             password: (string) $request->validated('password'),
+            role: ! empty($role) ? (string) $role : 'customer',
         );
     }
 
@@ -27,6 +31,7 @@ readonly class RegisterUserDTO
             name: (string) ($data['name'] ?? ''),
             email: (string) ($data['email'] ?? ''),
             password: (string) ($data['password'] ?? ''),
+            role: (string) ($data['role'] ?? 'customer'),
         );
     }
 }

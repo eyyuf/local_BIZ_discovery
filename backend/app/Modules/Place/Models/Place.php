@@ -31,7 +31,23 @@ class Place extends Model
         'phone',
         'website',
         'is_active',
+        'verification_status',
+        'is_verified',
+        'tax_id',
+        'telebirr_merchant_id',
+        'verification_document',
+        'verification_notes',
+        'verified_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_verified' => 'boolean',
+            'is_active'   => 'boolean',
+            'verified_at' => 'datetime',
+        ];
+    }
 
     protected static function booted(): void
     {

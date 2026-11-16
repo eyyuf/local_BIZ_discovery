@@ -9,6 +9,7 @@ use App\Modules\Discovery\Requests\CategoryPlacesRequest;
 use App\Modules\Discovery\Resources\CategoryResource;
 use App\Modules\Discovery\Resources\SearchResultResource;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryController extends Controller
 {
@@ -17,11 +18,13 @@ class CategoryController extends Controller
      */
     public function index(): JsonResponse
     {
-        $categories = Category::query()
-            ->whereNull('parent_id')
-            ->where('is_active', true)
-            ->with(['children' => fn ($query) => $query->where('is_active', true)])
-            ->get();
+        $categories = Cache::rememberForever('all_categories', function () {
+            return Category::query()
+                ->whereNull('parent_id')
+                ->where('is_active', true)
+                ->with(['children' => fn ($query) => $query->where('is_active', true)])
+                ->get();
+        });
 
         return CategoryResource::collection($categories)->response();
     }
