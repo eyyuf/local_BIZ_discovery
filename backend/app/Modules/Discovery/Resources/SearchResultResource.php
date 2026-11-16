@@ -32,6 +32,10 @@ class SearchResultResource extends JsonResource
                 $this->relationLoaded('images'),
                 fn () => PlaceImageResource::collection($this->images)
             ),
+            'categories'  => $this->when(
+                $this->relationLoaded('categories'),
+                fn () => CategoryResource::collection($this->categories)
+            ),
         ];
     }
 }

@@ -274,13 +274,13 @@ export function RegisterPage() {
           {/* Right Column: Editorial Cultural Message */}
           <div className="hidden lg:flex lg:col-span-6 flex-col justify-center space-y-4 pl-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-black/40 text-[10px] font-mono uppercase tracking-widest text-white/90 w-fit backdrop-blur-md">
-              Culinary &amp; Local Escapes
+              Restaurants &amp; Local Spots
             </div>
             <h2 className="text-4xl xl:text-5xl font-black text-white tracking-tight leading-tight font-display">
-              Ethiopia's finest culinary spots &amp; boutique stays.
+              Ethiopia's finest restaurants, cafes &amp; hotels.
             </h2>
             <p className="text-sm xl:text-base text-[#AAA69C] leading-relaxed max-w-lg">
-              Discover verified dining, artisanal coffee roasters, and scenic highland getaways.
+              Discover verified restaurants, cafes, bakeries, and hotels.
             </p>
           </div>
         </div>

@@ -10,7 +10,7 @@ export function HeroCard({ place }) {
   const heroName = hasPlace ? place.name : 'Discover Authentic Spots Across Ethiopia';
   const heroLocation = hasPlace
     ? (place.address?.split(',')?.slice(-2)?.join(',')?.trim() || place.address || 'Ethiopia')
-    : 'Local culinary, cafe & cultural spots';
+    : 'Restaurants, cafes & local spots';
   const bgImage = hasPlace ? getPlacePrimaryPhoto(place) : '/assets/place-placeholder.svg';
 
   return (

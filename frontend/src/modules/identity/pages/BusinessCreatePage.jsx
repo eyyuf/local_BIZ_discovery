@@ -393,7 +393,7 @@ export function BusinessCreatePage() {
             Launch Your Local Spot
           </h1>
           <p className="text-xs sm:text-sm text-[#AAA69C] max-w-2xl leading-relaxed">
-            Register your restaurant, traditional kitchen, specialty cafe, bakery, or hotel. Once created, your venue is immediately indexed across search, interactive maps, and community discovery.
+            Register your restaurant, cafe, bakery, hotel, or local business. Once created, your venue is immediately indexed across search, interactive maps, and community discovery.
           </p>
         </div>
 

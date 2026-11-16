@@ -5,6 +5,7 @@ import { discoveryApi } from '../api/discoveryApi';
 import { LeafletMap } from '@/shared/map/LeafletMap';
 import { BookmarkButton } from '@/modules/bookmarks/components/BookmarkButton';
 import { getPlacePrimaryPhoto, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
+import { getPlaceCategoryLabel } from '@/shared/utils/placeCategories';
 
 // Safe distance formatting from API response
 function formatDistance(distanceKm) {
@@ -18,16 +19,9 @@ function formatDistance(distanceKm) {
   return `${dist.toFixed(1)} km away`;
 }
 
-// Derive category label solely from genuine API data (no slug guessing)
+// Derive category label with simplified terminology
 function getCategoryLabel(place) {
-  if (place?.categories && place.categories.length > 0) {
-    const cat = place.categories[0];
-    return typeof cat === 'object' ? cat.name : cat;
-  }
-  if (place?.category) {
-    return typeof place.category === 'object' ? place.category.name : place.category;
-  }
-  return null;
+  return getPlaceCategoryLabel(place);
 }
 
 export function NearbyPage() {
@@ -40,6 +34,8 @@ export function NearbyPage() {
   const [places, setPlaces] = useState([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
   const [placesError, setPlacesError] = useState(null);
+  const [selectedPlaceId, setSelectedPlaceId] = useState(null);
+  const [hoveredPlaceId, setHoveredPlaceId] = useState(null);
 
   const radiusOptions = [2, 5, 10, 25];
 
@@ -426,6 +422,15 @@ export function NearbyPage() {
                 zoom={13}
                 radius={radius}
                 markers={places}
+                selectedPlaceId={selectedPlaceId || hoveredPlaceId}
+                onSelectMarker={(place) => {
+                  const pId = place.id || place.slug;
+                  setSelectedPlaceId(pId);
+                  const cardEl = document.getElementById(`nearby-place-card-${pId}`);
+                  if (cardEl && listRef.current) {
+                    cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  }
+                }}
                 showCenterPin={true}
                 className="!h-full w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
               />
@@ -559,19 +564,33 @@ export function NearbyPage() {
                   }
                 }}
               >
-                {places.map((place) => {
+                {places.map((place, index) => {
+                  const placeId = place.id || place.slug;
                   const photo = getPlacePrimaryPhoto(place);
                   const categoryLabel = getCategoryLabel(place);
                   const formattedDistance = formatDistance(place.distance_km);
                   const hasRating =
                     place?.average_rating != null && Number(place.average_rating) > 0;
+                  const isSelected = selectedPlaceId && String(selectedPlaceId) === String(placeId);
+                  const isHovered = hoveredPlaceId && String(hoveredPlaceId) === String(placeId);
+                  const isActive = isSelected || isHovered;
 
                   return (
                     <Link
-                      key={place.id || place.slug}
+                      key={placeId}
+                      id={`nearby-place-card-${placeId}`}
                       to={`/places/${place.slug}`}
-                      onClick={handleCardClick}
-                      className="group block bg-[#151518] border border-white/[0.08] hover:border-white/25 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5 flex flex-col text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                      onClick={(e) => {
+                        handleCardClick(e);
+                        setSelectedPlaceId(placeId);
+                      }}
+                      onMouseEnter={() => setHoveredPlaceId(placeId)}
+                      onMouseLeave={() => setHoveredPlaceId(null)}
+                      className={`group block bg-[#151518] rounded-2xl overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex flex-col text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+                        isActive
+                          ? 'border-2 border-amber-400 bg-[#1A1A22] shadow-2xl ring-1 ring-amber-400/50'
+                          : 'border border-white/[0.08] hover:border-white/25 hover:shadow-2xl'
+                      }`}
                     >
                       {/* Image container: full width, compact 16:9 aspect ratio */}
                       <div className="relative w-full aspect-[16/9] overflow-hidden bg-[#1D1C19]">
@@ -586,6 +605,17 @@ export function NearbyPage() {
                           }}
                         />
                         <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+
+                        {/* Sequential Number matching map marker pin */}
+                        <div
+                          className={`absolute top-2.5 left-2.5 z-10 w-6 h-6 rounded-full font-mono font-black text-xs flex items-center justify-center shadow-md transition-colors ${
+                            isActive
+                              ? 'bg-amber-400 text-black border border-white'
+                              : 'bg-black/80 backdrop-blur-md border border-white/30 text-white'
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
 
                         {/* Bookmark Button (top right) */}
                         <div
@@ -612,6 +642,7 @@ export function NearbyPage() {
                               className="text-sm sm:text-base font-bold text-white group-hover:text-amber-400 transition truncate leading-snug"
                               title={place.name}
                             >
+                              <span className="text-amber-400 font-mono font-bold mr-1.5">{index + 1}.</span>
                               {place.name}
                             </h3>
                             {hasRating && (

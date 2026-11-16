@@ -1383,7 +1383,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                     <div>
                       <h2 className="text-lg font-bold text-white font-display">Menu &amp; Offerings</h2>
                       <p className="text-xs text-[#AAA69C]">
-                        Organize your culinary menu into sections (e.g. Starters, Traditional Wot, Hot Beverages).
+                        Organize your menu into sections (e.g. Starters, Main Dishes, Hot Beverages).
                       </p>
                     </div>
 
@@ -1406,7 +1406,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                       <UtensilsCrossed className="w-8 h-8 text-[#AAA69C]/60 mx-auto" />
                       <h3 className="text-sm font-bold text-white">No Menu Sections Created</h3>
                       <p className="text-xs text-[#AAA69C] max-w-sm mx-auto">
-                        Add sections like "Signature Dishes", "Breakfast", or "Specialty Coffee" to showcase your offerings.
+                        Add sections like "Signature Dishes", "Breakfast", or "Coffee & Drinks" to showcase your offerings.
                       </p>
                       <button
                         type="button"

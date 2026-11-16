@@ -64,6 +64,10 @@ export function HomePage() {
       const address = (place?.address || '').toLowerCase();
       const name = (place?.name || '').toLowerCase();
 
+      const catNames = Array.isArray(place?.categories)
+        ? place.categories.map((c) => (typeof c === 'object' ? c.name : c).toLowerCase()).join(' ')
+        : '';
+
       if (activeFilter === 'open_now') {
         return place.is_open !== false;
       }
@@ -78,27 +82,40 @@ export function HomePage() {
       }
       if (activeFilter === 'cafes') {
         return (
+          catNames.includes('cafe') ||
           slug.includes('coffee') ||
           slug.includes('roaster') ||
           slug.includes('cafe') ||
-          name.includes('coffee')
+          name.includes('coffee') ||
+          name.includes('cafe')
         );
       }
-      if (activeFilter === 'cultural_dining') {
+      if (activeFilter === 'restaurants' || activeFilter === 'cultural_dining') {
         return (
+          catNames.includes('restaurant') ||
+          catNames.includes('bakery') ||
           slug.includes('kitchen') ||
           slug.includes('habesha') ||
           slug.includes('bistro') ||
           slug.includes('traditional') ||
-          name.includes('habesha')
+          slug.includes('grill') ||
+          slug.includes('fish') ||
+          slug.includes('restaurant') ||
+          name.includes('habesha') ||
+          name.includes('restaurant') ||
+          name.includes('kitchen') ||
+          name.includes('bistro')
         );
       }
-      if (activeFilter === 'lakeside_stays') {
+      if (activeFilter === 'hotels' || activeFilter === 'lakeside_stays') {
         return (
+          catNames.includes('hotel') ||
           slug.includes('resort') ||
           slug.includes('inn') ||
           slug.includes('hotel') ||
           slug.includes('suites') ||
+          name.includes('hotel') ||
+          name.includes('resort') ||
           address.includes('bishoftu')
         );
       }

@@ -10,8 +10,8 @@ export function TopRatedSection({ places = [] }) {
   const categories = [
     { id: 'all', label: 'All' },
     { id: 'cafes', label: 'Cafes' },
-    { id: 'dining', label: 'Dining' },
-    { id: 'stays', label: 'Stays' },
+    { id: 'restaurants', label: 'Restaurants' },
+    { id: 'hotels', label: 'Hotels' },
   ];
 
   const handleScroll = (direction) => {
@@ -25,14 +25,48 @@ export function TopRatedSection({ places = [] }) {
     if (activeCategory === 'all') return true;
     const slug = (place?.slug || '').toLowerCase();
     const name = (place?.name || '').toLowerCase();
+    const catNames = Array.isArray(place?.categories)
+      ? place.categories.map((c) => (typeof c === 'object' ? c.name : c).toLowerCase()).join(' ')
+      : '';
+
     if (activeCategory === 'cafes') {
-      return slug.includes('coffee') || slug.includes('roaster') || slug.includes('cafe') || name.includes('cafe') || name.includes('coffee');
+      return (
+        catNames.includes('cafe') ||
+        slug.includes('coffee') ||
+        slug.includes('roaster') ||
+        slug.includes('cafe') ||
+        name.includes('cafe') ||
+        name.includes('coffee')
+      );
     }
-    if (activeCategory === 'dining') {
-      return slug.includes('kitchen') || slug.includes('bistro') || slug.includes('fish') || slug.includes('grill') || slug.includes('dining') || slug.includes('crust') || slug.includes('bakery') || slug.includes('pastry');
+    if (activeCategory === 'restaurants' || activeCategory === 'dining') {
+      return (
+        catNames.includes('restaurant') ||
+        catNames.includes('bakery') ||
+        slug.includes('kitchen') ||
+        slug.includes('bistro') ||
+        slug.includes('fish') ||
+        slug.includes('grill') ||
+        slug.includes('dining') ||
+        slug.includes('crust') ||
+        slug.includes('bakery') ||
+        slug.includes('pastry') ||
+        slug.includes('restaurant') ||
+        name.includes('restaurant') ||
+        name.includes('kitchen')
+      );
     }
-    if (activeCategory === 'stays') {
-      return slug.includes('resort') || slug.includes('inn') || slug.includes('hotel') || slug.includes('suites') || slug.includes('spa');
+    if (activeCategory === 'hotels' || activeCategory === 'stays') {
+      return (
+        catNames.includes('hotel') ||
+        slug.includes('resort') ||
+        slug.includes('inn') ||
+        slug.includes('hotel') ||
+        slug.includes('suites') ||
+        slug.includes('spa') ||
+        name.includes('hotel') ||
+        name.includes('resort')
+      );
     }
     return true;
   });

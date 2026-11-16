@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Star, ChevronLeft, ChevronRight, ArrowUpRight, Clock, Sparkles } from 'lucide-react';
 import { BookmarkButton } from '@/modules/bookmarks/components/BookmarkButton';
 import { getPlacePhotos, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
+import { getPlaceCategoryLabel } from '@/shared/utils/placeCategories';
 
 export function PlaceCard({ place, rank = null, className = '' }) {
   const photos = getPlacePhotos(place);
@@ -37,17 +38,7 @@ export function PlaceCard({ place, rank = null, className = '' }) {
   };
 
   // Derive primary category
-  const getCategoryLabel = () => {
-    if (place?.categories && place.categories.length > 0) {
-      return place.categories[0].name || place.categories[0];
-    }
-    const slug = (place?.slug || '').toLowerCase();
-    if (slug.includes('bakery') || slug.includes('pastry') || slug.includes('crust')) return 'Artisan Bakery';
-    if (slug.includes('coffee') || slug.includes('roaster') || slug.includes('cafe')) return 'Specialty Cafe';
-    if (slug.includes('resort') || slug.includes('hotel') || slug.includes('inn') || slug.includes('suites')) return 'Boutique Stay';
-    if (slug.includes('fish') || slug.includes('kitchen') || slug.includes('bistro') || slug.includes('grill') || slug.includes('dining')) return 'Cultural Dining';
-    return 'Dining & Cafe';
-  };
+  const categoryLabel = getPlaceCategoryLabel(place);
 
   // Real rating score and review count only - no fabricated data
   const getRatingInfo = () => {
@@ -79,7 +70,6 @@ export function PlaceCard({ place, rank = null, className = '' }) {
   };
 
   const neighborhood = getNeighborhood();
-  const categoryLabel = getCategoryLabel();
   const { hasRating, rating, count } = getRatingInfo();
   const highlightSnippet = getHighlightSnippet();
   const isOpen = place?.is_open !== undefined ? Boolean(place.is_open) : null;

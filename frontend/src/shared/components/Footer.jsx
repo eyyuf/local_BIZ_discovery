@@ -36,7 +36,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-xs leading-relaxed text-[#AAA69C] max-w-sm">
-              Discover authentic Ethiopian dining, specialty cafes, cultural landmarks, lakeside getaways, and verified neighborhood businesses.
+              Discover authentic Ethiopian restaurants, cafes, bakeries, hotels, and verified neighborhood businesses.
             </p>
             <div className="flex items-center gap-2 text-[11px] text-[#AAA69C]/80 pt-1">
               <ShieldCheck className="w-4 h-4 text-white/70 shrink-0" />

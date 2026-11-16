@@ -8,9 +8,9 @@ export function QuickFilters({ activeFilter, onSelectFilter }) {
     { id: 'bole', label: 'Bole Area', icon: MapPin },
     { id: 'kazanchis', label: 'Kazanchis', icon: MapPin },
     { id: 'bishoftu', label: 'Bishoftu Lakes', icon: MapPin },
-    { id: 'cafes', label: 'Specialty Cafes', icon: Coffee },
-    { id: 'cultural_dining', label: 'Cultural Dining', icon: UtensilsCrossed },
-    { id: 'lakeside_stays', label: 'Lakeside Stays', icon: Hotel },
+    { id: 'cafes', label: 'Cafes', icon: Coffee },
+    { id: 'restaurants', label: 'Restaurants', icon: UtensilsCrossed },
+    { id: 'hotels', label: 'Hotels', icon: Hotel },
   ];
 
   return (
@@ -20,7 +20,10 @@ export function QuickFilters({ activeFilter, onSelectFilter }) {
       </span>
       {filters.map((f) => {
         const Icon = f.icon;
-        const isActive = activeFilter === f.id;
+        const isActive =
+          activeFilter === f.id ||
+          (f.id === 'restaurants' && activeFilter === 'cultural_dining') ||
+          (f.id === 'hotels' && activeFilter === 'lakeside_stays');
 
         return (
           <button

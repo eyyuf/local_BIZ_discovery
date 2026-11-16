@@ -749,7 +749,7 @@ export function ProfilePage() {
                 <div className="space-y-1 max-w-md mx-auto">
                   <h3 className="text-base font-bold text-white font-display">No Businesses Registered Yet</h3>
                   <p className="text-xs text-[#AAA69C] leading-relaxed">
-                    Own or manage a local cafe, cultural restaurant, bakery, or boutique stay in Ethiopia? Register your spot to reach thousands of neighborhood explorers.
+                    Own or manage a local cafe, restaurant, bakery, or hotel in Ethiopia? Register your spot to reach thousands of neighborhood explorers.
                   </p>
                 </div>
                 <Link

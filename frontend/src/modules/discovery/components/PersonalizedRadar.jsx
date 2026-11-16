@@ -6,7 +6,7 @@ import { useAuth } from '@/modules/identity';
 export function PersonalizedRadar() {
   const { isAuthenticated, user } = useAuth();
 
-  const tasteTags = ['Artisanal Roasters', 'Traditional Wot', 'Highland Stays'];
+  const tasteTags = ['Cafes', 'Restaurants', 'Hotels'];
 
   return (
     <section className="w-full">
@@ -24,8 +24,8 @@ export function PersonalizedRadar() {
 
             <p className="text-xs sm:text-sm text-[#AAA69C] leading-relaxed max-w-xl">
               {isAuthenticated
-                ? `Welcome back ${user?.name || ''}! Local Spot is tailoring suggestions based on your bookmarked traditional kitchens, specialty cafes, and highland escapes.`
-                : 'Sign in to unlock your personal taste radar. Local Spot analyzes your favorite roasters, traditional kitchens, and weekend vibes to surface fresh daily recommendations.'}
+                ? `Welcome back ${user?.name || ''}! Local Spot is tailoring suggestions based on your bookmarked restaurants, cafes, and hotels.`
+                : 'Sign in to unlock your personal taste radar. Local Spot analyzes your favorite cafes, restaurants, and hotels to surface fresh daily recommendations.'}
             </p>
 
             <div className="flex flex-wrap gap-2 pt-1">
