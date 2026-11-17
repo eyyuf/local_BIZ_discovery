@@ -21,14 +21,14 @@ class ReviewVerificationAction
                 'is_verified'         => true,
                 'verification_status' => 'verified',
                 'verified_at'         => now(),
-                'verification_notes'  => $notes ?: 'Approved by administrator',
+                'verification_notes'  => $notes ?: 'Approved by administrator after verifying Trade License and Fayda ID.',
             ]);
         } else {
             $place->update([
                 'is_verified'         => false,
                 'verification_status' => 'rejected',
                 'verified_at'         => null,
-                'verification_notes'  => $notes ?: 'Rejected by administrator',
+                'verification_notes'  => $notes ?: 'Verification rejected by administrator.',
             ]);
         }
 

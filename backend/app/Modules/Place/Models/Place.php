@@ -34,8 +34,11 @@ class Place extends Model
         'verification_status',
         'is_verified',
         'tax_id',
+        'manager_name',
+        'fayda_fin',
         'telebirr_merchant_id',
         'verification_document',
+        'fayda_document',
         'verification_notes',
         'verified_at',
     ];
@@ -47,6 +50,21 @@ class Place extends Model
             'is_active'   => 'boolean',
             'verified_at' => 'datetime',
         ];
+    }
+
+    public function isVerified(): bool
+    {
+        return (bool) $this->is_verified;
+    }
+
+    public function scopeVerified(Builder $query): Builder
+    {
+        return $query->where('is_verified', true);
+    }
+
+    public function scopePendingVerification(Builder $query): Builder
+    {
+        return $query->where('verification_status', 'pending');
     }
 
     protected static function booted(): void

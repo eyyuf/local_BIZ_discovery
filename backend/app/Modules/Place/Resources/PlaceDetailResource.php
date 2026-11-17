@@ -24,11 +24,18 @@ class PlaceDetailResource extends JsonResource
             'verification_status'   => $this->verification_status ?? 'unverified',
             'verified_at'           => $this->verified_at?->toISOString(),
             'tax_id'                => $this->tax_id,
+            'manager_name'          => $this->manager_name,
+            'fayda_fin'             => $this->fayda_fin,
             'telebirr_merchant_id'  => $this->telebirr_merchant_id,
             'verification_document' => $this->verification_document
                 ? (str_starts_with($this->verification_document, 'http')
                     ? $this->verification_document
                     : asset('storage/' . $this->verification_document))
+                : null,
+            'fayda_document'        => $this->fayda_document
+                ? (str_starts_with($this->fayda_document, 'http')
+                    ? $this->fayda_document
+                    : asset('storage/' . $this->fayda_document))
                 : null,
             'verification_notes'    => $this->verification_notes,
             'average_rating'        => $this->average_rating,
