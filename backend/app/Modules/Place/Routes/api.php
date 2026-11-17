@@ -49,5 +49,6 @@ Route::prefix('api/v1/owner/places')->middleware(['api', 'auth:sanctum'])->group
 
 Route::prefix('api/v1/admin/places')->middleware(['api', 'auth:sanctum'])->group(function () {
     Route::get('pending-verifications', [PlaceVerificationController::class, 'pendingList']);
+    Route::post('{place}/review', [PlaceVerificationController::class, 'review']);
     Route::post('{place}/verify', [PlaceVerificationController::class, 'review']);
 });

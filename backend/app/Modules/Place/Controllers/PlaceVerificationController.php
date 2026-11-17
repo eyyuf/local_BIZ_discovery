@@ -11,60 +11,124 @@ use App\Modules\Place\Requests\SubmitVerificationRequest;
 use App\Modules\Place\Resources\PlaceDetailResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PlaceVerificationController extends Controller
 {
+    /**
+     * Submit business legitimacy verification details (TIN, Manager Name, Trade License, Fayda ID).
+     */
     public function submit(SubmitVerificationRequest $request, Place $place, SubmitVerificationAction $action): JsonResponse
     {
         $updated = $action->execute($place, $request->user(), $request->validated());
 
         return response()->json([
-            'message' => $updated->is_verified ? 'Business verified successfully' : 'Verification submitted and pending review',
+            'message' => $updated->is_verified
+                ? 'Business verified successfully.'
+                : 'Verification submitted successfully and is pending administrator review.',
             'place'   => new PlaceDetailResource($updated),
         ], 200);
     }
 
+    /**
+     * Get the current legitimacy verification status and submitted documents.
+     */
     public function status(Request $request, Place $place): JsonResponse
     {
-        if ((int) $place->user_id !== (int) $request->user()->id && ! $request->user()->isAdmin() && $request->user()->role !== 'admin') {
-            abort(403, 'Unauthorized.');
+        $user = $request->user();
+        if ((int) $place->user_id !== (int) $user->id && ! $user->isAdmin() && $user->role !== 'admin') {
+            abort(403, 'You are not authorized to view verification details for this place.');
         }
 
         return response()->json([
             'place_id'              => $place->id,
+            'place_name'            => $place->name,
             'is_verified'           => (bool) $place->is_verified,
             'verification_status'   => $place->verification_status ?? 'unverified',
-            'verified_at'           => $place->verified_at?->toISOString(),
-            'telebirr_merchant_id'  => $place->telebirr_merchant_id,
             'tax_id'                => $place->tax_id,
-            'verification_document' => $place->verification_document
-                ? (str_starts_with($place->verification_document, 'http')
-                    ? $place->verification_document
-                    : asset('storage/' . $place->verification_document))
-                : null,
+            'manager_name'          => $place->manager_name,
+            'fayda_fin'             => $place->fayda_fin,
+            'verification_document' => $this->formatDocumentUrl($place->verification_document),
+            'fayda_document'        => $this->formatDocumentUrl($place->fayda_document),
+            'telebirr_merchant_id'  => $place->telebirr_merchant_id,
             'verification_notes'    => $place->verification_notes,
-        ]);
+            'verified_at'           => $place->verified_at?->toISOString(),
+            'fayda_validator_url'   => 'https://fayda.et',
+        ], 200);
     }
 
-    public function pendingList(Request $request): AnonymousResourceCollection
+    /**
+     * List all places pending admin legitimacy verification.
+     */
+    public function pendingList(Request $request): JsonResponse
     {
-        if (! $request->user()->isAdmin() && $request->user()->role !== 'admin') {
+        $user = $request->user();
+        if (! $user->isAdmin() && $user->role !== 'admin') {
             abort(403, 'Administrator access required.');
         }
 
-        $pendingPlaces = Place::where('verification_status', 'pending')->latest()->paginate(15);
+        $pendingPlaces = Place::where('verification_status', 'pending')
+            ->with('owner')
+            ->latest('updated_at')
+            ->paginate(15);
 
-        return PlaceDetailResource::collection($pendingPlaces);
+        return response()->json([
+            'data' => $pendingPlaces->through(function (Place $place) {
+                return [
+                    'id'                    => $place->id,
+                    'name'                  => $place->name,
+                    'slug'                  => $place->slug,
+                    'address'               => $place->address,
+                    'phone'                 => $place->phone,
+                    'tax_id'                => $place->tax_id,
+                    'manager_name'          => $place->manager_name,
+                    'fayda_fin'             => $place->fayda_fin,
+                    'trade_license_url'     => $this->formatDocumentUrl($place->verification_document),
+                    'fayda_document_url'    => $this->formatDocumentUrl($place->fayda_document),
+                    'verification_status'   => $place->verification_status,
+                    'verification_notes'    => $place->verification_notes,
+                    'submitted_at'          => $place->updated_at?->toISOString(),
+                    'fayda_validator_url'   => 'https://fayda.et',
+                    'owner'                 => $place->owner ? [
+                        'id'    => $place->owner->id,
+                        'name'  => $place->owner->name,
+                        'email' => $place->owner->email,
+                    ] : null,
+                ];
+            }),
+            'meta' => [
+                'current_page' => $pendingPlaces->currentPage(),
+                'last_page'    => $pendingPlaces->lastPage(),
+                'total'        => $pendingPlaces->total(),
+                'per_page'     => $pendingPlaces->perPage(),
+            ],
+        ], 200);
     }
 
+    /**
+     * Admin review action: approve or reject business verification.
+     */
     public function review(ReviewVerificationRequest $request, Place $place, ReviewVerificationAction $action): JsonResponse
     {
         $reviewed = $action->execute($place, $request->user(), $request->validated());
 
         return response()->json([
-            'message' => $reviewed->is_verified ? 'Place verification approved' : 'Place verification rejected',
+            'message' => $reviewed->is_verified
+                ? 'Place legitimacy verification approved successfully.'
+                : 'Place legitimacy verification has been rejected.',
             'place'   => new PlaceDetailResource($reviewed),
         ], 200);
+    }
+
+    private function formatDocumentUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return asset('storage/' . ltrim($path, '/'));
     }
 }

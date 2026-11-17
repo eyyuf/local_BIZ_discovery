@@ -42,13 +42,47 @@ class PlaceVerificationTest extends TestCase
             'user_id'             => $this->owner->id,
             'name'                => 'Bole Fresh Cafe',
             'slug'                => 'bole-fresh-cafe-' . uniqid(),
-            'description'         => 'Specialty Ethiopian coffee',
+            'description'         => 'Specialty Ethiopian coffee and pastries',
             'address'             => 'Bole Medhanialem, Addis Ababa',
             'phone'               => '+251911223344',
             'is_active'           => true,
             'is_verified'         => false,
             'verification_status' => 'unverified',
         ]);
+    }
+
+    public function test_owner_can_submit_tin_fayda_and_license_documents_for_review(): void
+    {
+        Storage::fake('public');
+        Sanctum::actingAs($this->owner);
+
+        $licenseFile = UploadedFile::fake()->create('trade_license.jpg', 300, 'image/jpeg');
+        $faydaFile = UploadedFile::fake()->create('fayda_national_id.jpg', 300, 'image/jpeg');
+
+        $response = $this->postJson("/api/v1/owner/places/{$this->place->id}/verify", [
+            'verification_type' => 'tin_fayda',
+            'tax_id'            => '0012345678',
+            'manager_name'      => 'Abebe Bikila',
+            'fayda_fin'         => '1234-5678-9012',
+            'license_document'  => $licenseFile,
+            'fayda_document'    => $faydaFile,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('place.is_verified', false);
+        $response->assertJsonPath('place.verification_status', 'pending');
+        $response->assertJsonPath('place.tax_id', '0012345678');
+        $response->assertJsonPath('place.manager_name', 'Abebe Bikila');
+        $response->assertJsonPath('place.fayda_fin', '1234-5678-9012');
+
+        $this->place->refresh();
+        $this->assertFalse($this->place->is_verified);
+        $this->assertEquals('pending', $this->place->verification_status);
+        $this->assertEquals('0012345678', $this->place->tax_id);
+        $this->assertEquals('Abebe Bikila', $this->place->manager_name);
+        $this->assertEquals('1234-5678-9012', $this->place->fayda_fin);
+        $this->assertNotNull($this->place->verification_document);
+        $this->assertNotNull($this->place->fayda_document);
     }
 
     public function test_owner_can_auto_verify_place_with_telebirr_merchant_id(): void
@@ -63,65 +97,26 @@ class PlaceVerificationTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonPath('place.is_verified', true);
         $response->assertJsonPath('place.verification_status', 'verified');
-        $response->assertJsonPath('place.telebirr_merchant_id', '458921');
 
         $this->place->refresh();
         $this->assertTrue($this->place->is_verified);
         $this->assertEquals('verified', $this->place->verification_status);
+        $this->assertEquals('458921', $this->place->telebirr_merchant_id);
         $this->assertNotNull($this->place->verified_at);
     }
 
-    public function test_telebirr_verification_rejects_invalid_shortcode_format(): void
+    public function test_verification_rejects_invalid_tin_format(): void
     {
         Sanctum::actingAs($this->owner);
 
         $response = $this->postJson("/api/v1/owner/places/{$this->place->id}/verify", [
-            'verification_type'    => 'telebirr',
-            'telebirr_merchant_id' => '12',
+            'verification_type' => 'tin_fayda',
+            'tax_id'            => '123', // invalid length
+            'manager_name'      => 'Abebe Bikila',
         ]);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['telebirr_merchant_id']);
-    }
-
-    public function test_owner_can_submit_document_verification_for_admin_review(): void
-    {
-        Storage::fake('cloudinary');
-        Storage::fake('public');
-        Sanctum::actingAs($this->owner);
-
-        $file = UploadedFile::fake()->create('etrade_license.jpg', 300, 'image/jpeg');
-
-        $response = $this->postJson("/api/v1/owner/places/{$this->place->id}/verify", [
-            'verification_type' => 'document',
-            'document'          => $file,
-        ]);
-
-        $response->assertStatus(200);
-        $response->assertJsonPath('place.is_verified', false);
-        $response->assertJsonPath('place.verification_status', 'pending');
-
-        $this->place->refresh();
-        $this->assertFalse($this->place->is_verified);
-        $this->assertEquals('pending', $this->place->verification_status);
-        $this->assertNotNull($this->place->verification_document);
-    }
-
-    public function test_owner_can_submit_tin_for_review(): void
-    {
-        Sanctum::actingAs($this->owner);
-
-        $response = $this->postJson("/api/v1/owner/places/{$this->place->id}/verify", [
-            'verification_type' => 'tin',
-            'tax_id'            => '0012345678',
-        ]);
-
-        $response->assertStatus(200);
-        $response->assertJsonPath('place.verification_status', 'pending');
-
-        $this->place->refresh();
-        $this->assertEquals('0012345678', $this->place->tax_id);
-        $this->assertEquals('pending', $this->place->verification_status);
+        $response->assertJsonValidationErrors(['tax_id']);
     }
 
     public function test_non_owner_cannot_submit_verification(): void
@@ -138,6 +133,15 @@ class PlaceVerificationTest extends TestCase
 
     public function test_owner_can_check_verification_status(): void
     {
+        $this->place->update([
+            'tax_id'                => '0012345678',
+            'manager_name'          => 'Abebe Bikila',
+            'fayda_fin'             => '1234-5678-9012',
+            'verification_document' => 'verifications/licenses/lic.jpg',
+            'fayda_document'        => 'verifications/fayda/id.jpg',
+            'verification_status'   => 'pending',
+        ]);
+
         Sanctum::actingAs($this->owner);
 
         $response = $this->getJson("/api/v1/owner/places/{$this->place->id}/verification-status");
@@ -145,19 +149,27 @@ class PlaceVerificationTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonStructure([
             'place_id',
+            'place_name',
             'is_verified',
             'verification_status',
-            'verified_at',
-            'telebirr_merchant_id',
             'tax_id',
+            'manager_name',
+            'fayda_fin',
             'verification_document',
-            'verification_notes',
+            'fayda_document',
+            'verified_at',
+            'fayda_validator_url',
         ]);
+        $response->assertJsonPath('fayda_validator_url', 'https://fayda.et');
     }
 
-    public function test_admin_can_view_pending_verifications(): void
+    public function test_admin_can_view_pending_verifications_list(): void
     {
-        $this->place->update(['verification_status' => 'pending']);
+        $this->place->update([
+            'verification_status' => 'pending',
+            'tax_id'              => '0012345678',
+            'manager_name'        => 'Abebe Bikila',
+        ]);
 
         Sanctum::actingAs($this->admin);
 
@@ -165,6 +177,7 @@ class PlaceVerificationTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonFragment(['name' => 'Bole Fresh Cafe']);
+        $response->assertJsonFragment(['manager_name' => 'Abebe Bikila']);
     }
 
     public function test_non_admin_cannot_view_pending_verifications(): void
@@ -178,13 +191,17 @@ class PlaceVerificationTest extends TestCase
 
     public function test_admin_can_approve_place_verification(): void
     {
-        $this->place->update(['verification_status' => 'pending']);
+        $this->place->update([
+            'verification_status' => 'pending',
+            'tax_id'              => '0012345678',
+            'manager_name'        => 'Abebe Bikila',
+        ]);
 
         Sanctum::actingAs($this->admin);
 
-        $response = $this->postJson("/api/v1/admin/places/{$this->place->id}/verify", [
+        $response = $this->postJson("/api/v1/admin/places/{$this->place->id}/review", [
             'decision' => 'approved',
-            'notes'    => 'eTrade license verified on etrade.gov.et',
+            'notes'    => 'Trade License and Fayda ID QR code verified successfully on fayda.et',
         ]);
 
         $response->assertStatus(200);
@@ -194,18 +211,24 @@ class PlaceVerificationTest extends TestCase
         $this->place->refresh();
         $this->assertTrue($this->place->is_verified);
         $this->assertEquals('verified', $this->place->verification_status);
-        $this->assertEquals('eTrade license verified on etrade.gov.et', $this->place->verification_notes);
+        $this->assertNotNull($this->place->verified_at);
+        $this->assertEquals(
+            'Trade License and Fayda ID QR code verified successfully on fayda.et',
+            $this->place->verification_notes
+        );
     }
 
     public function test_admin_can_reject_place_verification(): void
     {
-        $this->place->update(['verification_status' => 'pending']);
+        $this->place->update([
+            'verification_status' => 'pending',
+        ]);
 
         Sanctum::actingAs($this->admin);
 
-        $response = $this->postJson("/api/v1/admin/places/{$this->place->id}/verify", [
+        $response = $this->postJson("/api/v1/admin/places/{$this->place->id}/review", [
             'decision' => 'rejected',
-            'notes'    => 'License image was blurry and unreadable',
+            'notes'    => 'Fayda ID QR code unreadable or name does not match trade license general manager',
         ]);
 
         $response->assertStatus(200);
@@ -215,6 +238,20 @@ class PlaceVerificationTest extends TestCase
         $this->place->refresh();
         $this->assertFalse($this->place->is_verified);
         $this->assertEquals('rejected', $this->place->verification_status);
-        $this->assertEquals('License image was blurry and unreadable', $this->place->verification_notes);
+    }
+
+    public function test_public_place_detail_shows_is_verified_true_when_approved(): void
+    {
+        $this->place->update([
+            'is_verified'         => true,
+            'verification_status' => 'verified',
+            'verified_at'         => now(),
+        ]);
+
+        $response = $this->getJson("/api/v1/places/{$this->place->slug}");
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.is_verified', true);
+        $response->assertJsonPath('data.verification_status', 'verified');
     }
 }
