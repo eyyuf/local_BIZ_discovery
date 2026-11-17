@@ -25,6 +25,8 @@ class SearchResultResource extends JsonResource
             'phone'       => $this->phone,
             'website'     => $this->website,
             'is_open'     => (bool) ($this->resource instanceof \App\Modules\Place\Models\Place ? $this->resource->isOpen() : ($this->is_open ?? false)),
+            'is_verified' => (bool) ($this->is_verified ?? false),
+            'verification_status' => $this->verification_status ?? 'unverified',
             'is_active'   => (bool) $this->is_active,
             'cover_image' => $this->relationLoaded('images')
                 ? ($this->images->firstWhere('is_cover', true)?->url ?? $this->images->first()?->url)

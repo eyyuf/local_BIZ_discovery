@@ -57,7 +57,7 @@ class PlaceVerificationController extends Controller
     }
 
     /**
-     * List all places pending admin legitimacy verification.
+     * List all places pending admin legitimacy verification with optional status filter.
      */
     public function pendingList(Request $request): JsonResponse
     {
@@ -66,36 +66,58 @@ class PlaceVerificationController extends Controller
             abort(403, 'Administrator access required.');
         }
 
-        $pendingPlaces = Place::where('verification_status', 'pending')
-            ->with('owner')
-            ->latest('updated_at')
-            ->paginate(15);
+        $status = $request->query('status', 'pending');
+        if ($status === 'approved') {
+            $status = 'verified';
+        }
+
+        $query = Place::with('owner')->latest('updated_at');
+
+        if ($status !== 'all') {
+            $query->where('verification_status', $status);
+        } else {
+            $query->whereIn('verification_status', ['pending', 'verified', 'rejected']);
+        }
+
+        $perPage = max(1, min((int) $request->query('per_page', 15), 50));
+        $pendingPlaces = $query->paginate($perPage);
+
+        $counts = [
+            'pending'  => Place::where('verification_status', 'pending')->count(),
+            'verified' => Place::where('verification_status', 'verified')->count(),
+            'rejected' => Place::where('verification_status', 'rejected')->count(),
+            'total'    => Place::whereIn('verification_status', ['pending', 'verified', 'rejected'])->count(),
+        ];
+
+        $items = $pendingPlaces->getCollection()->map(function (Place $place) {
+            return [
+                'id'                    => $place->id,
+                'name'                  => $place->name,
+                'slug'                  => $place->slug,
+                'address'               => $place->address,
+                'phone'                 => $place->phone,
+                'tax_id'                => $place->tax_id,
+                'manager_name'          => $place->manager_name,
+                'fayda_fin'             => $place->fayda_fin,
+                'trade_license_url'     => $this->formatDocumentUrl($place->verification_document),
+                'fayda_document_url'    => $this->formatDocumentUrl($place->fayda_document),
+                'verification_status'   => $place->verification_status,
+                'verification_notes'    => $place->verification_notes,
+                'submitted_at'          => $place->updated_at?->toISOString(),
+                'verified_at'           => $place->verified_at?->toISOString(),
+                'fayda_validator_url'   => 'https://fayda.et',
+                'owner'                 => $place->owner ? [
+                    'id'    => $place->owner->id,
+                    'name'  => $place->owner->name,
+                    'email' => $place->owner->email,
+                ] : null,
+            ];
+        })->values();
 
         return response()->json([
-            'data' => $pendingPlaces->through(function (Place $place) {
-                return [
-                    'id'                    => $place->id,
-                    'name'                  => $place->name,
-                    'slug'                  => $place->slug,
-                    'address'               => $place->address,
-                    'phone'                 => $place->phone,
-                    'tax_id'                => $place->tax_id,
-                    'manager_name'          => $place->manager_name,
-                    'fayda_fin'             => $place->fayda_fin,
-                    'trade_license_url'     => $this->formatDocumentUrl($place->verification_document),
-                    'fayda_document_url'    => $this->formatDocumentUrl($place->fayda_document),
-                    'verification_status'   => $place->verification_status,
-                    'verification_notes'    => $place->verification_notes,
-                    'submitted_at'          => $place->updated_at?->toISOString(),
-                    'fayda_validator_url'   => 'https://fayda.et',
-                    'owner'                 => $place->owner ? [
-                        'id'    => $place->owner->id,
-                        'name'  => $place->owner->name,
-                        'email' => $place->owner->email,
-                    ] : null,
-                ];
-            }),
-            'meta' => [
+            'data'   => $items,
+            'counts' => $counts,
+            'meta'   => [
                 'current_page' => $pendingPlaces->currentPage(),
                 'last_page'    => $pendingPlaces->lastPage(),
                 'total'        => $pendingPlaces->total(),

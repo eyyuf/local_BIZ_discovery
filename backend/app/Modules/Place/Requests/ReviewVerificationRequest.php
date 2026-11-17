@@ -17,15 +17,16 @@ class ReviewVerificationRequest extends FormRequest
     {
         return [
             'decision' => ['required', 'string', 'in:approved,rejected'],
-            'notes'    => ['nullable', 'string', 'max:1000'],
+            'notes'    => ['nullable', 'string', 'max:1000', 'required_if:decision,rejected'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'decision.required' => 'A review decision (approved or rejected) is required.',
-            'decision.in'       => 'The decision must be either "approved" or "rejected".',
+            'decision.required'  => 'A review decision (approved or rejected) is required.',
+            'decision.in'        => 'The decision must be either "approved" or "rejected".',
+            'notes.required_if'  => 'A meaningful rejection reason is required when rejecting verification.',
         ];
     }
 }

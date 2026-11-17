@@ -16,6 +16,13 @@ class SubmitVerificationAction
             abort(403, 'You are not authorized to verify this place.');
         }
 
+        // Prevent duplicate pending submissions for regular owners
+        if ($place->verification_status === 'pending' && ! $user->isAdmin()) {
+            throw ValidationException::withMessages([
+                'verification' => ['A verification application is already pending review for this business.'],
+            ]);
+        }
+
         $type = $data['verification_type'] ?? 'tin_fayda';
 
         // 1. Instant Telebirr Merchant Verification (Automated flow)

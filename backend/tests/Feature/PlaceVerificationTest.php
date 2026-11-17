@@ -254,4 +254,93 @@ class PlaceVerificationTest extends TestCase
         $response->assertJsonPath('data.is_verified', true);
         $response->assertJsonPath('data.verification_status', 'verified');
     }
+
+    public function test_owner_cannot_submit_duplicate_pending_verification(): void
+    {
+        $this->place->update([
+            'verification_status' => 'pending',
+        ]);
+
+        Sanctum::actingAs($this->owner);
+
+        $response = $this->postJson("/api/v1/owner/places/{$this->place->id}/verify", [
+            'verification_type' => 'telebirr',
+            'telebirr_merchant_id' => '123456',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['verification']);
+    }
+
+    public function test_admin_cannot_review_own_business(): void
+    {
+        // Give the admin their own place
+        $adminPlace = Place::create([
+            'user_id'             => $this->admin->id,
+            'name'                => 'Admin Cafe',
+            'slug'                => 'admin-cafe',
+            'address'             => 'Bole, Addis Ababa',
+            'verification_status' => 'pending',
+            'is_active'           => true,
+        ]);
+
+        Sanctum::actingAs($this->admin);
+
+        $response = $this->postJson("/api/v1/admin/places/{$adminPlace->id}/review", [
+            'decision' => 'approved',
+            'notes'    => 'Approving my own place',
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_rejection_requires_notes_reason(): void
+    {
+        $this->place->update([
+            'verification_status' => 'pending',
+        ]);
+
+        Sanctum::actingAs($this->admin);
+
+        $response = $this->postJson("/api/v1/admin/places/{$this->place->id}/review", [
+            'decision' => 'rejected',
+            'notes'    => '', // empty notes
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['notes']);
+    }
+
+    public function test_admin_can_filter_verifications_by_status(): void
+    {
+        $this->place->update([
+            'verification_status' => 'verified',
+            'is_verified'         => true,
+        ]);
+
+        $pendingPlace = Place::create([
+            'user_id'             => $this->owner->id,
+            'name'                => 'Pending Spot',
+            'slug'                => 'pending-spot',
+            'address'             => 'Bole',
+            'verification_status' => 'pending',
+            'is_active'           => true,
+        ]);
+
+        Sanctum::actingAs($this->admin);
+
+        // Filter by verified
+        $resVerified = $this->getJson('/api/v1/admin/places/pending-verifications?status=verified');
+        $resVerified->assertStatus(200);
+        $idsVerified = collect($resVerified->json('data'))->pluck('id');
+        $this->assertTrue($idsVerified->contains($this->place->id));
+        $this->assertFalse($idsVerified->contains($pendingPlace->id));
+
+        // Filter by pending
+        $resPending = $this->getJson('/api/v1/admin/places/pending-verifications?status=pending');
+        $resPending->assertStatus(200);
+        $idsPending = collect($resPending->json('data'))->pluck('id');
+        $this->assertFalse($idsPending->contains($this->place->id));
+        $this->assertTrue($idsPending->contains($pendingPlace->id));
+    }
 }
