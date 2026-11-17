@@ -4,6 +4,7 @@ import { Star, ChevronLeft, ChevronRight, ArrowUpRight, Clock, Sparkles } from '
 import { BookmarkButton } from '@/modules/bookmarks/components/BookmarkButton';
 import { getPlacePhotos, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 import { getPlaceCategoryLabel } from '@/shared/utils/placeCategories';
+import { getOperatingStatus } from '@/shared/utils/operatingHours';
 
 export function PlaceCard({ place, rank = null, className = '' }) {
   const photos = getPlacePhotos(place);
@@ -72,7 +73,9 @@ export function PlaceCard({ place, rank = null, className = '' }) {
   const neighborhood = getNeighborhood();
   const { hasRating, rating, count } = getRatingInfo();
   const highlightSnippet = getHighlightSnippet();
-  const isOpen = place?.is_open !== undefined ? Boolean(place.is_open) : null;
+  const operatingStatus = getOperatingStatus(place);
+  const showStatusBadge = operatingStatus.hasHours;
+  const isOpen = operatingStatus.isOpen;
 
   // Clean description: 1 line max, no boilerplate
   const description = (place?.description || '').trim();
@@ -144,7 +147,7 @@ export function PlaceCard({ place, rank = null, className = '' }) {
           </div>
 
           {/* Open/Closed Badge (Bottom-Left Pill, only if status available) */}
-          {isOpen !== null && (
+          {showStatusBadge && (
             <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-xs font-semibold text-[#F5F5F7] border border-white/10 shadow-sm">
               {isOpen ? (
                 <>

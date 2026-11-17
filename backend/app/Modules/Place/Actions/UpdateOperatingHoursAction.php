@@ -4,6 +4,7 @@ namespace App\Modules\Place\Actions;
 
 use App\Modules\Place\Models\Place;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class UpdateOperatingHoursAction
@@ -44,6 +45,9 @@ class UpdateOperatingHoursAction
                     );
                 }
             }
+
+            // Invalidate cached place details when hours change
+            Cache::forget("place_{$place->id}");
 
             // Return active operating schedule ordered by weekday (0 = Sun, ..., 6 = Sat)
             return $place->operatingHours()->orderBy('day_of_week')->get();

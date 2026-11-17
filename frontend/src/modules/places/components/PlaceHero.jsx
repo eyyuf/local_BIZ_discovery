@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { BookmarkButton } from '@/modules/bookmarks/components/BookmarkButton';
 import { PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
+import { getOperatingStatus } from '@/shared/utils/operatingHours';
 
 export function PlaceHero({
   place,
@@ -84,6 +85,7 @@ export function PlaceHero({
 
   const neighborhood =
     place?.address?.split(',')?.slice(-2)?.join(',')?.trim() || 'Addis Ababa';
+  const operatingStatus = getOperatingStatus(place);
 
   return (
     <div className="relative w-full h-[520px] sm:h-[580px] lg:h-[640px] overflow-hidden bg-[#151513] select-none">
@@ -181,10 +183,24 @@ export function PlaceHero({
 
         {/* Status & Location line */}
         <div className="flex items-center gap-3 text-xs sm:text-sm font-medium">
-          <div className="inline-flex items-center gap-1.5 text-emerald-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold">Open Now</span>
-          </div>
+          {operatingStatus.tone === 'open' && (
+            <div className="inline-flex items-center gap-1.5 text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-semibold">Open Now</span>
+            </div>
+          )}
+          {operatingStatus.tone === 'closed' && (
+            <div className="inline-flex items-center gap-1.5 text-rose-400">
+              <span className="w-2 h-2 rounded-full bg-rose-400" />
+              <span className="font-semibold">{operatingStatus.label}</span>
+            </div>
+          )}
+          {operatingStatus.tone === 'neutral' && (
+            <div className="inline-flex items-center gap-1.5 text-[#AAA69C]">
+              <span className="w-2 h-2 rounded-full bg-[#AAA69C]/60" />
+              <span className="font-semibold">{operatingStatus.label}</span>
+            </div>
+          )}
           <span className="text-white/40">&bull;</span>
           <span className="text-[#AAA69C]">{neighborhood}</span>
         </div>

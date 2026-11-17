@@ -17,3 +17,21 @@ node_modules/
 vendor/
 dist/
 frontend/dist/
+
+
+# Vite cache
+frontend/.vite/
+
+# Frontend production build
+frontend/dist/
+
+# Dependencies
+frontend/node_modules/
+
+# Laravel dependencies
+backend/vendor/
+
+# Laravel runtime files
+backend/storage/*.key
+backend/storage/logs/
+backend/bootstrap/cache/

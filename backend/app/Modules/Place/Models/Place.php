@@ -6,6 +6,8 @@ use App\Modules\Discovery\Models\Amenity;
 use App\Modules\Discovery\Models\Category;
 use App\Modules\Discovery\Models\PlaceBookmark;
 use App\Modules\Identity\Models\User;
+use App\Modules\Place\Actions\CheckIsOpenNowAction;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -41,6 +43,10 @@ class Place extends Model
         'verified_at',
     ];
 
+    protected $appends = [
+        'is_open',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -48,6 +54,22 @@ class Place extends Model
             'is_active'   => 'boolean',
             'verified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Determine whether the place is currently open in Africa/Addis_Ababa.
+     */
+    public function isOpen(?DateTimeInterface $at = null): bool
+    {
+        return app(CheckIsOpenNowAction::class)->execute($this, $at);
+    }
+
+    /**
+     * Dynamic is_open attribute accessor.
+     */
+    public function getIsOpenAttribute(): bool
+    {
+        return $this->isOpen();
     }
 
     protected static function booted(): void

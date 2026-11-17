@@ -31,7 +31,7 @@ class GetExploreFeedAction
         if ($lat !== null && $lng !== null) {
             $places = Place::query()
                 ->where('is_active', true)
-                ->with(['images', 'categories'])
+                ->with(['images', 'categories', 'operatingHours'])
                 ->withinRadius($lat, $lng, 50.0)
                 ->withDistanceTo($lat, $lng)
                 ->orderBy('distance_km', 'asc')
@@ -42,7 +42,7 @@ class GetExploreFeedAction
         } else {
             $places = Place::query()
                 ->where('is_active', true)
-                ->with(['images', 'categories'])
+                ->with(['images', 'categories', 'operatingHours'])
                 ->withCount('bookmarks')
                 ->orderByDesc('bookmarks_count')
                 ->orderByDesc('created_at')

@@ -6,6 +6,7 @@ import { TrendingSection } from '../components/TrendingSection';
 import { LatestSection } from '../components/LatestSection';
 import { PersonalizedRadar } from '../components/PersonalizedRadar';
 import { TopRatedSection } from '../components/TopRatedSection';
+import { getOperatingStatus } from '@/shared/utils/operatingHours';
 
 export function HomePage() {
   const [searchParams] = useSearchParams();
@@ -69,7 +70,7 @@ export function HomePage() {
         : '';
 
       if (activeFilter === 'open_now') {
-        return place.is_open !== false;
+        return getOperatingStatus(place).isOpen;
       }
       if (activeFilter === 'bole') {
         return address.includes('bole') || slug.includes('bole');

@@ -19,6 +19,7 @@ class PlaceDetailResource extends JsonResource
             'longitude'       => $this->longitude,
             'phone'           => $this->phone,
             'website'         => $this->website,
+            'is_open'         => (bool) ($this->resource instanceof \App\Modules\Place\Models\Place ? $this->resource->isOpen() : ($this->is_open ?? false)),
             'is_active'             => (bool) $this->is_active,
             'is_verified'           => (bool) ($this->is_verified ?? false),
             'verification_status'   => $this->verification_status ?? 'unverified',
