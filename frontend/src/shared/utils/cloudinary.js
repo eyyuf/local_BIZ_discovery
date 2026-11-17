@@ -17,6 +17,11 @@ export function getOptimizedImageUrl(url, options = {}) {
     return url;
   }
 
+  // Avoid duplicating transformations if already applied
+  if (/\/upload\/[a-z]_[^/]+\//.test(url)) {
+    return url;
+  }
+
   const {
     width,
     height,

@@ -17,6 +17,7 @@ Route::prefix('api/v1')->middleware('api')->group(function () {
 // Authenticated review, rating, discussion message, and favorite routes
 Route::prefix('api/v1')->middleware(['api', 'auth:sanctum'])->group(function () {
     // Written reviews
+    Route::get('user/reviews', [ReviewController::class, 'userReviews']);
     Route::post('places/{place}/reviews', [ReviewController::class, 'store']);
     Route::match(['put', 'patch'], 'reviews/{review}', [ReviewController::class, 'update']);
     Route::delete('reviews/{review}', [ReviewController::class, 'destroy']);

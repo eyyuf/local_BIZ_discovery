@@ -16,11 +16,13 @@ class Review extends Model
     protected $fillable = [
         'place_id',
         'user_id',
+        'rating',
         'comment',
         'is_published',
     ];
 
     protected $casts = [
+        'rating'       => 'integer',
         'is_published' => 'boolean',
     ];
 

@@ -4,6 +4,7 @@ use App\Modules\Place\Controllers\MenuController;
 use App\Modules\Place\Controllers\OperatingHourController;
 use App\Modules\Place\Controllers\OwnerPlaceController;
 use App\Modules\Place\Controllers\PlaceController;
+use App\Modules\Place\Controllers\PlaceImageController;
 use App\Modules\Place\Controllers\PlaceVerificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,20 +13,31 @@ Route::prefix('api/v1/places')->middleware('api')->group(function () {
     Route::get('/', [PlaceController::class, 'index']);
     Route::get('{place:slug}', [PlaceController::class, 'show']);
     Route::get('{place:slug}/menu', [MenuController::class, 'index']);
+    Route::get('{place:slug}/images', [PlaceImageController::class, 'index']);
 });
 
 // Business Owner routes (Protected by auth)
 Route::prefix('api/v1/owner/places')->middleware(['api', 'auth:sanctum'])->group(function () {
     Route::get('/', [OwnerPlaceController::class, 'index']);
     Route::post('/', [OwnerPlaceController::class, 'store']);
+    Route::get('{place}', [OwnerPlaceController::class, 'show']);
     Route::put('{place}', [OwnerPlaceController::class, 'update']);
     Route::delete('{place}', [OwnerPlaceController::class, 'destroy']);
+
+    // Place Images Management (Cloudinary)
+    Route::get('{place}/images', [PlaceImageController::class, 'index']);
+    Route::post('{place}/images', [PlaceImageController::class, 'store']);
+    Route::post('{place}/images/{placeImage}/cover', [PlaceImageController::class, 'setCover']);
+    Route::delete('{place}/images/{placeImage}', [PlaceImageController::class, 'destroy']);
 
     // Operating hours
     Route::put('{place}/operating-hours', [OperatingHourController::class, 'update']);
 
     // Menu Management
+    Route::get('{place}/menu', [MenuController::class, 'index']);
     Route::post('{place}/menu/sections', [MenuController::class, 'storeSection']);
+    Route::put('{place}/menu/sections/{menuSection}', [MenuController::class, 'updateSection']);
+    Route::delete('{place}/menu/sections/{menuSection}', [MenuController::class, 'destroySection']);
     Route::post('{place}/menu/items', [MenuController::class, 'storeItem']);
     Route::put('menu/items/{menuItem}', [MenuController::class, 'updateItem']);
     Route::delete('menu/items/{menuItem}', [MenuController::class, 'destroyItem']);
