@@ -199,13 +199,13 @@ export function AdminDashboardPage() {
               </button>
 
               <a
-                href="https://fayda.et"
+                href="https://id.gov.et/scanId"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>Fayda.et Validator</span>
+                <span>Open id.gov.et Scanner</span>
               </a>
             </div>
           </div>
@@ -314,12 +314,12 @@ export function AdminDashboardPage() {
           </div>
 
           <a
-            href="https://fayda.et"
+            href="https://id.gov.et/scanId"
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold inline-flex items-center gap-1.5 shrink-0 transition"
           >
-            <span>Scan QR on fayda.et</span>
+            <span>Scan QR on id.gov.et</span>
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>
@@ -567,13 +567,13 @@ export function AdminDashboardPage() {
                   <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-2">
                       <a
-                        href={place.fayda_validator_url || 'https://fayda.et'}
+                        href={place.fayda_validator_url || 'https://id.gov.et/scanId'}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-[#AAA69C] hover:text-white transition flex items-center gap-1.5"
                       >
                         <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Validate on Fayda.et</span>
+                        <span>Validate on id.gov.et</span>
                       </a>
                     </div>
 
@@ -751,7 +751,7 @@ export function AdminDashboardPage() {
             />
           </div>
           <p className="text-[11px] text-[#AAA69C] mt-2">
-            Tip: You can scan the digital QR code with your phone camera directly from the screen to validate on fayda.et.
+            Tip: You can scan the digital QR code with your phone camera or through https://id.gov.et/scanId.
           </p>
         </div>
       )}

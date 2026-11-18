@@ -52,7 +52,7 @@ class PlaceVerificationController extends Controller
             'telebirr_merchant_id'  => $place->telebirr_merchant_id,
             'verification_notes'    => $place->verification_notes,
             'verified_at'           => $place->verified_at?->toISOString(),
-            'fayda_validator_url'   => 'https://fayda.et',
+            'fayda_validator_url'   => 'https://id.gov.et/scanId',
         ], 200);
     }
 
@@ -105,7 +105,7 @@ class PlaceVerificationController extends Controller
                 'verification_notes'    => $place->verification_notes,
                 'submitted_at'          => $place->updated_at?->toISOString(),
                 'verified_at'           => $place->verified_at?->toISOString(),
-                'fayda_validator_url'   => 'https://fayda.et',
+                'fayda_validator_url'   => 'https://id.gov.et/scanId',
                 'owner'                 => $place->owner ? [
                     'id'    => $place->owner->id,
                     'name'  => $place->owner->name,
