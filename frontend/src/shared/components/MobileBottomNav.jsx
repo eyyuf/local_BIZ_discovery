@@ -18,7 +18,9 @@ export function MobileBottomNav() {
   ];
   const isAuthPage = authPaths.some((p) => location.pathname.startsWith(p));
 
-  if (isAuthPage) {
+  const isAdminPage = location.pathname.startsWith('/admin');
+
+  if (isAuthPage || isAdminPage) {
     return null;
   }
 
@@ -100,9 +102,6 @@ export function MobileBottomNav() {
               >
                 {item.label}
               </span>
-              {active && (
-                <span className="w-1 h-1 rounded-full bg-amber-400 mt-0.5" />
-              )}
             </Link>
           );
         })}

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Mail, Lock, Eye, EyeOff, Compass, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Compass, ArrowLeft, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
 
 export function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -18,9 +18,13 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true });
+      if (user?.role === 'admin' && (from === '/' || from === '/profile')) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, user, navigate, from]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,8 +32,12 @@ export function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await login({ email, password });
-      navigate(from, { replace: true });
+      const authUser = await login({ email, password });
+      if (authUser?.role === 'admin' && (from === '/' || from === '/profile')) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err) {
       let msg = 'Invalid email or password. Please try again.';
       if (err.response?.data?.errors) {
@@ -208,6 +216,21 @@ export function LoginPage() {
                     )}
                   </button>
                 </div>
+
+                {/* Admin Quick Fill (Discreet Moderator Tool) */}
+                <div className="pt-2 flex items-center justify-between text-[11px] text-[#AAA69C]/80">
+                  <span>Demo administrator access?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('admin@localspot.et');
+                      setPassword('password');
+                    }}
+                    className="text-[#AAA69C] hover:text-white transition flex items-center gap-1 cursor-pointer font-medium underline underline-offset-2"
+                  >
+                    <span>Use admin credentials</span>
+                  </button>
+                </div>
               </form>
 
               {/* Bottom Registration Link */}
@@ -242,7 +265,7 @@ export function LoginPage() {
 
       {/* Bottom Sub-footer */}
       <footer className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#AAA69C]/80 font-mono">
-        <div>Bole &bull; Kazanchis &bull; Bishoftu &bull; Piassa</div>
+        <div>Bole / Kazanchis / Bishoftu / Piassa</div>
         <div>Local Spot Ethiopia &copy; 2026</div>
       </footer>
     </div>

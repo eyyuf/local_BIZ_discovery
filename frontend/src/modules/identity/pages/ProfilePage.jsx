@@ -31,6 +31,8 @@ import {
   Image as ImageIcon,
   Settings,
   Edit,
+  ShieldCheck,
+  ArrowRight,
 } from 'lucide-react';
 import gsap from 'gsap';
 import { getPlacePrimaryPhoto, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
@@ -334,8 +336,12 @@ export function ProfilePage() {
                   <h1 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight">
                     {user?.name || 'LocalSpot Explorer'}
                   </h1>
-                  <span className="px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white/[0.08] text-white/90 border border-white/10 font-mono">
-                    {user?.role === 'owner' ? 'Business Owner' : 'Verified Explorer'}
+                  <span className={`px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider font-mono ${
+                    user?.role === 'admin'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      : 'bg-white/[0.08] text-white/90 border border-white/10'
+                  }`}>
+                    {user?.role === 'admin' ? 'System Administrator' : (user?.role === 'owner' ? 'Business Owner' : 'Verified Explorer')}
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-[#AAA69C] flex items-center justify-center sm:justify-start gap-2">
@@ -417,6 +423,33 @@ export function ProfilePage() {
                 <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
               )}
               <span className="font-semibold">{avatarFeedback.text}</span>
+            </div>
+          )}
+
+          {/* Admin Direct Access Banner */}
+          {user?.role === 'admin' && (
+            <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-amber-500/5">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-white font-display">Administrator Verification Console</p>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">Admin Only</span>
+                  </div>
+                  <p className="text-xs text-[#AAA69C] mt-0.5">
+                    Review and verify Ethiopian business registrations (TIN, Trade License, and Fayda National ID).
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/admin"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-amber-400 hover:bg-amber-300 text-black text-xs font-bold transition shadow-lg shrink-0 flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+              >
+                <span>Launch Admin Dashboard</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           )}
         </div>
@@ -786,13 +819,14 @@ export function ProfilePage() {
                               e.currentTarget.src = PLACE_PLACEHOLDER;
                             }}
                           />
-                          <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono border border-white/10 bg-black/75 backdrop-blur-md text-[#AAA69C]">
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                place.is_active ? 'bg-emerald-400' : 'bg-zinc-500'
-                              }`}
-                            />
-                            <span>{place.is_active ? 'Live' : 'Draft'}</span>
+                          <span
+                            className={`absolute top-2.5 right-2.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide border backdrop-blur-md ${
+                              place.is_active
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                : 'bg-black/80 text-zinc-400 border-white/10'
+                            }`}
+                          >
+                            {place.is_active ? 'Live' : 'Draft'}
                           </span>
                         </div>
 

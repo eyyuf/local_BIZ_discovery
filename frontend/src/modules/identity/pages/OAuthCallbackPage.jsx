@@ -115,7 +115,7 @@ export function OAuthCallbackPage() {
       </main>
 
       <footer className="relative z-20 text-center py-4 text-[11px] text-[#AAA69C]/60 font-mono">
-        Local Spot Ethiopia &bull; 2026
+        Local Spot Ethiopia — 2026
       </footer>
     </div>
   );

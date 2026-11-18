@@ -339,7 +339,7 @@ export function LeafletMap({
               <div class="custom-carto-popup" style="font-family: system-ui, -apple-system, sans-serif; min-width: 200px; padding: 2px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
                   <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); font-size: 10px; font-weight: 700; color: #F5B301;">
-                    #${rank} &bull; ${escapeHtml(categoryLabel)}
+                    #${rank} — ${escapeHtml(categoryLabel)}
                   </span>
                   ${
                     place.distance_km

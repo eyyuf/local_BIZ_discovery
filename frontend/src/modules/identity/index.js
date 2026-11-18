@@ -8,5 +8,7 @@ export { default as ProfilePage } from './pages/ProfilePage';
 export { default as OAuthCallbackPage } from './pages/OAuthCallbackPage';
 export { BusinessCreatePage } from './pages/BusinessCreatePage';
 export { BusinessDashboardPage } from './pages/BusinessDashboardPage';
+export { AdminDashboardPage } from './pages/AdminDashboardPage';
 export { default as SavedBookmarksList } from './components/SavedBookmarksList';
+
 

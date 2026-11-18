@@ -33,6 +33,7 @@ export function Navbar() {
   const authPaths = ['/login', '/register', '/signup', '/oauth', '/forgot-password', '/reset-password'];
   const isAuthPage = authPaths.some((p) => location.pathname.startsWith(p));
   const isPlaceDetailPage = location.pathname.startsWith('/places/');
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   const activeFilter = searchParams.get('filter') || 'all';
 
@@ -81,8 +82,8 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Suppress completely on place detail and auth routes per architecture specification
-  if (isPlaceDetailPage || isAuthPage) {
+  // Suppress completely on place detail, auth routes, and dedicated admin portal
+  if (isPlaceDetailPage || isAuthPage || isAdminPage) {
     return null;
   }
 
@@ -119,9 +120,8 @@ export function Navbar() {
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 bg-black/45 flex items-center justify-center text-white backdrop-blur-md group-hover:border-white transition">
             <Compass className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span className="font-extrabold text-base sm:text-lg tracking-tight text-white font-display flex items-center gap-1.5 whitespace-nowrap">
+          <span className="font-extrabold text-base sm:text-lg tracking-tight text-white font-display whitespace-nowrap">
             Local Spot
-            <span className="w-1.5 h-1.5 rounded-full bg-white/70 inline-block" />
           </span>
         </Link>
 
@@ -166,20 +166,18 @@ export function Navbar() {
             <span>Collections</span>
           </Link>
 
-          {user?.role === 'admin' && (
-            <Link
-              to="/admin/verifications"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-950/25 text-emerald-400 backdrop-blur-md text-xs font-semibold hover:border-emerald-400 hover:text-emerald-300 transition"
-              title="Admin Business Verifications"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Verifications</span>
-            </Link>
-          )}
-
           {/* User / Sign In Pill */}
           {isAuthenticated ? (
             <div className="flex items-center gap-1.5 pl-1">
+              {user?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 backdrop-blur-md text-xs font-bold text-amber-300 hover:border-amber-400 hover:bg-amber-500/20 transition shadow-sm shadow-amber-500/10"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Admin Panel</span>
+                </Link>
+              )}
               <Link
                 to="/profile"
                 className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/25 bg-black/45 backdrop-blur-md text-xs font-bold text-white hover:border-white transition"
@@ -287,17 +285,17 @@ export function Navbar() {
             </Link>
           </div>
 
-          <div className="pt-2 space-y-2">
+          <div className="pt-2">
             {isAuthenticated ? (
-              <>
+              <div className="space-y-2">
                 {user?.role === 'admin' && (
                   <Link
-                    to="/admin/verifications"
+                    to="/admin"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-950/40 transition"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 text-xs font-bold text-amber-300"
                   >
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Admin Verifications</span>
+                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                    <span>Admin Panel</span>
                   </Link>
                 )}
                 <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
@@ -317,7 +315,7 @@ export function Navbar() {
                     Sign Out
                   </button>
                 </div>
-              </>
+              </div>
             ) : (
               <Link
                 to="/login"

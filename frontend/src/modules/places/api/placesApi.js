@@ -134,7 +134,7 @@ export const placesApi = {
     return response.data?.url || response.data;
   },
 
-  // Business Legitimacy Verification
+  // Business Legitimacy Verification (Owner)
   getVerificationStatus: async (placeId) => {
     const response = await apiClient.get(`/owner/places/${placeId}/verification-status`);
     return response.data;
@@ -144,6 +144,14 @@ export const placesApi = {
     const isFormData = payload instanceof FormData;
     const headers = isFormData ? { 'Content-Type': 'multipart/form-data' } : {};
     const response = await apiClient.post(`/owner/places/${placeId}/verify`, payload, { headers });
+    return response.data;
+  },
+
+  // Admin Verification Management
+  getPendingVerifications: async (status = 'pending', page = 1) => {
+    const response = await apiClient.get('/admin/places/pending-verifications', {
+      params: { status, page },
+    });
     return response.data;
   },
 

@@ -14,7 +14,6 @@ export function NearMeFloatingPill() {
         onClick={() => navigate('/nearby')}
         className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-white/25 bg-black/60 text-xs font-semibold text-white shadow-lg backdrop-blur-md hover:border-white hover:bg-black/80 transition active:scale-95 cursor-pointer"
       >
-        <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
         <LocateFixed className="w-3.5 h-3.5 text-white/90" />
         <span>Near Me</span>
       </button>

@@ -160,7 +160,7 @@ class PlaceVerificationTest extends TestCase
             'verified_at',
             'fayda_validator_url',
         ]);
-        $response->assertJsonPath('fayda_validator_url', 'https://fayda.et');
+        $response->assertJsonPath('fayda_validator_url', 'https://id.gov.et/scanId');
     }
 
     public function test_admin_can_view_pending_verifications_list(): void

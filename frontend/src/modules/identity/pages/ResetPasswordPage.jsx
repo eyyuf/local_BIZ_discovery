@@ -95,7 +95,7 @@ export function ResetPasswordPage() {
               Local Spot
             </span>
             <span className="text-[9px] tracking-widest text-[#AAA69C] uppercase font-mono mt-1 block">
-              Addis Ababa &bull; Discovery
+              Addis Ababa / Discovery
             </span>
           </div>
           <div className="w-8 h-8 rounded-full border border-white/20 bg-[#151513] flex items-center justify-center text-white group-hover:border-white transition">
@@ -232,7 +232,7 @@ export function ResetPasswordPage() {
       </main>
 
       <footer className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#AAA69C]/80 font-mono">
-        <div>Bole &bull; Kazanchis &bull; Bishoftu &bull; Piassa</div>
+        <div>Bole / Kazanchis / Bishoftu / Piassa</div>
         <div>Local Spot Ethiopia &copy; 2026</div>
       </footer>
     </div>
