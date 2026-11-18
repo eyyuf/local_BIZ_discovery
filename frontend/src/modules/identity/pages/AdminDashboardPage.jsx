@@ -326,7 +326,7 @@ export function AdminDashboardPage() {
         <div>
           {/* Brand Header */}
           <div className="h-16 flex items-center justify-between px-6 border-b border-white/[0.08]">
-            <Link to="/" className="flex items-center gap-2.5 group">
+            <Link to="/admin" className="flex items-center gap-2.5 group">
               <div className="w-8 h-8 rounded-full border border-amber-500/30 bg-amber-500/10 flex items-center justify-center text-amber-400 backdrop-blur-md group-hover:border-amber-400 transition">
                 <ShieldCheck className="w-4 h-4" />
               </div>
@@ -493,10 +493,15 @@ export function AdminDashboardPage() {
         <div className="p-4 border-t border-white/[0.08] space-y-2">
           <Link
             to="/"
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#AAA69C] hover:text-white hover:bg-white/[0.04] transition"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-[#AAA69C] hover:text-white hover:bg-white/[0.04] transition group"
           >
-            <Compass className="w-4 h-4" />
-            <span>Back to Discovery Home</span>
+            <div className="flex items-center gap-2.5">
+              <Compass className="w-4 h-4 text-[#AAA69C] group-hover:text-white transition" />
+              <span>Public Live Site</span>
+            </div>
+            <ExternalLink className="w-3 h-3 opacity-50 group-hover:opacity-100 transition" />
           </Link>
 
           <button

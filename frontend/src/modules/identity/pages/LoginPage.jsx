@@ -18,8 +18,9 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      if (user?.role === 'admin' && (from === '/' || from === '/profile')) {
-        navigate('/admin', { replace: true });
+      if (user?.role === 'admin') {
+        const dest = from.startsWith('/admin') ? from : '/admin';
+        navigate(dest, { replace: true });
       } else {
         navigate(from, { replace: true });
       }
@@ -33,8 +34,9 @@ export function LoginPage() {
 
     try {
       const authUser = await login({ email, password });
-      if (authUser?.role === 'admin' && (from === '/' || from === '/profile')) {
-        navigate('/admin', { replace: true });
+      if (authUser?.role === 'admin') {
+        const dest = from.startsWith('/admin') ? from : '/admin';
+        navigate(dest, { replace: true });
       } else {
         navigate(from, { replace: true });
       }
