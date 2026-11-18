@@ -217,19 +217,18 @@ export function LoginPage() {
                   </button>
                 </div>
 
-                {/* Quick Admin Demo Autofill */}
-                <div className="pt-2 flex items-center justify-between text-[11px] text-[#AAA69C]">
-                  <span>Testing admin dashboard?</span>
+                {/* Admin Quick Fill (Discreet Moderator Tool) */}
+                <div className="pt-2 flex items-center justify-between text-[11px] text-[#AAA69C]/80">
+                  <span>Demo administrator access?</span>
                   <button
                     type="button"
                     onClick={() => {
                       setEmail('admin@localspot.et');
                       setPassword('password');
                     }}
-                    className="px-2.5 py-1 rounded-full border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                    className="text-[#AAA69C] hover:text-white transition flex items-center gap-1 cursor-pointer font-medium underline underline-offset-2"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Fill Admin Credentials</span>
+                    <span>Use admin credentials</span>
                   </button>
                 </div>
               </form>
