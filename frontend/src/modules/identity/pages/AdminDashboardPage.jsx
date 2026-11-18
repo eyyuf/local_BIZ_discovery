@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ShieldCheck,
@@ -31,7 +31,12 @@ import {
   Menu,
   Download,
   Filter,
-  CheckCircle,
+  MoreHorizontal,
+  BadgeCheck,
+  Building,
+  User,
+  SlidersHorizontal,
+  Maximize2,
 } from 'lucide-react';
 import placesApi from '@/modules/places/api/placesApi';
 import { useAuth } from '@/modules/identity';
@@ -44,6 +49,7 @@ export function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'verified' | 'rejected' | 'all'
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [perPage, setPerPage] = useState(15);
+  const [dateFilter, setDateFilter] = useState('all'); // 'all' | '7days' | '30days'
 
   // Data State
   const [places, setPlaces] = useState([]);
@@ -54,26 +60,31 @@ export function AdminDashboardPage() {
   const [errorBanner, setErrorBanner] = useState(null);
   const [toast, setToast] = useState(null);
 
-  // Filter & Search
+  // Search Filter
   const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef(null);
 
-  // Modals & Drawers
-  const [inspectingPlace, setInspectingPlace] = useState(null); // Place detailed drawer
+  // Modals & Inspection Drawers
+  const [inspectingPlace, setInspectingPlace] = useState(null);
+  const [activeInspectionDocTab, setActiveInspectionDocTab] = useState('license'); // 'license' | 'fayda'
   const [approvingPlace, setApprovingPlace] = useState(null);
   const [rejectingPlace, setRejectingPlace] = useState(null);
   const [rejectionNotes, setRejectionNotes] = useState('');
   const [rejectionError, setRejectionError] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
-  // Document Lightbox
+  // Document Lightbox with Zoom & Rotate
   const [lightbox, setLightbox] = useState(null); // { url, title, type }
   const [lightboxRotation, setLightboxRotation] = useState(0);
   const [lightboxScale, setLightboxScale] = useState(1);
 
-  // Copy TIN state
+  // Row Action Dropdown Menu State
+  const [activeMenuId, setActiveMenuId] = useState(null);
+
+  // Copy TIN feedback
   const [copiedId, setCopiedId] = useState(null);
 
-  // Close modals on Escape key
+  // Keyboard Shortcuts: Escape to close modals, "/" to focus search
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -81,11 +92,29 @@ export function AdminDashboardPage() {
         if (rejectingPlace) setRejectingPlace(null);
         if (approvingPlace) setApprovingPlace(null);
         if (inspectingPlace) setInspectingPlace(null);
+        if (activeMenuId) setActiveMenuId(null);
+      }
+      if (e.key === '/' && document.activeElement !== searchInputRef.current) {
+        if (!lightbox && !rejectingPlace && !approvingPlace && !inspectingPlace) {
+          e.preventDefault();
+          searchInputRef.current?.focus();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightbox, rejectingPlace, approvingPlace, inspectingPlace]);
+  }, [lightbox, rejectingPlace, approvingPlace, inspectingPlace, activeMenuId]);
+
+  // Click outside listener for row action menu
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (activeMenuId && !e.target.closest('.row-action-menu-container')) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [activeMenuId]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -117,6 +146,7 @@ export function AdminDashboardPage() {
     fetchVerifications(activeTab, 1);
   }, [activeTab, fetchVerifications]);
 
+  // Handle Approve
   const handleConfirmApprove = async () => {
     if (!approvingPlace) return;
 
@@ -140,12 +170,13 @@ export function AdminDashboardPage() {
     }
   };
 
+  // Submit Rejection
   const handleSubmitReject = async (e) => {
     e.preventDefault();
     if (!rejectingPlace) return;
 
     if (!rejectionNotes.trim()) {
-      setRejectionError('Please provide a reason so the owner can correct their submission.');
+      setRejectionError('Please provide a reason so the business owner can correct their submission.');
       return;
     }
 
@@ -187,21 +218,67 @@ export function AdminDashboardPage() {
     navigate('/login');
   };
 
-  // Client-side search filter
+  // Export to CSV Function
+  const handleExportCSV = () => {
+    if (!places.length) {
+      showToast('No records available to export.', 'info');
+      return;
+    }
+
+    const headers = ['ID', 'Business Name', 'TIN', 'General Manager', 'Fayda FIN', 'Status', 'Submitted Date', 'Owner Name', 'Owner Email'];
+    const rows = places.map((p) => [
+      p.id,
+      `"${(p.name || '').replace(/"/g, '""')}"`,
+      `"${p.tax_id || ''}"`,
+      `"${(p.manager_name || '').replace(/"/g, '""')}"`,
+      `"${p.fayda_fin || ''}"`,
+      p.verification_status,
+      p.submitted_at || '',
+      `"${(p.owner?.name || '').replace(/"/g, '""')}"`,
+      `"${p.owner?.email || ''}"`,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `localspot_verifications_${activeTab}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Exported CSV file successfully.');
+  };
+
+  // Client-side search and date filter
   const filteredPlaces = useMemo(() => {
-    if (!searchQuery.trim()) return places;
-    const q = searchQuery.toLowerCase().trim();
-    return places.filter((p) => {
-      return (
-        p.name?.toLowerCase().includes(q) ||
-        p.tax_id?.toLowerCase().includes(q) ||
-        p.manager_name?.toLowerCase().includes(q) ||
-        p.fayda_fin?.toLowerCase().includes(q) ||
-        p.owner?.name?.toLowerCase().includes(q) ||
-        p.owner?.email?.toLowerCase().includes(q)
-      );
-    });
-  }, [places, searchQuery]);
+    let result = places;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((p) => {
+        return (
+          p.name?.toLowerCase().includes(q) ||
+          p.tax_id?.toLowerCase().includes(q) ||
+          p.manager_name?.toLowerCase().includes(q) ||
+          p.fayda_fin?.toLowerCase().includes(q) ||
+          p.owner?.name?.toLowerCase().includes(q) ||
+          p.owner?.email?.toLowerCase().includes(q)
+        );
+      });
+    }
+
+    if (dateFilter === '7days') {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      result = result.filter((p) => p.submitted_at && new Date(p.submitted_at) >= sevenDaysAgo);
+    } else if (dateFilter === '30days') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      result = result.filter((p) => p.submitted_at && new Date(p.submitted_at) >= thirtyDaysAgo);
+    }
+
+    return result;
+  }, [places, searchQuery, dateFilter]);
 
   const getTabTitle = () => {
     switch (activeTab) {
@@ -242,7 +319,7 @@ export function AdminDashboardPage() {
       {/* 1. LEFT SIDEBAR (Matching the KYC Figma layout) */}
       {/* ======================================================== */}
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-64 bg-[#121215] border-r border-white/[0.08] flex flex-col justify-between transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-64 bg-[#111114] border-r border-white/[0.08] flex flex-col justify-between transition-transform duration-300 lg:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -250,15 +327,15 @@ export function AdminDashboardPage() {
           {/* Brand Header */}
           <div className="h-16 flex items-center justify-between px-6 border-b border-white/[0.08]">
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-full border border-white/20 bg-black/50 flex items-center justify-center text-white backdrop-blur-md group-hover:border-white transition">
-                <Compass className="w-4 h-4 text-amber-400" />
+              <div className="w-8 h-8 rounded-full border border-amber-500/30 bg-amber-500/10 flex items-center justify-center text-amber-400 backdrop-blur-md group-hover:border-amber-400 transition">
+                <ShieldCheck className="w-4 h-4" />
               </div>
               <div>
                 <span className="font-extrabold text-sm tracking-tight text-white font-display block leading-none">
                   Local Spot
                 </span>
                 <span className="text-[9px] tracking-widest text-[#AAA69C] uppercase font-mono mt-0.5 block">
-                  Admin Portal
+                  KYC Admin
                 </span>
               </div>
             </Link>
@@ -274,10 +351,10 @@ export function AdminDashboardPage() {
 
           {/* Navigation Links */}
           <div className="px-3 py-5 space-y-6">
-            {/* Main Menu */}
+            {/* Overview Section */}
             <div>
               <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#AAA69C]/60 font-mono mb-2">
-                Menu
+                Overview
               </p>
               <div className="space-y-1">
                 <button
@@ -288,12 +365,12 @@ export function AdminDashboardPage() {
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                     activeTab === 'all'
-                      ? 'bg-white/10 text-white shadow-sm'
+                      ? 'bg-white/10 text-white shadow-sm font-bold'
                       : 'text-[#AAA69C] hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
                   <LayoutGrid className="w-4 h-4 text-[#AAA69C]" />
-                  <span>Dashboard Overview</span>
+                  <span>Dashboard</span>
                 </button>
               </div>
             </div>
@@ -314,9 +391,9 @@ export function AdminDashboardPage() {
                     setActiveTab('pending');
                     setIsSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer relative ${
                     activeTab === 'pending'
-                      ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                      ? 'bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30'
                       : 'text-[#AAA69C] hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
@@ -343,12 +420,12 @@ export function AdminDashboardPage() {
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                     activeTab === 'verified'
-                      ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                      ? 'bg-emerald-500/15 text-emerald-300 font-bold border border-emerald-500/30'
                       : 'text-[#AAA69C] hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     <span>Approved</span>
                   </div>
                   <span
@@ -370,7 +447,7 @@ export function AdminDashboardPage() {
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                     activeTab === 'rejected'
-                      ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                      ? 'bg-rose-500/15 text-rose-300 font-bold border border-rose-500/30'
                       : 'text-[#AAA69C] hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
@@ -394,19 +471,19 @@ export function AdminDashboardPage() {
             {/* Official Fayda Scanner Quick Tool */}
             <div>
               <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#AAA69C]/60 font-mono mb-2">
-                External Tools
+                Ethiopia National ID
               </p>
               <a
                 href="https://id.gov.et/scanId"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/20 transition"
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-emerald-500/20 transition group"
               >
                 <div className="flex items-center gap-2.5">
-                  <QrCode className="w-4 h-4" />
+                  <QrCode className="w-4 h-4 text-emerald-400" />
                   <span>id.gov.et Scanner</span>
                 </div>
-                <ExternalLink className="w-3 h-3 opacity-60" />
+                <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 transition" />
               </a>
             </div>
           </div>
@@ -419,7 +496,7 @@ export function AdminDashboardPage() {
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#AAA69C] hover:text-white hover:bg-white/[0.04] transition"
           >
             <Compass className="w-4 h-4" />
-            <span>Switch to Discovery App</span>
+            <span>Back to Discovery Home</span>
           </Link>
 
           <button
@@ -437,8 +514,8 @@ export function AdminDashboardPage() {
       {/* 2. MAIN VIEWPORT */}
       {/* ======================================================== */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top Bar Header */}
-        <header className="h-16 bg-[#121215]/90 border-b border-white/[0.08] px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20 backdrop-blur-xl">
+        {/* Top Bar Header (Matching Figma top bar) */}
+        <header className="h-16 bg-[#111114]/90 border-b border-white/[0.08] px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20 backdrop-blur-xl">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -454,7 +531,7 @@ export function AdminDashboardPage() {
               <ChevronRight className="w-3 h-3 text-[#AAA69C]/40" />
               <span>Verifications</span>
               <ChevronRight className="w-3 h-3 text-[#AAA69C]/40" />
-              <span className="text-white font-medium capitalize">{activeTab}</span>
+              <span className="text-white font-semibold capitalize">{activeTab}</span>
             </div>
           </div>
 
@@ -481,11 +558,15 @@ export function AdminDashboardPage() {
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-emerald-400' : ''}`} />
             </button>
 
-            {/* Admin Avatar Pill */}
-            <div className="flex items-center gap-2.5 pl-2 border-l border-white/[0.08]">
-              <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center text-xs font-bold uppercase font-mono">
-                {user?.name?.[0] || 'A'}
+            {/* Admin Profile Pill */}
+            <div className="flex items-center gap-2.5 pl-3 border-l border-white/[0.08]">
+              <div className="relative">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 text-black flex items-center justify-center text-xs font-black uppercase font-mono shadow-sm">
+                  {user?.name?.[0] || 'A'}
+                </div>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#111114]" />
               </div>
+
               <div className="hidden md:block text-left">
                 <p className="text-xs font-bold text-white leading-tight">
                   {user?.name || 'Administrator'}
@@ -530,52 +611,80 @@ export function AdminDashboardPage() {
           {/* ======================================================== */}
           {/* 3. TOOLBAR BAR (Matching the Figma controls bar) */}
           {/* ======================================================== */}
-          <div className="p-4 rounded-2xl bg-[#121215] border border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-4 rounded-2xl bg-[#141418] border border-white/[0.08] flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xl">
             {/* Search Input */}
             <div className="relative flex-1 max-w-md">
-              <Search className="w-3.5 h-3.5 text-[#AAA69C] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-4 h-4 text-[#AAA69C] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by business name, TIN, or manager..."
-                className="w-full h-9 pl-9 pr-8 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder:text-[#AAA69C]/60 focus:outline-none focus:border-white/30 transition"
+                placeholder="Search by customer name, business, or TIN... (Press '/' to focus)"
+                className="w-full h-10 pl-10 pr-8 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder:text-[#AAA69C]/60 focus:outline-none focus:border-amber-400/50 transition font-sans"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#AAA69C] hover:text-white p-0.5"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#AAA69C] hover:text-white p-0.5"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Right Controls: Entries per page & Export */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-xs text-[#AAA69C]">
+            {/* Right Controls: Entries per page, Date selector, Filter & Export */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Show Entries */}
+              <div className="flex items-center gap-2 text-xs text-[#AAA69C] bg-black/40 border border-white/10 rounded-xl px-3 h-10">
                 <span>Show</span>
                 <select
                   value={perPage}
                   onChange={(e) => setPerPage(Number(e.target.value))}
-                  className="h-9 px-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:border-white/30"
+                  className="bg-transparent text-xs text-white focus:outline-none cursor-pointer font-semibold"
                 >
-                  <option value={10}>10</option>
-                  <option value={15}>15</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
+                  <option value={10} className="bg-[#141418]">10</option>
+                  <option value={15} className="bg-[#141418]">15</option>
+                  <option value={25} className="bg-[#141418]">25</option>
+                  <option value={50} className="bg-[#141418]">50</option>
                 </select>
                 <span className="hidden sm:inline">entries</span>
               </div>
 
+              {/* Date Filter Dropdown */}
+              <div className="flex items-center gap-2 text-xs text-[#AAA69C] bg-black/40 border border-white/10 rounded-xl px-3 h-10">
+                <Calendar className="w-3.5 h-3.5 text-[#AAA69C]" />
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="bg-transparent text-xs text-white focus:outline-none cursor-pointer"
+                >
+                  <option value="all" className="bg-[#141418]">All Time</option>
+                  <option value="7days" className="bg-[#141418]">Past 7 Days</option>
+                  <option value="30days" className="bg-[#141418]">Past 30 Days</option>
+                </select>
+              </div>
+
+              {/* Export Report / CSV Button (Matching Figma button) */}
+              <button
+                type="button"
+                onClick={handleExportCSV}
+                title="Export filtered records as CSV"
+                className="h-10 px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-white flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-[#AAA69C]" />
+                <span className="hidden sm:inline">Export Report</span>
+              </button>
+
+              {/* Primary Action Button: id.gov.et Scan */}
               <a
                 href="https://id.gov.et/scanId"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-9 px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-white flex items-center gap-1.5 transition active:scale-95"
+                className="h-10 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-md shadow-amber-950/20"
               >
-                <QrCode className="w-3.5 h-3.5 text-emerald-400" />
+                <QrCode className="w-4 h-4" />
                 <span>Scan QR</span>
               </a>
             </div>
@@ -584,19 +693,19 @@ export function AdminDashboardPage() {
           {/* ======================================================== */}
           {/* 4. THE KYC DATA TABLE (Exact Figma column layout) */}
           {/* ======================================================== */}
-          <div className="rounded-2xl bg-[#121215] border border-white/[0.08] overflow-hidden shadow-2xl">
+          <div className="rounded-2xl bg-[#141418] border border-white/[0.08] overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 {/* Table Header Row */}
                 <thead>
-                  <tr className="border-b border-white/[0.08] bg-black/30 text-[11px] font-mono font-bold uppercase tracking-wider text-[#AAA69C]">
-                    <th scope="col" className="py-3.5 px-4 sm:px-6">Business / Customer</th>
-                    <th scope="col" className="py-3.5 px-4">TIN Number</th>
-                    <th scope="col" className="py-3.5 px-4">Trade License</th>
-                    <th scope="col" className="py-3.5 px-4">Fayda National ID</th>
-                    <th scope="col" className="py-3.5 px-4">Status</th>
-                    <th scope="col" className="py-3.5 px-4">Submission Date</th>
-                    <th scope="col" className="py-3.5 px-4 sm:px-6 text-right">Action</th>
+                  <tr className="border-b border-white/[0.08] bg-black/40 text-[11px] font-mono font-bold uppercase tracking-wider text-[#AAA69C]">
+                    <th scope="col" className="py-4 px-4 sm:px-6">Customer / Business</th>
+                    <th scope="col" className="py-4 px-4">BVN / TIN</th>
+                    <th scope="col" className="py-4 px-4">Identity Card</th>
+                    <th scope="col" className="py-4 px-4">Utility Bill / Fayda ID</th>
+                    <th scope="col" className="py-4 px-4">Status</th>
+                    <th scope="col" className="py-4 px-4">Submission Date</th>
+                    <th scope="col" className="py-4 px-4 sm:px-6 text-right">Action</th>
                   </tr>
                 </thead>
 
@@ -632,35 +741,50 @@ export function AdminDashboardPage() {
                           key={place.id}
                           className="hover:bg-white/[0.02] transition-colors group"
                         >
-                          {/* Column 1: Business / Customer Name */}
+                          {/* Column 1: Business / Customer Name (with Avatar letter badge) */}
                           <td className="py-4 px-4 sm:px-6">
-                            <div className="space-y-0.5">
-                              <Link
-                                to={`/places/${place.slug}`}
-                                target="_blank"
-                                className="font-bold text-white hover:text-emerald-400 transition inline-flex items-center gap-1.5"
-                              >
-                                <span>{place.name}</span>
-                                <ExternalLink className="w-3 h-3 text-[#AAA69C]/60 opacity-0 group-hover:opacity-100 transition" />
-                              </Link>
-                              <p className="text-[11px] text-[#AAA69C] truncate max-w-xs">
-                                {place.manager_name ? `GM: ${place.manager_name}` : place.address || 'Addis Ababa'}
-                              </p>
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">
+                                {place.name?.[0]?.toUpperCase() || 'B'}
+                              </div>
+
+                              <div className="space-y-0.5 min-w-0">
+                                <Link
+                                  to={`/places/${place.slug}`}
+                                  target="_blank"
+                                  className="font-bold text-white hover:text-amber-400 transition inline-flex items-center gap-1.5 truncate max-w-xs"
+                                >
+                                  <span className="truncate">{place.name}</span>
+                                  <ExternalLink className="w-3 h-3 text-[#AAA69C]/60 opacity-0 group-hover:opacity-100 transition shrink-0" />
+                                </Link>
+
+                                <p className="text-[11px] text-[#AAA69C] truncate max-w-xs">
+                                  {place.manager_name ? (
+                                    <span>GM: <strong className="text-white/80">{place.manager_name}</strong></span>
+                                  ) : (
+                                    place.address || 'Addis Ababa'
+                                  )}
+                                </p>
+                              </div>
                             </div>
                           </td>
 
-                          {/* Column 2: TIN (with Validated Badge matching Figma) */}
+                          {/* Column 2: BVN / TIN (with Green Validated Dot matching Figma) */}
                           <td className="py-4 px-4">
                             {place.tax_id ? (
-                              <div className="inline-flex items-center gap-1.5">
+                              <div className="flex items-center gap-2">
                                 <span className="font-mono font-bold text-white tracking-wider">
                                   {place.tax_id}
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-medium">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                  <span>Validated</span>
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => copyToClipboard(place.tax_id, `tin-${place.id}`)}
                                   title="Copy TIN"
-                                  className="text-[#AAA69C] hover:text-white p-0.5"
+                                  className="text-[#AAA69C] hover:text-white p-0.5 ml-0.5 transition"
                                 >
                                   {copiedId === `tin-${place.id}` ? (
                                     <Check className="w-3 h-3 text-emerald-400" />
@@ -674,99 +798,156 @@ export function AdminDashboardPage() {
                             )}
                           </td>
 
-                          {/* Column 3: Trade License (View file link) */}
+                          {/* Column 3: Identity Card (Trade License view file link matching Figma) */}
                           <td className="py-4 px-4">
                             {place.trade_license_url ? (
                               <button
                                 type="button"
                                 onClick={() => openLightbox(place.trade_license_url, `Trade License — ${place.name}`, 'license')}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-emerald-400 text-xs font-medium border border-white/10 transition cursor-pointer"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 hover:underline transition cursor-pointer"
                               >
-                                <FileText className="w-3.5 h-3.5" />
                                 <span>View file</span>
+                                <Eye className="w-3.5 h-3.5 opacity-80" />
                               </button>
                             ) : (
                               <span className="text-[#AAA69C]/50 text-[11px]">No file</span>
                             )}
                           </td>
 
-                          {/* Column 4: Fayda ID (View file / Scan QR link) */}
+                          {/* Column 4: Utility Bill / Fayda ID (View file link matching Figma) */}
                           <td className="py-4 px-4">
                             {place.fayda_document_url ? (
                               <button
                                 type="button"
                                 onClick={() => openLightbox(place.fayda_document_url, `Fayda National ID — ${place.name}`, 'fayda')}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-emerald-400 text-xs font-medium border border-white/10 transition cursor-pointer"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 hover:underline transition cursor-pointer"
                               >
-                                <QrCode className="w-3.5 h-3.5" />
-                                <span>View file (QR)</span>
+                                <span>View file</span>
+                                <QrCode className="w-3.5 h-3.5 opacity-80" />
                               </button>
                             ) : (
                               <span className="text-[#AAA69C]/50 text-[11px]">No file</span>
                             )}
                           </td>
 
-                          {/* Column 5: Status Tag */}
+                          {/* Column 5: Status Tag (Matching Figma rounded pill badge) */}
                           <td className="py-4 px-4">
                             {isPending && (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                                Pending
+                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/25">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                <span>Pending</span>
                               </span>
                             )}
                             {isVerified && (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                                Approved
+                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                <span>Approved</span>
                               </span>
                             )}
                             {isRejected && (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/30">
-                                Declined
+                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/25">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                <span>Declined</span>
                               </span>
                             )}
                           </td>
 
-                          {/* Column 6: Submission Date */}
+                          {/* Column 6: Submission Date (e.g. 11/18/26) */}
                           <td className="py-4 px-4 text-[#AAA69C] font-mono text-[11px]">
                             {place.submitted_at ? new Date(place.submitted_at).toLocaleDateString() : 'N/A'}
                           </td>
 
-                          {/* Column 7: Action (Approve / Decline / Review Drawer) */}
-                          <td className="py-4 px-4 sm:px-6 text-right">
-                            <div className="inline-flex items-center gap-1.5 justify-end">
+                          {/* Column 7: Action (Review Button + Dropdown matching Figma) */}
+                          <td className="py-4 px-4 sm:px-6 text-right relative row-action-menu-container">
+                            <div className="inline-flex items-center gap-2 justify-end">
                               <button
                                 type="button"
                                 onClick={() => setInspectingPlace(place)}
-                                title="Review Full KYC Details"
-                                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-medium transition cursor-pointer"
+                                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-semibold transition cursor-pointer"
                               >
                                 Review
                               </button>
 
-                              {isPending && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => setApprovingPlace(place)}
-                                    title="Approve Business"
-                                    className="p-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black transition cursor-pointer active:scale-95 shadow-sm"
-                                  >
-                                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                                  </button>
+                              {/* Three Dots More Menu */}
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveMenuId(activeMenuId === place.id ? null : place.id)}
+                                  className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[#AAA69C] hover:text-white transition cursor-pointer"
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </button>
 
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setRejectingPlace(place);
-                                      setRejectionNotes('');
-                                      setRejectionError('');
-                                    }}
-                                    title="Decline Business"
-                                    className="p-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 transition cursor-pointer active:scale-95"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
-                                </>
-                              )}
+                                {/* Action Dropdown Menu */}
+                                {activeMenuId === place.id && (
+                                  <div className="absolute right-0 top-full mt-1.5 z-30 w-44 rounded-xl bg-[#18181C] border border-white/15 p-1.5 shadow-2xl space-y-0.5 text-left text-xs animate-in fade-in zoom-in-95">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setInspectingPlace(place);
+                                        setActiveMenuId(null);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-white hover:bg-white/10 transition"
+                                    >
+                                      <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                                      <span>Full Inspection</span>
+                                    </button>
+
+                                    {isPending && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setApprovingPlace(place);
+                                            setActiveMenuId(null);
+                                          }}
+                                          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition"
+                                        >
+                                          <Check className="w-3.5 h-3.5" />
+                                          <span>Approve Place</span>
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setRejectingPlace(place);
+                                            setRejectionNotes('');
+                                            setRejectionError('');
+                                            setActiveMenuId(null);
+                                          }}
+                                          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition"
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                          <span>Decline Place</span>
+                                        </button>
+                                      </>
+                                    )}
+
+                                    {place.tax_id && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          copyToClipboard(place.tax_id, `tin-${place.id}`);
+                                          setActiveMenuId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#AAA69C] hover:text-white hover:bg-white/10 transition"
+                                      >
+                                        <Copy className="w-3.5 h-3.5" />
+                                        <span>Copy TIN</span>
+                                      </button>
+                                    )}
+
+                                    <Link
+                                      to={`/places/${place.slug}`}
+                                      target="_blank"
+                                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#AAA69C] hover:text-white hover:bg-white/10 transition"
+                                    >
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                      <span>Public Page</span>
+                                    </Link>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -777,33 +958,40 @@ export function AdminDashboardPage() {
               </table>
             </div>
 
-            {/* Pagination Controls Footer */}
-            {totalPages > 1 && (
-              <div className="h-14 px-4 sm:px-6 border-t border-white/[0.08] flex items-center justify-between text-xs text-[#AAA69C] bg-black/20">
-                <span>
-                  Page <strong className="text-white">{currentPage}</strong> of <strong className="text-white">{totalPages}</strong>
-                </span>
+            {/* Pagination Controls Footer (Matching Figma footer) */}
+            <div className="h-16 px-4 sm:px-6 border-t border-white/[0.08] flex items-center justify-between text-xs text-[#AAA69C] bg-black/20">
+              <span>
+                Showing <strong className="text-white">{filteredPlaces.length ? (currentPage - 1) * perPage + 1 : 0}</strong> to{' '}
+                <strong className="text-white">{Math.min(currentPage * perPage, counts.total || filteredPlaces.length)}</strong> of{' '}
+                <strong className="text-white">{counts.total || filteredPlaces.length}</strong> entries
+              </span>
 
+              {totalPages > 1 && (
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     disabled={currentPage <= 1 || isLoading}
                     onClick={() => fetchVerifications(activeTab, currentPage - 1)}
-                    className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white transition cursor-pointer font-medium"
                   >
                     Previous
                   </button>
+
+                  <span className="px-2 font-mono text-white">
+                    {currentPage} / {totalPages}
+                  </span>
+
                   <button
                     type="button"
                     disabled={currentPage >= totalPages || isLoading}
                     onClick={() => fetchVerifications(activeTab, currentPage + 1)}
-                    className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white transition cursor-pointer font-medium"
                   >
                     Next
                   </button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </main>
       </div>
@@ -813,11 +1001,11 @@ export function AdminDashboardPage() {
       {/* ======================================================== */}
       {inspectingPlace && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end animate-in fade-in"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex justify-end animate-in fade-in"
           onClick={() => setInspectingPlace(null)}
         >
           <div
-            className="w-full max-w-xl bg-[#121215] border-l border-white/10 h-full overflow-y-auto p-6 space-y-6 shadow-2xl flex flex-col justify-between"
+            className="w-full max-w-2xl bg-[#141418] border-l border-white/10 h-full overflow-y-auto p-6 space-y-6 shadow-2xl flex flex-col justify-between"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="space-y-6">
@@ -825,7 +1013,7 @@ export function AdminDashboardPage() {
               <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#AAA69C]">
-                    Application Inspection
+                    Verification Inspector
                   </span>
                   <h3 className="text-xl font-bold text-white font-display">
                     {inspectingPlace.name}
@@ -834,7 +1022,7 @@ export function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setInspectingPlace(null)}
-                  className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#AAA69C] hover:text-white"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#AAA69C] hover:text-white transition"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -842,14 +1030,14 @@ export function AdminDashboardPage() {
 
               {/* Status & Submitter */}
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
+                <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
                   <span className="text-[10px] text-[#AAA69C] uppercase font-mono block">Current Status</span>
                   <p className="font-bold uppercase tracking-wider text-white">
                     {inspectingPlace.verification_status}
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
+                <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
                   <span className="text-[10px] text-[#AAA69C] uppercase font-mono block">Submitted By</span>
                   <p className="font-bold text-white truncate">{inspectingPlace.owner?.name || 'Owner'}</p>
                   <p className="text-[10px] text-[#AAA69C] font-mono truncate">{inspectingPlace.owner?.email}</p>
@@ -873,7 +1061,7 @@ export function AdminDashboardPage() {
                   </div>
                   <div className="flex justify-between py-1 border-b border-white/[0.04]">
                     <span className="text-[#AAA69C]">Fayda FIN:</span>
-                    <span className="font-mono text-white">{inspectingPlace.fayda_fin || 'In QR Code'}</span>
+                    <span className="font-mono text-white">{inspectingPlace.fayda_fin || 'Embedded in QR'}</span>
                   </div>
                   <div className="flex justify-between py-1">
                     <span className="text-[#AAA69C]">Phone:</span>
@@ -882,24 +1070,47 @@ export function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Document Previews in Drawer */}
+              {/* Document Review Tabs in Drawer */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                  Uploaded Verification Documents
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                    Document Verification
+                  </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Trade License */}
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-2">
+                  <div className="inline-flex p-1 rounded-xl bg-black/40 border border-white/10 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setActiveInspectionDocTab('license')}
+                      className={`px-3 py-1 rounded-lg font-semibold transition ${
+                        activeInspectionDocTab === 'license' ? 'bg-white/10 text-white' : 'text-[#AAA69C] hover:text-white'
+                      }`}
+                    >
+                      Trade License
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveInspectionDocTab('fayda')}
+                      className={`px-3 py-1 rounded-lg font-semibold transition ${
+                        activeInspectionDocTab === 'fayda' ? 'bg-white/10 text-white' : 'text-[#AAA69C] hover:text-white'
+                      }`}
+                    >
+                      Fayda National ID
+                    </button>
+                  </div>
+                </div>
+
+                {activeInspectionDocTab === 'license' ? (
+                  <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-3">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-white">Trade License</span>
+                      <span className="text-[#AAA69C]">Trade License (የንግድ ፈቃድ)</span>
                       {inspectingPlace.trade_license_url && (
                         <button
                           type="button"
                           onClick={() => openLightbox(inspectingPlace.trade_license_url, `Trade License — ${inspectingPlace.name}`, 'license')}
-                          className="text-emerald-400 hover:text-emerald-300 font-semibold text-[11px]"
+                          className="text-emerald-400 hover:text-emerald-300 font-semibold text-xs flex items-center gap-1"
                         >
-                          Zoom
+                          <Maximize2 className="w-3.5 h-3.5" />
+                          <span>Inspect Fullscreen</span>
                         </button>
                       )}
                     </div>
@@ -907,32 +1118,36 @@ export function AdminDashboardPage() {
                     {inspectingPlace.trade_license_url ? (
                       <div
                         onClick={() => openLightbox(inspectingPlace.trade_license_url, `Trade License — ${inspectingPlace.name}`, 'license')}
-                        className="h-32 rounded-lg bg-black/60 overflow-hidden cursor-pointer relative group"
+                        className="h-64 rounded-xl bg-black/60 overflow-hidden cursor-pointer relative group border border-white/10 flex items-center justify-center"
                       >
                         <img
                           src={inspectingPlace.trade_license_url}
                           alt="Trade License"
-                          className="w-full h-full object-cover group-hover:scale-105 transition"
+                          className="w-full h-full object-contain group-hover:scale-105 transition"
                         />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs font-bold text-white gap-1.5">
+                          <Eye className="w-4 h-4 text-emerald-400" />
+                          <span>Click to Zoom &amp; Rotate</span>
+                        </div>
                       </div>
                     ) : (
-                      <div className="h-32 rounded-lg bg-white/5 border border-dashed border-white/10 flex items-center justify-center text-[11px] text-[#AAA69C]">
-                        Not uploaded
+                      <div className="h-48 rounded-xl bg-white/5 border border-dashed border-white/10 flex items-center justify-center text-xs text-[#AAA69C]">
+                        No Trade License document uploaded
                       </div>
                     )}
                   </div>
-
-                  {/* Fayda ID Card */}
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-2">
+                ) : (
+                  <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-3">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-white">Fayda National ID</span>
+                      <span className="text-[#AAA69C]">Fayda National ID &amp; QR</span>
                       {inspectingPlace.fayda_document_url && (
                         <button
                           type="button"
                           onClick={() => openLightbox(inspectingPlace.fayda_document_url, `Fayda National ID — ${inspectingPlace.name}`, 'fayda')}
-                          className="text-emerald-400 hover:text-emerald-300 font-semibold text-[11px]"
+                          className="text-emerald-400 hover:text-emerald-300 font-semibold text-xs flex items-center gap-1"
                         >
-                          Zoom QR
+                          <Maximize2 className="w-3.5 h-3.5" />
+                          <span>Inspect QR Fullscreen</span>
                         </button>
                       )}
                     </div>
@@ -940,26 +1155,30 @@ export function AdminDashboardPage() {
                     {inspectingPlace.fayda_document_url ? (
                       <div
                         onClick={() => openLightbox(inspectingPlace.fayda_document_url, `Fayda National ID — ${inspectingPlace.name}`, 'fayda')}
-                        className="h-32 rounded-lg bg-black/60 overflow-hidden cursor-pointer relative group"
+                        className="h-64 rounded-xl bg-black/60 overflow-hidden cursor-pointer relative group border border-white/10 flex items-center justify-center"
                       >
                         <img
                           src={inspectingPlace.fayda_document_url}
                           alt="Fayda ID"
-                          className="w-full h-full object-cover group-hover:scale-105 transition"
+                          className="w-full h-full object-contain group-hover:scale-105 transition"
                         />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs font-bold text-white gap-1.5">
+                          <QrCode className="w-4 h-4 text-emerald-400" />
+                          <span>Click to Scan Digital QR</span>
+                        </div>
                       </div>
                     ) : (
-                      <div className="h-32 rounded-lg bg-white/5 border border-dashed border-white/10 flex items-center justify-center text-[11px] text-[#AAA69C]">
-                        Not uploaded
+                      <div className="h-48 rounded-xl bg-white/5 border border-dashed border-white/10 flex items-center justify-center text-xs text-[#AAA69C]">
+                        No Fayda ID document uploaded
                       </div>
                     )}
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Action Footer in Drawer */}
-            <div className="pt-4 border-t border-white/[0.08] flex items-center gap-2.5">
+            <div className="pt-4 border-t border-white/[0.08] flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -967,7 +1186,7 @@ export function AdminDashboardPage() {
                   setRejectionNotes('');
                   setRejectionError('');
                 }}
-                className="flex-1 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold transition"
+                className="flex-1 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold transition cursor-pointer"
               >
                 Decline Application
               </button>
@@ -975,7 +1194,7 @@ export function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setApprovingPlace(inspectingPlace)}
-                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg"
+                className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg cursor-pointer"
               >
                 <Check className="w-4 h-4 stroke-[2.5]" />
                 <span>Approve Verification</span>
@@ -994,37 +1213,37 @@ export function AdminDashboardPage() {
           onClick={() => setApprovingPlace(null)}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-[#141416] border border-white/15 p-5 space-y-4 shadow-2xl"
+            className="w-full max-w-md rounded-2xl bg-[#16161A] border border-white/15 p-6 space-y-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                <CheckCircle2 className="w-5 h-5" />
+              <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Approve Business Verification?</h3>
+                <h3 className="text-base font-bold text-white">Approve Business Verification?</h3>
                 <p className="text-xs text-[#AAA69C] mt-0.5">
                   Confirm granting verified badge to <strong className="text-white">{approvingPlace.name}</strong>.
                 </p>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] text-xs space-y-1.5">
+            <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] text-xs space-y-2">
               <div className="flex justify-between text-[#AAA69C]">
-                <span>TIN:</span>
-                <span className="font-mono text-white">{approvingPlace.tax_id || 'N/A'}</span>
+                <span>10-Digit TIN:</span>
+                <span className="font-mono text-white font-bold">{approvingPlace.tax_id || 'N/A'}</span>
               </div>
               <div className="flex justify-between text-[#AAA69C]">
                 <span>General Manager:</span>
-                <span className="text-white font-medium">{approvingPlace.manager_name || 'N/A'}</span>
+                <span className="text-white font-semibold">{approvingPlace.manager_name || 'N/A'}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setApprovingPlace(null)}
-                className="px-3.5 py-2 rounded-lg border border-white/10 text-xs text-[#AAA69C] hover:text-white transition"
+                className="px-4 py-2 rounded-xl border border-white/10 text-xs text-[#AAA69C] hover:text-white transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -1032,7 +1251,7 @@ export function AdminDashboardPage() {
                 type="button"
                 onClick={handleConfirmApprove}
                 disabled={isSubmittingReview}
-                className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition flex items-center gap-1.5 shadow-md active:scale-95"
+                className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
               >
                 {isSubmittingReview && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 <span>Confirm Approval</span>
@@ -1052,12 +1271,12 @@ export function AdminDashboardPage() {
         >
           <form
             onSubmit={handleSubmitReject}
-            className="w-full max-w-lg rounded-2xl bg-[#141416] border border-white/15 p-5 space-y-4 shadow-2xl"
+            className="w-full max-w-lg rounded-2xl bg-[#16161A] border border-white/15 p-6 space-y-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <XCircle className="w-4 h-4 text-rose-400" />
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <XCircle className="w-5 h-5 text-rose-400" />
                 <span>Decline Verification — {rejectingPlace.name}</span>
               </h3>
               <button
@@ -1088,7 +1307,7 @@ export function AdminDashboardPage() {
                     setRejectionNotes(preset);
                     setRejectionError('');
                   }}
-                  className="px-2.5 py-1 rounded-md bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-[11px] text-[#AAA69C] hover:text-white transition cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-[11px] text-[#AAA69C] hover:text-white transition cursor-pointer"
                 >
                   {preset}
                 </button>
@@ -1112,18 +1331,18 @@ export function AdminDashboardPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => setRejectingPlace(null)}
-                className="px-3.5 py-2 rounded-lg border border-white/10 text-xs text-[#AAA69C] hover:text-white transition"
+                className="px-4 py-2 rounded-xl border border-white/10 text-xs text-[#AAA69C] hover:text-white transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmittingReview || !rejectionNotes.trim()}
-                className="px-4 py-2 rounded-lg bg-rose-500 hover:bg-rose-400 disabled:opacity-50 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 disabled:opacity-50 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
               >
                 {isSubmittingReview && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 <span>Confirm Decline</span>
@@ -1147,7 +1366,7 @@ export function AdminDashboardPage() {
           >
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold truncate max-w-md">{lightbox.title}</span>
-              <span className="text-[11px] text-[#AAA69C] hidden sm:inline">
+              <span className="text-[11px] text-[#AAA69C] hidden sm:inline font-mono">
                 (Press Esc to exit)
               </span>
             </div>
@@ -1157,17 +1376,17 @@ export function AdminDashboardPage() {
                 type="button"
                 onClick={() => setLightboxRotation((prev) => (prev + 90) % 360)}
                 title="Rotate 90 degrees"
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs flex items-center gap-1 transition cursor-pointer"
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs flex items-center gap-1 transition cursor-pointer"
               >
                 <RotateCw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Rotate 90°</span>
+                <span className="hidden sm:inline font-medium">Rotate 90°</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setLightboxScale((prev) => Math.min(prev + 0.25, 2.5))}
                 title="Zoom in"
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
               >
                 <ZoomIn className="w-3.5 h-3.5" />
               </button>
@@ -1176,7 +1395,7 @@ export function AdminDashboardPage() {
                 type="button"
                 onClick={() => setLightboxScale((prev) => Math.max(prev - 0.25, 0.75))}
                 title="Zoom out"
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
               >
                 <ZoomOut className="w-3.5 h-3.5" />
               </button>
@@ -1185,7 +1404,7 @@ export function AdminDashboardPage() {
                 href={lightbox.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs flex items-center gap-1 transition"
+                className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs flex items-center gap-1 transition"
               >
                 <span>Raw</span>
                 <ExternalLink className="w-3 h-3" />
@@ -1194,7 +1413,7 @@ export function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setLightbox(null)}
-                className="p-2 rounded-lg bg-white/15 hover:bg-white/25 text-white transition cursor-pointer"
+                className="p-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
