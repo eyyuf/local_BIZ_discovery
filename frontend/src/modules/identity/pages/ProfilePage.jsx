@@ -819,13 +819,14 @@ export function ProfilePage() {
                               e.currentTarget.src = PLACE_PLACEHOLDER;
                             }}
                           />
-                          <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono border border-white/10 bg-black/75 backdrop-blur-md text-[#AAA69C]">
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                place.is_active ? 'bg-emerald-400' : 'bg-zinc-500'
-                              }`}
-                            />
-                            <span>{place.is_active ? 'Live' : 'Draft'}</span>
+                          <span
+                            className={`absolute top-2.5 right-2.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide border backdrop-blur-md ${
+                              place.is_active
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                : 'bg-black/80 text-zinc-400 border-white/10'
+                            }`}
+                          >
+                            {place.is_active ? 'Live' : 'Draft'}
                           </span>
                         </div>
 

@@ -384,7 +384,7 @@ export function PlaceReviewsSection({ place }) {
                           </div>
                         )}
 
-                        <span className="text-[#AAA69C]/40">·</span>
+                        <span className="text-[#AAA69C]/30 text-xs">/</span>
 
                         <span className="text-[11px] text-[#AAA69C] font-mono whitespace-nowrap">
                           {formatDate(rev.created_at)}
@@ -454,7 +454,7 @@ export function PlaceReviewsSection({ place }) {
                               >
                                 {label}
                               </span>
-                              <span className="text-[#AAA69C]/40">·</span>
+                              <span className="text-[#AAA69C]/30 text-xs">/</span>
                               <span className="text-[10px] text-[#AAA69C] font-mono">
                                 {formatDate(msg.created_at)}
                               </span>

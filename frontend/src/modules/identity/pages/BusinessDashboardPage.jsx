@@ -847,13 +847,14 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                 <h1 className="text-base sm:text-lg font-bold text-white font-display truncate">
                   {place.name}
                 </h1>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono border border-white/10 bg-black/60 text-[#AAA69C]">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      place.is_active ? 'bg-emerald-400' : 'bg-zinc-500'
-                    }`}
-                  />
-                  <span>{place.is_active ? 'Live' : 'Draft'}</span>
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide border ${
+                    place.is_active
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                      : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/25'
+                  }`}
+                >
+                  {place.is_active ? 'Live' : 'Draft'}
                 </span>
               </div>
               <p className="text-xs text-[#AAA69C] truncate max-w-md mt-0.5">{place.address}</p>
@@ -977,13 +978,14 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/5 text-[#AAA69C] border border-white/10">
                           {place.categories?.[0]?.name || 'Local Spot'}
                         </span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono border border-white/10 bg-black/60 text-[#AAA69C]">
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              place.is_active ? 'bg-emerald-400' : 'bg-zinc-500'
-                            }`}
-                          />
-                          <span>{place.is_active ? 'Live' : 'Draft'}</span>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold tracking-wide border ${
+                            place.is_active
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                              : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/25'
+                          }`}
+                        >
+                          {place.is_active ? 'Live' : 'Draft'}
                         </span>
                       </div>
 
@@ -1146,14 +1148,13 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                     <button
                       type="button"
                       onClick={() => setInfoForm((prev) => ({ ...prev, is_active: !prev.is_active }))}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono transition cursor-pointer border ${
+                      className={`inline-flex items-center px-3 py-1 rounded-md text-xs font-semibold tracking-wide transition cursor-pointer border ${
                         infoForm.is_active
-                          ? 'border-white/20 bg-white/10 text-white'
-                          : 'border-white/10 bg-black/40 text-[#AAA69C]'
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
+                          : 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30 hover:bg-zinc-500/25'
                       }`}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${infoForm.is_active ? 'bg-emerald-400' : 'bg-zinc-500'}`} />
-                      <span>{infoForm.is_active ? 'Live' : 'Draft'}</span>
+                      {infoForm.is_active ? 'Live' : 'Draft'}
                     </button>
                   </div>
                 </div>
@@ -1501,18 +1502,13 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                                     )}
                                     <div className="flex items-center gap-2 mt-2">
                                       <span
-                                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full inline-flex items-center gap-1 border ${
+                                        className={`text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-md inline-flex items-center border ${
                                           item.is_available
-                                            ? 'border-white/10 bg-white/5 text-[#AAA69C]'
-                                            : 'border-red-500/20 bg-red-950/20 text-red-300'
+                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                                            : 'bg-rose-500/10 text-rose-400 border-rose-500/25'
                                         }`}
                                       >
-                                        <span
-                                          className={`w-1.5 h-1.5 rounded-full ${
-                                            item.is_available ? 'bg-emerald-400' : 'bg-red-400'
-                                          }`}
-                                        />
-                                        <span>{item.is_available ? 'Available' : 'Sold Out'}</span>
+                                        {item.is_available ? 'Available' : 'Sold Out'}
                                       </span>
                                     </div>
                                   </div>

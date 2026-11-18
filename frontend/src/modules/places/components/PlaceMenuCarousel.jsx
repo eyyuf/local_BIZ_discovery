@@ -312,18 +312,13 @@ export function PlaceMenuCarousel({ menuSections = [] }) {
               <div className="flex items-center justify-between pt-3 border-t border-white/[0.06] text-xs">
                 <span className="text-[#AAA69C]">Availability Status:</span>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full font-mono text-[11px] inline-flex items-center gap-1.5 border ${
+                  className={`px-2.5 py-0.5 rounded-md font-semibold text-[11px] tracking-wide inline-flex items-center border ${
                     activeModalItem.is_available
-                      ? 'border-white/10 bg-white/5 text-white'
-                      : 'border-red-500/20 bg-red-950/20 text-red-300'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                      : 'bg-rose-500/10 text-rose-400 border-rose-500/25'
                   }`}
                 >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      activeModalItem.is_available ? 'bg-emerald-400' : 'bg-red-400'
-                    }`}
-                  />
-                  <span>{activeModalItem.is_available ? 'Available' : 'Sold Out'}</span>
+                  {activeModalItem.is_available ? 'Available' : 'Sold Out'}
                 </span>
               </div>
             </div>

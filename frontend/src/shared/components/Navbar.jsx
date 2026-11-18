@@ -120,9 +120,8 @@ export function Navbar() {
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 bg-black/45 flex items-center justify-center text-white backdrop-blur-md group-hover:border-white transition">
             <Compass className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span className="font-extrabold text-base sm:text-lg tracking-tight text-white font-display flex items-center gap-1.5 whitespace-nowrap">
+          <span className="font-extrabold text-base sm:text-lg tracking-tight text-white font-display whitespace-nowrap">
             Local Spot
-            <span className="w-1.5 h-1.5 rounded-full bg-white/70 inline-block" />
           </span>
         </Link>
 

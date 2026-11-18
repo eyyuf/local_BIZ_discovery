@@ -560,11 +560,8 @@ export function AdminDashboardPage() {
 
             {/* Admin Profile Pill */}
             <div className="flex items-center gap-2.5 pl-3 border-l border-white/[0.08]">
-              <div className="relative">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 text-black flex items-center justify-center text-xs font-black uppercase font-mono shadow-sm">
-                  {user?.name?.[0] || 'A'}
-                </div>
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#111114]" />
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 text-black flex items-center justify-center text-xs font-black uppercase font-mono shadow-sm">
+                {user?.name?.[0] || 'A'}
               </div>
 
               <div className="hidden md:block text-left">
@@ -769,22 +766,21 @@ export function AdminDashboardPage() {
                             </div>
                           </td>
 
-                          {/* Column 2: BVN / TIN (with Green Validated Dot matching Figma) */}
+                          {/* Column 2: BVN / TIN */}
                           <td className="py-4 px-4">
                             {place.tax_id ? (
                               <div className="flex items-center gap-2">
                                 <span className="font-mono font-bold text-white tracking-wider">
                                   {place.tax_id}
                                 </span>
-                                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-medium">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                  <span>Validated</span>
+                                <span className="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase">
+                                  Validated
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => copyToClipboard(place.tax_id, `tin-${place.id}`)}
                                   title="Copy TIN"
-                                  className="text-[#AAA69C] hover:text-white p-0.5 ml-0.5 transition"
+                                  className="text-[#AAA69C] hover:text-white p-0.5 ml-0.5 transition cursor-pointer"
                                 >
                                   {copiedId === `tin-${place.id}` ? (
                                     <Check className="w-3 h-3 text-emerald-400" />
@@ -804,10 +800,10 @@ export function AdminDashboardPage() {
                               <button
                                 type="button"
                                 onClick={() => openLightbox(place.trade_license_url, `Trade License — ${place.name}`, 'license')}
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 hover:underline transition cursor-pointer"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400/90 hover:text-emerald-300 hover:underline transition cursor-pointer"
                               >
                                 <span>View file</span>
-                                <Eye className="w-3.5 h-3.5 opacity-80" />
+                                <Eye className="w-3.5 h-3.5 opacity-75" />
                               </button>
                             ) : (
                               <span className="text-[#AAA69C]/50 text-[11px]">No file</span>
@@ -820,34 +816,31 @@ export function AdminDashboardPage() {
                               <button
                                 type="button"
                                 onClick={() => openLightbox(place.fayda_document_url, `Fayda National ID — ${place.name}`, 'fayda')}
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 hover:underline transition cursor-pointer"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400/90 hover:text-emerald-300 hover:underline transition cursor-pointer"
                               >
                                 <span>View file</span>
-                                <QrCode className="w-3.5 h-3.5 opacity-80" />
+                                <QrCode className="w-3.5 h-3.5 opacity-75" />
                               </button>
                             ) : (
                               <span className="text-[#AAA69C]/50 text-[11px]">No file</span>
                             )}
                           </td>
 
-                          {/* Column 5: Status Tag (Matching Figma rounded pill badge) */}
+                          {/* Column 5: Status Tag (Clean, sharp badge without dots) */}
                           <td className="py-4 px-4">
                             {isPending && (
-                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/25">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                                <span>Pending</span>
+                              <span className="inline-flex items-center justify-center px-3 py-1 rounded-md text-[11px] font-semibold tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/25">
+                                Pending
                               </span>
                             )}
                             {isVerified && (
-                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                <span>Approved</span>
+                              <span className="inline-flex items-center justify-center px-3 py-1 rounded-md text-[11px] font-semibold tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                                Approved
                               </span>
                             )}
                             {isRejected && (
-                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/25">
-                                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                                <span>Declined</span>
+                              <span className="inline-flex items-center justify-center px-3 py-1 rounded-md text-[11px] font-semibold tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/25">
+                                Declined
                               </span>
                             )}
                           </td>

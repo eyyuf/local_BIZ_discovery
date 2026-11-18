@@ -265,7 +265,7 @@ export function LoginPage() {
 
       {/* Bottom Sub-footer */}
       <footer className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#AAA69C]/80 font-mono">
-        <div>Bole &bull; Kazanchis &bull; Bishoftu &bull; Piassa</div>
+        <div>Bole / Kazanchis / Bishoftu / Piassa</div>
         <div>Local Spot Ethiopia &copy; 2026</div>
       </footer>
     </div>

@@ -184,24 +184,20 @@ export function PlaceHero({
         {/* Status & Location line */}
         <div className="flex items-center gap-3 text-xs sm:text-sm font-medium">
           {operatingStatus.tone === 'open' && (
-            <div className="inline-flex items-center gap-1.5 text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-semibold">Open Now</span>
-            </div>
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold text-xs">
+              Open Now
+            </span>
           )}
           {operatingStatus.tone === 'closed' && (
-            <div className="inline-flex items-center gap-1.5 text-rose-400">
-              <span className="w-2 h-2 rounded-full bg-rose-400" />
-              <span className="font-semibold">{operatingStatus.label}</span>
-            </div>
+            <span className="px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 font-semibold text-xs">
+              {operatingStatus.label}
+            </span>
           )}
           {operatingStatus.tone === 'neutral' && (
-            <div className="inline-flex items-center gap-1.5 text-[#AAA69C]">
-              <span className="w-2 h-2 rounded-full bg-[#AAA69C]/60" />
-              <span className="font-semibold">{operatingStatus.label}</span>
-            </div>
+            <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-[#AAA69C] border border-white/15 font-semibold text-xs">
+              {operatingStatus.label}
+            </span>
           )}
-          <span className="text-white/40">&bull;</span>
           <span className="text-[#AAA69C]">{neighborhood}</span>
         </div>
 

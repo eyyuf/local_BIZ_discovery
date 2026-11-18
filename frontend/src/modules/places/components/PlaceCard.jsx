@@ -148,18 +148,12 @@ export function PlaceCard({ place, rank = null, className = '' }) {
 
           {/* Open/Closed Badge (Bottom-Left Pill, only if status available) */}
           {showStatusBadge && (
-            <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-xs font-semibold text-[#F5F5F7] border border-white/10 shadow-sm">
-              {isOpen ? (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-                  <span>Open now</span>
-                </>
-              ) : (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-red-400" />
-                  <span>Closed</span>
-                </>
-              )}
+            <div className={`absolute bottom-3 left-3 z-10 px-2.5 py-0.5 rounded-full text-xs font-semibold backdrop-blur-md border shadow-sm ${
+              isOpen
+                ? 'bg-black/80 text-emerald-400 border-emerald-500/30'
+                : 'bg-black/80 text-zinc-400 border-white/10'
+            }`}>
+              {isOpen ? 'Open now' : 'Closed'}
             </div>
           )}
 
@@ -208,10 +202,7 @@ export function PlaceCard({ place, rank = null, className = '' }) {
                 {categoryLabel}
               </span>
               {neighborhood && (
-                <>
-                  <span>&bull;</span>
-                  <span className="truncate max-w-[150px]">{neighborhood}</span>
-                </>
+                <span className="text-[#AAA69C]/80 truncate max-w-[150px]">{neighborhood}</span>
               )}
             </div>
           </div>

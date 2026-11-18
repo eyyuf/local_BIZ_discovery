@@ -59,30 +59,26 @@ export function WeeklySchedule({ operatingHours = [] }) {
 
         {/* Dynamic Status Badge */}
         {!hasHours ? (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900 border border-white/10 text-[#AAA69C] text-xs font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+          <div className="px-3 py-1 rounded-full bg-zinc-900 border border-white/10 text-[#AAA69C] text-xs font-semibold">
             <span>Hours Unavailable</span>
           </div>
         ) : isOpenNow ? (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 text-xs font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 text-xs font-semibold">
             <span>Open Now</span>
           </div>
         ) : isTodayOpenSchedule && timeStr < todayRecord.opens_at ? (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+          <div className="px-3 py-1 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs font-semibold">
             <span>Opens at {formatTime(todayRecord.opens_at)}</span>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-950/50 border border-rose-500/30 text-rose-300 text-xs font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+          <div className="px-3 py-1 rounded-full bg-rose-950/50 border border-rose-500/30 text-rose-300 text-xs font-semibold">
             <span>Closed</span>
           </div>
         )}
       </div>
 
       <p className="text-xs text-[#AAA69C] -mt-2">
-        Local East Africa Time (EAT &bull; Africa/Addis_Ababa)
+        Local East Africa Time (EAT / Africa/Addis_Ababa)
       </p>
 
       {/* Days Table */}
