@@ -178,7 +178,8 @@ export function PlaceReviewsSection({ place }) {
       setTimeout(() => setFeedbackMsg(null), 3000);
       fetchReviewsAndRatings(1, true);
     } catch {
-      alert('Unable to delete review. Please try again.');
+      setFeedbackMsg('Unable to delete review. Please try again.');
+      setTimeout(() => setFeedbackMsg(null), 4000);
     }
   };
 

@@ -156,7 +156,8 @@ export function ProfilePage() {
       setTimeout(() => setBusinessActionMsg(null), 4000);
     } catch (err) {
       console.error('Failed to delete place', err);
-      alert('Could not delete business. Please try again.');
+      setBusinessActionMsg('Could not delete business listing. Please try again.');
+      setTimeout(() => setBusinessActionMsg(null), 5000);
     }
   };
 
@@ -239,7 +240,8 @@ export function ProfilePage() {
       setReviewActionMsg('Review deleted.');
       setTimeout(() => setReviewActionMsg(null), 3000);
     } catch {
-      alert('Unable to delete review. Please try again.');
+      setReviewActionMsg('Unable to delete review. Please try again.');
+      setTimeout(() => setReviewActionMsg(null), 5000);
     }
   };
 

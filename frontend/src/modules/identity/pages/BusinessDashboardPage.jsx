@@ -136,7 +136,10 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
   const [geoSuccess, setGeoSuccess] = useState(null);
   const [isSavingLocation, setIsSavingLocation] = useState(false);
 
-  // Danger Zone
+  // Critical Actions: Delete Business Modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [deleteError, setDeleteError] = useState(null);
   const [isDeletingBusiness, setIsDeletingBusiness] = useState(false);
 
   const showNotification = useCallback((msg) => {
@@ -326,12 +329,12 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image (PNG, JPG, WebP).');
+      showNotification('Please select a valid image (PNG, JPG, WebP).');
       if (photoInputRef.current) photoInputRef.current.value = '';
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('Photo must be under 5MB.');
+      showNotification('Photo must be under 5MB.');
       if (photoInputRef.current) photoInputRef.current.value = '';
       return;
     }
@@ -362,7 +365,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       fetchPlaceDetails();
     } catch (err) {
       console.error('Upload photo error', err);
-      alert(err.response?.data?.message || 'Could not upload photo.');
+      showNotification(err.response?.data?.message || 'Could not upload photo.');
     } finally {
       setIsUploadingPhoto(false);
       URL.revokeObjectURL(previewUrl);
@@ -387,7 +390,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       fetchPlaceDetails();
     } catch (err) {
       console.error('Set cover error', err);
-      alert('Could not update cover photo.');
+      showNotification('Could not update cover photo.');
     }
   };
 
@@ -400,7 +403,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       fetchPlaceDetails();
     } catch (err) {
       console.error('Delete photo error', err);
-      alert('Could not delete photo.');
+      showNotification('Could not delete photo.');
     }
   };
 
@@ -440,7 +443,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       fetchMenu();
     } catch (err) {
       console.error('Save section error', err);
-      alert(err.response?.data?.message || 'Could not save menu section.');
+      showNotification(err.response?.data?.message || 'Could not save menu section.');
     } finally {
       setIsSavingSection(false);
     }
@@ -456,7 +459,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       fetchMenu();
     } catch (err) {
       console.error('Delete section error', err);
-      alert('Could not delete section.');
+      showNotification('Could not delete section.');
     }
   };
 
@@ -492,12 +495,12 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file (PNG, JPG, WebP).');
+      showNotification('Please select an image file (PNG, JPG, WebP).');
       if (itemPhotoInputRef.current) itemPhotoInputRef.current.value = '';
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('Item photo must be under 5MB.');
+      showNotification('Item photo must be under 5MB.');
       if (itemPhotoInputRef.current) itemPhotoInputRef.current.value = '';
       return;
     }
@@ -526,7 +529,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       showNotification('Dish photo cropped and uploaded to Cloudinary!');
     } catch (err) {
       console.error('Dish photo upload error', err);
-      alert('Could not upload item photo.');
+      showNotification('Could not upload item photo.');
     } finally {
       setIsUploadingItemPhoto(false);
       URL.revokeObjectURL(previewUrl);
@@ -546,13 +549,13 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
   const handleSaveItem = async (e) => {
     e.preventDefault();
     if (!itemFormData.name.trim() || itemFormData.price === '') {
-      alert('Item name and price are required.');
+      showNotification('Item name and price are required.');
       return;
     }
 
     const priceNum = parseFloat(itemFormData.price);
     if (isNaN(priceNum) || priceNum < 0) {
-      alert('Price must be a valid positive number.');
+      showNotification('Price must be a valid positive number.');
       return;
     }
 
@@ -582,7 +585,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       fetchMenu();
     } catch (err) {
       console.error('Save item error', err);
-      alert(err.response?.data?.message || 'Could not save menu item.');
+      showNotification(err.response?.data?.message || 'Could not save menu item.');
     } finally {
       setIsSavingItem(false);
     }
@@ -596,7 +599,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       fetchMenu();
     } catch (err) {
       console.error('Delete item error', err);
-      alert('Could not delete menu item.');
+      showNotification('Could not delete menu item.');
     }
   };
 
@@ -642,7 +645,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       fetchPlaceDetails();
     } catch (err) {
       console.error('Save hours error', err);
-      alert(err.response?.data?.message || 'Could not update operating hours.');
+      showNotification(err.response?.data?.message || 'Could not update operating hours.');
     } finally {
       setIsSavingHours(false);
     }
@@ -704,7 +707,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
   const handleSaveLocation = async (e) => {
     e.preventDefault();
     if (!locationForm.address.trim()) {
-      alert('Physical address is required.');
+      showNotification('Physical address is required.');
       return;
     }
 
@@ -713,20 +716,20 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
     if (locationForm.latitude) {
       latNum = parseFloat(locationForm.latitude);
       if (isNaN(latNum) || latNum < -90 || latNum > 90) {
-        alert('Latitude must be between -90 and 90.');
+        showNotification('Latitude must be between -90 and 90.');
         return;
       }
     }
     if (locationForm.longitude) {
       lngNum = parseFloat(locationForm.longitude);
       if (isNaN(lngNum) || lngNum < -180 || lngNum > 180) {
-        alert('Longitude must be between -180 and 180.');
+        showNotification('Longitude must be between -180 and 180.');
         return;
       }
     }
 
     if ((latNum !== undefined && lngNum === undefined) || (latNum === undefined && lngNum !== undefined)) {
-      alert('Both latitude and longitude must be provided together, or leave both empty.');
+      showNotification('Both latitude and longitude must be provided together, or leave both empty.');
       return;
     }
 
@@ -741,32 +744,31 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
       fetchPlaceDetails();
     } catch (err) {
       console.error('Save location error', err);
-      alert(err.response?.data?.message || 'Could not update location.');
+      showNotification(err.response?.data?.message || 'Could not update location.');
     } finally {
       setIsSavingLocation(false);
     }
   };
 
   // ----------------------------------------------------
-  // Danger Zone: Delete Business
+  // Critical Actions: Delete Business
   // ----------------------------------------------------
-  const handleDeleteBusiness = async () => {
-    const confirmation = window.prompt(
-      `Type "${place?.name}" to confirm permanent deletion of this business and all related menu sections, items, and photos:`
-    );
-    if (confirmation !== place?.name) {
-      alert('Business name did not match. Deletion cancelled.');
+  const handleConfirmDeleteBusiness = async () => {
+    if (deleteConfirmationText.trim().toLowerCase() !== place?.name?.trim().toLowerCase()) {
+      setDeleteError(`Please type "${place?.name}" exactly to confirm.`);
       return;
     }
 
     setIsDeletingBusiness(true);
+    setDeleteError(null);
     try {
       await placesApi.deleteOwnerPlace(id);
-      alert('Business deleted successfully.');
+      setIsDeleteModalOpen(false);
+      showNotification(`"${place?.name}" has been permanently deleted.`);
       navigate('/profile?tab=businesses');
     } catch (err) {
       console.error('Delete business error', err);
-      alert('Failed to delete business.');
+      setDeleteError(err.response?.data?.message || 'Failed to delete business. Please try again.');
       setIsDeletingBusiness(false);
     }
   };
@@ -2024,21 +2026,32 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
               </div>
             )}
 
-            {/* DANGER ZONE (Bottom of Dashboard) */}
-            <div className="p-5 sm:p-6 rounded-2xl bg-red-950/15 border border-red-500/20 space-y-3">
-              <h3 className="text-sm font-bold text-red-400 font-display">Danger Zone</h3>
-              <p className="text-xs text-[#AAA69C]">
-                Permanently delete this business listing along with all photos, menu sections, and opening schedules. This action cannot be undone.
-              </p>
-              <button
-                type="button"
-                onClick={handleDeleteBusiness}
-                disabled={isDeletingBusiness}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-red-500/30 bg-red-950/30 hover:bg-red-950/50 text-xs font-semibold text-red-300 hover:text-red-200 transition cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>{isDeletingBusiness ? 'Deleting...' : 'Delete Business Listing'}</span>
-              </button>
+            {/* CRITICAL ACTIONS (Decommission / Delete Business) */}
+            <div className="p-6 rounded-2xl bg-red-950/15 border border-red-500/20 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-red-400 font-display flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                    <span>Critical Actions</span>
+                  </h3>
+                  <p className="text-xs text-[#AAA69C] max-w-xl">
+                    Permanently delete this business listing along with all photos, menu sections, and operating hours. Once deleted, this business entity cannot be recovered.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteConfirmationText('');
+                    setDeleteError(null);
+                    setIsDeleteModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 bg-red-950/30 hover:bg-red-950/60 active:scale-95 text-xs font-semibold text-red-300 hover:text-red-200 transition cursor-pointer shrink-0 shadow-sm"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Permanently Delete Business</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2076,6 +2089,85 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
         onClose={handleItemCropCancel}
         onConfirm={handleItemCropConfirm}
       />
+
+      {/* Delete Business Confirmation Modal (Stripe / GitHub style) */}
+      {isDeleteModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => !isDeletingBusiness && setIsDeleteModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-[#16161A] border border-red-500/30 p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white font-display">Delete Business Listing</h3>
+                <p className="text-xs text-[#AAA69C]">This action is irreversible and permanent.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#AAA69C] leading-relaxed">
+              You are about to delete <strong className="text-white">{place?.name}</strong>. All associated menus, photos, location coordinates, and reviews will be permanently purged.
+            </p>
+
+            <div className="space-y-1.5 text-xs">
+              <label className="text-[#AAA69C] font-medium block">
+                Type <span className="font-mono font-bold text-white selection:bg-white/30">{place?.name}</span> to confirm:
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmationText}
+                onChange={(e) => {
+                  setDeleteConfirmationText(e.target.value);
+                  if (deleteError) setDeleteError(null);
+                }}
+                placeholder={place?.name}
+                className="w-full h-10 px-3.5 rounded-xl bg-black/50 border border-white/15 text-white text-xs font-mono focus:border-red-500/50 focus:outline-none transition"
+              />
+            </div>
+
+            {deleteError && (
+              <p className="text-xs text-red-400 font-medium">{deleteError}</p>
+            )}
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={isDeletingBusiness}
+                className="px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 text-xs font-semibold text-[#AAA69C] hover:text-white transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteBusiness}
+                disabled={
+                  isDeletingBusiness ||
+                  deleteConfirmationText.trim().toLowerCase() !== place?.name?.trim().toLowerCase()
+                }
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition flex items-center gap-1.5 active:scale-95 shadow-md shadow-red-950/50 cursor-pointer"
+              >
+                {isDeletingBusiness ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting Business...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Business Permanently</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
