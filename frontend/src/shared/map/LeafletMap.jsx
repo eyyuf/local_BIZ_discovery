@@ -232,13 +232,17 @@ export function LeafletMap({
           attributionControl: true,
         });
 
-        // Configure CARTO Voyager Basemap Tile Layer with Retina (@2x) support
-        const cartoKey = import.meta.env.VITE_CARTO_API_KEY || '';
-        const baseTileUrl =
+        // Configure CARTO Voyager Basemap Tile Layer with Retina (@2x) support and API key
+        const cartoKey =
+          import.meta.env.VITE_CARTO_API_KEY || 'cb1_54qm_1_96ad4b00c2f947be345c198e';
+        const rawTileUrl =
           import.meta.env.VITE_CARTO_RASTER_URL ||
           'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
-        const tileUrl = cartoKey ? `${baseTileUrl}?key=${cartoKey}` : baseTileUrl;
+        let tileUrl = rawTileUrl;
+        if (cartoKey && !tileUrl.includes('key=')) {
+          tileUrl += (tileUrl.includes('?') ? '&' : '?') + `key=${encodeURIComponent(cartoKey)}`;
+        }
 
         const tileLayer = L.tileLayer(tileUrl, {
           maxZoom: 19,
