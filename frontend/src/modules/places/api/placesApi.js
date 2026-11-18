@@ -133,6 +133,34 @@ export const placesApi = {
     });
     return response.data?.url || response.data;
   },
+
+  // Business Legitimacy Verification
+  getVerificationStatus: async (placeId) => {
+    const response = await apiClient.get(`/owner/places/${placeId}/verification-status`);
+    return response.data;
+  },
+
+  submitVerification: async (placeId, payload) => {
+    const isFormData = payload instanceof FormData;
+    const headers = isFormData ? { 'Content-Type': 'multipart/form-data' } : {};
+    const response = await apiClient.post(`/owner/places/${placeId}/verify`, payload, { headers });
+    return response.data;
+  },
+
+  getAdminVerifications: async ({ page = 1, status = 'pending', perPage = 15 } = {}) => {
+    const response = await apiClient.get('/admin/places/pending-verifications', {
+      params: { page, status, per_page: perPage },
+    });
+    return response.data;
+  },
+
+  reviewVerification: async (placeId, { decision, notes }) => {
+    const response = await apiClient.post(`/admin/places/${placeId}/review`, {
+      decision,
+      notes,
+    });
+    return response.data;
+  },
 };
 
 export default placesApi;

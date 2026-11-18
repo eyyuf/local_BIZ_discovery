@@ -12,6 +12,7 @@ import {
   LogOut,
   X,
   Menu,
+  ShieldCheck,
 } from 'lucide-react';
 import { QuickFilters } from '@/modules/discovery/components/QuickFilters';
 import { NearMeFloatingPill } from '@/modules/discovery/components/NearMeFloatingPill';
@@ -165,6 +166,17 @@ export function Navbar() {
             <span>Collections</span>
           </Link>
 
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin/verifications"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-950/25 text-emerald-400 backdrop-blur-md text-xs font-semibold hover:border-emerald-400 hover:text-emerald-300 transition"
+              title="Admin Business Verifications"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Verifications</span>
+            </Link>
+          )}
+
           {/* User / Sign In Pill */}
           {isAuthenticated ? (
             <div className="flex items-center gap-1.5 pl-1">
@@ -275,25 +287,37 @@ export function Navbar() {
             </Link>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-2 space-y-2">
             {isAuthenticated ? (
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-                <Link
-                  to="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 text-xs font-bold text-white"
-                >
-                  <User className="w-4 h-4 text-[#AAA69C]" />
-                  <span>{user?.name}</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="text-xs text-red-400 font-semibold"
-                >
-                  Sign Out
-                </button>
-              </div>
+              <>
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin/verifications"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-950/40 transition"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Admin Verifications</span>
+                  </Link>
+                )}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 text-xs font-bold text-white"
+                  >
+                    <User className="w-4 h-4 text-[#AAA69C]" />
+                    <span>{user?.name}</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="text-xs text-red-400 font-semibold"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </>
             ) : (
               <Link
                 to="/login"

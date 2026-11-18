@@ -33,6 +33,8 @@ import discoveryApi from '@/modules/discovery/api/discoveryApi';
 import { LeafletMap } from '@/shared/map/LeafletMap';
 import { getPlacePrimaryPhoto, getPlacePhotos, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 import { ImageCropModal } from '@/shared/components/ImageCropModal';
+import { BusinessVerificationSection } from '../components/BusinessVerificationSection';
+import { VerifiedBadge } from '@/shared/components/VerifiedBadge';
 
 const DAYS_OF_WEEK = [
   { index: 1, name: 'Monday' },
@@ -808,6 +810,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
     { label: 'GPS Location Pin', done: hasGps },
     { label: 'Weekly Schedule', done: hasHours },
     { label: 'Menu & Dishes', done: hasMenu },
+    { label: 'Legitimacy Verification', done: Boolean(place.is_verified) },
   ];
   const completedCount = healthItems.filter((i) => i.done).length;
   const completenessPercent = Math.round((completedCount / healthItems.length) * 100);
@@ -819,6 +822,12 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
     { id: 'menu', label: 'Menu & Dishes', icon: UtensilsCrossed },
     { id: 'hours', label: 'Operating Hours', icon: Clock },
     { id: 'location', label: 'Location & GPS', icon: MapPin },
+    {
+      id: 'verification',
+      label: 'Verification',
+      icon: ShieldCheck,
+      badge: place.is_verified ? 'Verified' : (place.verification_status === 'pending' ? 'Pending' : (place.verification_status === 'rejected' ? 'Action' : undefined)),
+    },
   ];
 
   return (
@@ -847,6 +856,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                 <h1 className="text-base sm:text-lg font-bold text-white font-display truncate">
                   {place.name}
                 </h1>
+                {Boolean(place.is_verified) && <VerifiedBadge size="sm" />}
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono border border-white/10 bg-black/60 text-[#AAA69C]">
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
@@ -985,6 +995,27 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                           />
                           <span>{place.is_active ? 'Live' : 'Draft'}</span>
                         </span>
+                        {place.is_verified ? (
+                          <VerifiedBadge size="md" showLabel />
+                        ) : place.verification_status === 'pending' ? (
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('verification')}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition cursor-pointer"
+                          >
+                            <Clock className="w-3 h-3 animate-spin" />
+                            <span>Verification Pending</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('verification')}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border border-white/15 bg-white/5 text-[#AAA69C] hover:text-white hover:border-white/30 transition cursor-pointer"
+                          >
+                            <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                            <span>Get Verified</span>
+                          </button>
+                        )}
                       </div>
 
                       <h2 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight">
@@ -1981,6 +2012,19 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
                     </button>
                   </div>
                 </form>
+              </div>
+            )}
+
+            {/* TAB 7: BUSINESS LEGITIMACY VERIFICATION */}
+            {activeTab === 'verification' && (
+              <div className="animate-in fade-in duration-200">
+                <BusinessVerificationSection
+                  place={place}
+                  onPlaceUpdated={(updated) => {
+                    setPlace((prev) => ({ ...prev, ...updated }));
+                    showToast('Business verification details updated.');
+                  }}
+                />
               </div>
             )}
 

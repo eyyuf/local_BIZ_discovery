@@ -5,6 +5,7 @@ import { BookmarkButton } from '@/modules/bookmarks/components/BookmarkButton';
 import { getPlacePhotos, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 import { getPlaceCategoryLabel } from '@/shared/utils/placeCategories';
 import { getOperatingStatus } from '@/shared/utils/operatingHours';
+import { VerifiedBadge } from '@/shared/components/VerifiedBadge';
 
 export function PlaceCard({ place, rank = null, className = '' }) {
   const photos = getPlacePhotos(place);
@@ -174,13 +175,16 @@ export function PlaceCard({ place, rank = null, className = '' }) {
         {/* 2. Structured, Concise Text Block (Yelp-style hierarchy in dark obsidian) */}
         <div className="p-4 flex-1 flex flex-col justify-between space-y-2.5">
           <div>
-            {/* Line 1: Place Name */}
-            <h3
-              className="text-[17px] font-bold text-white truncate leading-snug group-hover:text-white transition-colors"
-              title={place?.name}
-            >
-              {place?.name}
-            </h3>
+            {/* Line 1: Place Name & Verified Badge */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h3
+                className="text-[17px] font-bold text-white truncate leading-snug group-hover:text-white transition-colors"
+                title={place?.name}
+              >
+                {place?.name}
+              </h3>
+              {Boolean(place?.is_verified) && <VerifiedBadge size="icon" />}
+            </div>
 
             {/* Line 2: Rating Stars + Numeric Rating + Review Count (Actual data only) */}
             <div className="flex items-center gap-2 pt-1">

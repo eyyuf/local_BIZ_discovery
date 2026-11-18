@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, ChevronRight, Compass } from 'lucide-react';
 import { getPlacePrimaryPhoto, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
+import { VerifiedBadge } from '@/shared/components/VerifiedBadge';
 
 export function HeroCard({ place }) {
   const hasPlace = Boolean(place && place.slug && place.name);
@@ -39,9 +40,12 @@ export function HeroCard({ place }) {
           </div>
         )}
 
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight text-border-letters font-display max-w-3xl">
-          {heroName}
-        </h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight text-border-letters font-display max-w-3xl">
+            {heroName}
+          </h1>
+          {Boolean(place?.is_verified) && <VerifiedBadge size="lg" />}
+        </div>
 
         <div className="flex items-center gap-1.5 text-xs sm:text-sm text-[#AAA69C] font-medium">
           <MapPin className="w-4 h-4 text-white/80 shrink-0" />

@@ -21,6 +21,8 @@ import { Navbar } from '@/shared/components/Navbar';
 import { Footer } from '@/shared/components/Footer';
 import { MobileBottomNav } from '@/shared/components/MobileBottomNav';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
+import { AdminRoute } from '@/shared/components/AdminRoute';
+import { AdminVerificationsPage } from '@/modules/admin/pages/AdminVerificationsPage';
 import { ScrollToTop } from '@/shared/components/ScrollToTop';
 
 export function App() {
@@ -83,6 +85,14 @@ export function App() {
                   <ProtectedRoute>
                     <BusinessDashboardPage defaultTab="info" />
                   </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/verifications"
+                element={
+                  <AdminRoute>
+                    <AdminVerificationsPage />
+                  </AdminRoute>
                 }
               />
               <Route path="*" element={<NotFoundPage />} />

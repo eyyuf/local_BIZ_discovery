@@ -6,6 +6,7 @@ import { LeafletMap } from '@/shared/map/LeafletMap';
 import { BookmarkButton } from '@/modules/bookmarks/components/BookmarkButton';
 import { getPlacePrimaryPhoto, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 import { getPlaceCategoryLabel } from '@/shared/utils/placeCategories';
+import { VerifiedBadge } from '@/shared/components/VerifiedBadge';
 
 // Safe distance formatting from API response
 function formatDistance(distanceKm) {
@@ -638,13 +639,16 @@ export function NearbyPage() {
                         <div>
                           {/* Name and Rating */}
                           <div className="flex items-start justify-between gap-2">
-                            <h3
-                              className="text-sm sm:text-base font-bold text-white group-hover:text-amber-400 transition truncate leading-snug"
-                              title={place.name}
-                            >
-                              <span className="text-amber-400 font-mono font-bold mr-1.5">{index + 1}.</span>
-                              {place.name}
-                            </h3>
+                            <div className="flex items-center gap-1.5 truncate">
+                              <h3
+                                className="text-sm sm:text-base font-bold text-white group-hover:text-amber-400 transition truncate leading-snug"
+                                title={place.name}
+                              >
+                                <span className="text-amber-400 font-mono font-bold mr-1.5">{index + 1}.</span>
+                                {place.name}
+                              </h3>
+                              {Boolean(place.is_verified) && <VerifiedBadge size="icon" />}
+                            </div>
                             {hasRating && (
                               <div className="flex items-center gap-1 text-xs font-bold text-amber-400 shrink-0 mt-0.5">
                                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />

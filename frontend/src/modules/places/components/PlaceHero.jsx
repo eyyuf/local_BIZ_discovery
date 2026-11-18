@@ -15,6 +15,7 @@ import {
 import { BookmarkButton } from '@/modules/bookmarks/components/BookmarkButton';
 import { PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 import { getOperatingStatus } from '@/shared/utils/operatingHours';
+import { VerifiedBadge } from '@/shared/components/VerifiedBadge';
 
 export function PlaceHero({
   place,
@@ -177,9 +178,12 @@ export function PlaceHero({
       {/* Bottom Content Overlay */}
       <div className="absolute bottom-8 inset-x-0 z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
         {/* Title */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight text-border-letters font-display max-w-4xl">
-          {place?.name}
-        </h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight text-border-letters font-display max-w-4xl">
+            {place?.name}
+          </h1>
+          {Boolean(place?.is_verified) && <VerifiedBadge size="lg" />}
+        </div>
 
         {/* Status & Location line */}
         <div className="flex items-center gap-3 text-xs sm:text-sm font-medium">
