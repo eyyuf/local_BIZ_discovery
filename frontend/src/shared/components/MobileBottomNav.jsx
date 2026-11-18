@@ -18,7 +18,9 @@ export function MobileBottomNav() {
   ];
   const isAuthPage = authPaths.some((p) => location.pathname.startsWith(p));
 
-  if (isAuthPage) {
+  const isAdminPage = location.pathname.startsWith('/admin');
+
+  if (isAuthPage || isAdminPage) {
     return null;
   }
 

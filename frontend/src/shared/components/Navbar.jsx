@@ -33,6 +33,7 @@ export function Navbar() {
   const authPaths = ['/login', '/register', '/signup', '/oauth', '/forgot-password', '/reset-password'];
   const isAuthPage = authPaths.some((p) => location.pathname.startsWith(p));
   const isPlaceDetailPage = location.pathname.startsWith('/places/');
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   const activeFilter = searchParams.get('filter') || 'all';
 
@@ -81,8 +82,8 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Suppress completely on place detail and auth routes per architecture specification
-  if (isPlaceDetailPage || isAuthPage) {
+  // Suppress completely on place detail, auth routes, and dedicated admin portal
+  if (isPlaceDetailPage || isAuthPage || isAdminPage) {
     return null;
   }
 
