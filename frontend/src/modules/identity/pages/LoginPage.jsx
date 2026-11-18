@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Mail, Lock, Eye, EyeOff, Compass, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Compass, ArrowLeft, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
 
 export function LoginPage() {
   const { login, isAuthenticated, user } = useAuth();
@@ -214,6 +214,22 @@ export function LoginPage() {
                         <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
+                  </button>
+                </div>
+
+                {/* Quick Admin Demo Autofill */}
+                <div className="pt-2 flex items-center justify-between text-[11px] text-[#AAA69C]">
+                  <span>Testing admin dashboard?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('admin@localspot.et');
+                      setPassword('password');
+                    }}
+                    className="px-2.5 py-1 rounded-full border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Fill Admin Credentials</span>
                   </button>
                 </div>
               </form>
