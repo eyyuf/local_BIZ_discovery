@@ -133,6 +133,35 @@ export const placesApi = {
     });
     return response.data?.url || response.data;
   },
+
+  // Verification Management (Owner)
+  getVerificationStatus: async (placeId) => {
+    const response = await apiClient.get(`/owner/places/${placeId}/verification-status`);
+    return response.data;
+  },
+
+  submitVerification: async (placeId, formData) => {
+    const response = await apiClient.post(`/owner/places/${placeId}/verify`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Admin Verification Management
+  getPendingVerifications: async (status = 'pending', page = 1) => {
+    const response = await apiClient.get('/admin/places/pending-verifications', {
+      params: { status, page },
+    });
+    return response.data;
+  },
+
+  reviewVerification: async (placeId, { decision, notes }) => {
+    const response = await apiClient.post(`/admin/places/${placeId}/review`, {
+      decision,
+      notes,
+    });
+    return response.data;
+  },
 };
 
 export default placesApi;

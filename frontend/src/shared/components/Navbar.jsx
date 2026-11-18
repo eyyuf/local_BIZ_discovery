@@ -12,6 +12,7 @@ import {
   LogOut,
   X,
   Menu,
+  ShieldCheck,
 } from 'lucide-react';
 import { QuickFilters } from '@/modules/discovery/components/QuickFilters';
 import { NearMeFloatingPill } from '@/modules/discovery/components/NearMeFloatingPill';
@@ -168,6 +169,15 @@ export function Navbar() {
           {/* User / Sign In Pill */}
           {isAuthenticated ? (
             <div className="flex items-center gap-1.5 pl-1">
+              {user?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 backdrop-blur-md text-xs font-bold text-amber-300 hover:border-amber-400 hover:bg-amber-500/20 transition shadow-sm shadow-amber-500/10"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Admin Panel</span>
+                </Link>
+              )}
               <Link
                 to="/profile"
                 className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/25 bg-black/45 backdrop-blur-md text-xs font-bold text-white hover:border-white transition"
@@ -277,22 +287,34 @@ export function Navbar() {
 
           <div className="pt-2">
             {isAuthenticated ? (
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-                <Link
-                  to="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 text-xs font-bold text-white"
-                >
-                  <User className="w-4 h-4 text-[#AAA69C]" />
-                  <span>{user?.name}</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="text-xs text-red-400 font-semibold"
-                >
-                  Sign Out
-                </button>
+              <div className="space-y-2">
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 text-xs font-bold text-amber-300"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                    <span>Admin Panel</span>
+                  </Link>
+                )}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 text-xs font-bold text-white"
+                  >
+                    <User className="w-4 h-4 text-[#AAA69C]" />
+                    <span>{user?.name}</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="text-xs text-red-400 font-semibold"
+                  >
+                    Sign Out
+                  </button>
+                </div>
               </div>
             ) : (
               <Link

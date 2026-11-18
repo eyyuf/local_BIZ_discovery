@@ -10,6 +10,7 @@ import {
   OAuthCallbackPage,
   BusinessCreatePage,
   BusinessDashboardPage,
+  AdminDashboardPage,
 } from '@/modules/identity';
 import { HomePage } from '@/modules/discovery/pages/HomePage';
 import { SearchPage } from '@/modules/discovery/pages/SearchPage';
@@ -21,6 +22,7 @@ import { Navbar } from '@/shared/components/Navbar';
 import { Footer } from '@/shared/components/Footer';
 import { MobileBottomNav } from '@/shared/components/MobileBottomNav';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
+import { AdminRoute } from '@/shared/components/AdminRoute';
 import { ScrollToTop } from '@/shared/components/ScrollToTop';
 
 export function App() {
@@ -83,6 +85,22 @@ export function App() {
                   <ProtectedRoute>
                     <BusinessDashboardPage defaultTab="info" />
                   </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <AdminDashboardPage />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/verifications"
+                element={
+                  <AdminRoute>
+                    <AdminDashboardPage />
+                  </AdminRoute>
                 }
               />
               <Route path="*" element={<NotFoundPage />} />

@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Mail, Lock, Eye, EyeOff, Compass, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
 
 export function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -18,9 +18,13 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true });
+      if (user?.role === 'admin' && (from === '/' || from === '/profile')) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, user, navigate, from]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,8 +32,12 @@ export function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await login({ email, password });
-      navigate(from, { replace: true });
+      const authUser = await login({ email, password });
+      if (authUser?.role === 'admin' && (from === '/' || from === '/profile')) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err) {
       let msg = 'Invalid email or password. Please try again.';
       if (err.response?.data?.errors) {
