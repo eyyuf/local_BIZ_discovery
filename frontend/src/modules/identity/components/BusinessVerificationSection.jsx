@@ -270,14 +270,14 @@ export function BusinessVerificationSection({ place, onPlaceUpdated }) {
             <h2 className="text-xl font-black text-white font-display">Business Verification</h2>
             {isVerified && <VerifiedBadge size="md" showLabel />}
             {isPending && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
-                <Clock className="w-3 h-3 animate-spin" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-semibold">
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
                 <span>Pending Review</span>
               </span>
             )}
             {isRejected && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium">
-                <ShieldAlert className="w-3 h-3" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs font-semibold">
+                <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
                 <span>Requires Correction</span>
               </span>
             )}

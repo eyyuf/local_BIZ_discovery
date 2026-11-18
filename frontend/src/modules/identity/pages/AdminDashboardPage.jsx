@@ -814,10 +814,10 @@ export function AdminDashboardPage() {
                               <button
                                 type="button"
                                 onClick={() => openLightbox(place.trade_license_url, `Trade License — ${place.name}`, 'license')}
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400/90 hover:text-emerald-300 hover:underline transition cursor-pointer"
+                                className="group inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 hover:underline transition cursor-pointer"
                               >
                                 <span>View file</span>
-                                <Eye className="w-3.5 h-3.5 opacity-75" />
+                                <Eye className="w-3.5 h-3.5 text-emerald-400/80 group-hover:text-emerald-300 transition" />
                               </button>
                             ) : (
                               <span className="text-[#AAA69C]/50 text-[11px]">No file</span>
@@ -830,10 +830,10 @@ export function AdminDashboardPage() {
                               <button
                                 type="button"
                                 onClick={() => openLightbox(place.fayda_document_url, `Fayda National ID — ${place.name}`, 'fayda')}
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400/90 hover:text-emerald-300 hover:underline transition cursor-pointer"
+                                className="group inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 hover:underline transition cursor-pointer"
                               >
                                 <span>View file</span>
-                                <QrCode className="w-3.5 h-3.5 opacity-75" />
+                                <QrCode className="w-3.5 h-3.5 text-emerald-400/80 group-hover:text-emerald-300 transition" />
                               </button>
                             ) : (
                               <span className="text-[#AAA69C]/50 text-[11px]">No file</span>

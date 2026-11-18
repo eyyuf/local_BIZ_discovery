@@ -50,8 +50,10 @@ export function BookmarkButton({
       className={`rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md flex items-center justify-center hover:border-white hover:bg-black/80 transition-all active:scale-90 ${dimension} ${className}`}
     >
       <Bookmark
-        className={`w-4 h-4 transition-colors ${
-          isBookmarked ? 'fill-white text-white' : 'text-white/90'
+        className={`w-4 h-4 transition-all duration-200 ${
+          isBookmarked
+            ? 'fill-amber-400 text-amber-400 scale-110 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+            : 'text-white/80 hover:text-white'
         }`}
       />
     </button>
