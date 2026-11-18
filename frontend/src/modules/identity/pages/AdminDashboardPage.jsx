@@ -67,6 +67,8 @@ export function AdminDashboardPage() {
   // Modals & Inspection Drawers
   const [inspectingPlace, setInspectingPlace] = useState(null);
   const [activeInspectionDocTab, setActiveInspectionDocTab] = useState('license'); // 'license' | 'fayda'
+  const [inspectDocRotation, setInspectDocRotation] = useState(0);
+  const [inspectDocScale, setInspectDocScale] = useState(1);
   const [approvingPlace, setApprovingPlace] = useState(null);
   const [rejectingPlace, setRejectingPlace] = useState(null);
   const [rejectionNotes, setRejectionNotes] = useState('');
@@ -83,6 +85,13 @@ export function AdminDashboardPage() {
 
   // Copy TIN feedback
   const [copiedId, setCopiedId] = useState(null);
+
+  const handleOpenReview = (place) => {
+    setInspectingPlace(place);
+    setActiveInspectionDocTab('license');
+    setInspectDocRotation(0);
+    setInspectDocScale(1);
+  };
 
   // Keyboard Shortcuts: Escape to close modals, "/" to focus search
   useEffect(() => {
@@ -860,7 +869,7 @@ export function AdminDashboardPage() {
                             <div className="inline-flex items-center gap-2 justify-end">
                               <button
                                 type="button"
-                                onClick={() => setInspectingPlace(place)}
+                                onClick={() => handleOpenReview(place)}
                                 className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-semibold transition cursor-pointer"
                               >
                                 Review
@@ -882,7 +891,7 @@ export function AdminDashboardPage() {
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        setInspectingPlace(place);
+                                        handleOpenReview(place);
                                         setActiveMenuId(null);
                                       }}
                                       className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-white hover:bg-white/10 transition"
@@ -995,179 +1004,375 @@ export function AdminDashboardPage() {
       </div>
 
       {/* ======================================================== */}
-      {/* 5. KYC FULL DETAIL DRAWER (When clicking "Review") */}
+      {/* 5. KYC AUDIT MODAL (Centered, 2-Column Desktop Layout)    */}
       {/* ======================================================== */}
       {inspectingPlace && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex justify-end animate-in fade-in"
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
           onClick={() => setInspectingPlace(null)}
         >
           <div
-            className="w-full max-w-2xl bg-[#141418] border-l border-white/10 h-full overflow-y-auto p-6 space-y-6 shadow-2xl flex flex-col justify-between"
+            className="w-full max-w-5xl max-h-[92vh] bg-[#141418] border border-white/15 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="space-y-6">
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#AAA69C]">
-                    Verification Inspector
-                  </span>
-                  <h3 className="text-xl font-bold text-white font-display">
-                    {inspectingPlace.name}
-                  </h3>
+            {/* Modal Header */}
+            <div className="px-5 py-4 sm:px-6 sm:py-4.5 border-b border-white/[0.08] flex items-center justify-between bg-black/30">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base sm:text-lg font-bold text-white font-display truncate">
+                      {inspectingPlace.name}
+                    </h3>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide border uppercase ${
+                        inspectingPlace.verification_status === 'verified'
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25'
+                          : inspectingPlace.verification_status === 'rejected'
+                          ? 'bg-rose-500/15 text-rose-400 border-rose-500/25'
+                          : 'bg-amber-500/15 text-amber-400 border-amber-500/25'
+                      }`}
+                    >
+                      {inspectingPlace.verification_status || 'Pending'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#AAA69C] truncate mt-0.5">
+                    {inspectingPlace.categories?.[0]?.name || 'Local Spot'} &bull; {inspectingPlace.address || 'Addis Ababa'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://id.gov.et/scanId"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold transition"
+                  title="Open Official id.gov.et Camera QR Scanner"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span>Scan QR</span>
+                  <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                </a>
+
                 <button
                   type="button"
                   onClick={() => setInspectingPlace(null)}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#AAA69C] hover:text-white transition"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#AAA69C] hover:text-white transition cursor-pointer"
+                  title="Close (Esc)"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
+            </div>
 
-              {/* Status & Submitter */}
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
-                  <span className="text-[10px] text-[#AAA69C] uppercase font-mono block">Current Status</span>
-                  <p className="font-bold uppercase tracking-wider text-white">
-                    {inspectingPlace.verification_status}
-                  </p>
+            {/* Modal Body - Balanced 2-Column Grid */}
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column: Business & Submitter Dossier */}
+              <div className="lg:col-span-5 space-y-4">
+                {/* Submitter & Timeline */}
+                <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-2 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/[0.04]">
+                    <span className="text-[#AAA69C]">Submitted By</span>
+                    <span className="font-semibold text-white">{inspectingPlace.owner?.name || 'Owner'}</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-2 border-b border-white/[0.04]">
+                    <span className="text-[#AAA69C]">Owner Email</span>
+                    <span className="font-mono text-white/90 truncate max-w-[180px]">
+                      {inspectingPlace.owner?.email || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#AAA69C]">Submission Date</span>
+                    <span className="font-mono text-[#AAA69C]">
+                      {inspectingPlace.submitted_at
+                        ? new Date(inspectingPlace.submitted_at).toLocaleString()
+                        : 'N/A'}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
-                  <span className="text-[10px] text-[#AAA69C] uppercase font-mono block">Submitted By</span>
-                  <p className="font-bold text-white truncate">{inspectingPlace.owner?.name || 'Owner'}</p>
-                  <p className="text-[10px] text-[#AAA69C] font-mono truncate">{inspectingPlace.owner?.email}</p>
-                </div>
-              </div>
-
-              {/* Data Credentials */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                  Submitted Credentials
-                </h4>
-
+                {/* Legal & Compliance Credentials */}
                 <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-3 text-xs">
-                  <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                    <span className="text-[#AAA69C]">10-Digit TIN:</span>
-                    <span className="font-mono font-bold text-white">{inspectingPlace.tax_id || 'Not provided'}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                    <span className="text-[#AAA69C]">General Manager:</span>
-                    <span className="font-semibold text-white">{inspectingPlace.manager_name || 'Not provided'}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                    <span className="text-[#AAA69C]">Fayda FIN:</span>
-                    <span className="font-mono text-white">{inspectingPlace.fayda_fin || 'Embedded in QR'}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-[#AAA69C]">Phone:</span>
-                    <span className="text-white">{inspectingPlace.phone || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Document Review Tabs in Drawer */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                    Document Verification
+                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider font-mono">
+                    Legal Credentials
                   </h4>
 
-                  <div className="inline-flex p-1 rounded-xl bg-black/40 border border-white/10 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => setActiveInspectionDocTab('license')}
-                      className={`px-3 py-1 rounded-lg font-semibold transition ${
-                        activeInspectionDocTab === 'license' ? 'bg-white/10 text-white' : 'text-[#AAA69C] hover:text-white'
-                      }`}
-                    >
-                      Trade License
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveInspectionDocTab('fayda')}
-                      className={`px-3 py-1 rounded-lg font-semibold transition ${
-                        activeInspectionDocTab === 'fayda' ? 'bg-white/10 text-white' : 'text-[#AAA69C] hover:text-white'
-                      }`}
-                    >
-                      Fayda National ID
-                    </button>
-                  </div>
-                </div>
-
-                {activeInspectionDocTab === 'license' ? (
-                  <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-[#AAA69C]">Trade License (የንግድ ፈቃድ)</span>
-                      {inspectingPlace.trade_license_url && (
-                        <button
-                          type="button"
-                          onClick={() => openLightbox(inspectingPlace.trade_license_url, `Trade License — ${inspectingPlace.name}`, 'license')}
-                          className="text-emerald-400 hover:text-emerald-300 font-semibold text-xs flex items-center gap-1"
-                        >
-                          <Maximize2 className="w-3.5 h-3.5" />
-                          <span>Inspect Fullscreen</span>
-                        </button>
+                  <div className="space-y-2.5">
+                    {/* TIN */}
+                    <div className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                      <div>
+                        <span className="text-[10px] text-[#AAA69C] block font-mono">10-Digit TIN</span>
+                        <span className="font-mono font-bold text-white text-xs">
+                          {inspectingPlace.tax_id || 'Not provided'}
+                        </span>
+                      </div>
+                      {inspectingPlace.tax_id && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-emerald-400 font-semibold uppercase">Validated</span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(inspectingPlace.tax_id, `tin-modal-${inspectingPlace.id}`)}
+                            className="p-1 text-[#AAA69C] hover:text-white transition"
+                            title="Copy TIN"
+                          >
+                            {copiedId === `tin-modal-${inspectingPlace.id}` ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
                       )}
                     </div>
 
-                    {inspectingPlace.trade_license_url ? (
-                      <div
-                        onClick={() => openLightbox(inspectingPlace.trade_license_url, `Trade License — ${inspectingPlace.name}`, 'license')}
-                        className="h-64 rounded-xl bg-black/60 overflow-hidden cursor-pointer relative group border border-white/10 flex items-center justify-center"
+                    {/* General Manager */}
+                    <div className="py-1.5 px-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                      <span className="text-[10px] text-[#AAA69C] block font-mono">General Manager (ሥራ አስኪያጅ)</span>
+                      <span className="font-semibold text-white text-xs">
+                        {inspectingPlace.manager_name || 'Not provided'}
+                      </span>
+                    </div>
+
+                    {/* Fayda FIN */}
+                    <div className="py-1.5 px-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                      <span className="text-[10px] text-[#AAA69C] block font-mono">Fayda National ID (FIN)</span>
+                      <span className="font-mono text-white text-xs">
+                        {inspectingPlace.fayda_fin || 'Embedded in Fayda Digital QR'}
+                      </span>
+                    </div>
+
+                    {/* Phone */}
+                    <div className="py-1.5 px-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                      <span className="text-[10px] text-[#AAA69C] block font-mono">Official Phone</span>
+                      <span className="text-white text-xs">
+                        {inspectingPlace.phone || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Audit Actions Block (In-Place Decision) */}
+                <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-3">
+                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider font-mono">
+                    Moderator Action
+                  </h4>
+
+                  {inspectingPlace.verification_status === 'pending' ? (
+                    <div className="space-y-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setApprovingPlace(inspectingPlace)}
+                        className="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                       >
+                        <Check className="w-4 h-4 stroke-[2.5]" />
+                        <span>Approve Business</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRejectingPlace(inspectingPlace);
+                          setRejectionNotes('');
+                          setRejectionError('');
+                        }}
+                        className="w-full py-2.5 px-4 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Decline Application</span>
+                      </button>
+                    </div>
+                  ) : inspectingPlace.verification_status === 'verified' ? (
+                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Application Approved</span>
+                      </div>
+                      <p className="text-[11px] text-[#AAA69C]">
+                        {inspectingPlace.verification_notes || 'Verified by administrator.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <XCircle className="w-4 h-4" />
+                        <span>Application Declined</span>
+                      </div>
+                      <p className="text-[11px] text-[#AAA69C]">
+                        {inspectingPlace.verification_notes || 'Declined during review.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: High-Resolution Document Inspection Workspace */}
+              <div className="lg:col-span-7 space-y-3 flex flex-col">
+                {/* Document Tab Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="inline-flex p-1 rounded-xl bg-black/40 border border-white/10 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveInspectionDocTab('license');
+                        setInspectDocRotation(0);
+                        setInspectDocScale(1);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
+                        activeInspectionDocTab === 'license'
+                          ? 'bg-white/15 text-white shadow-sm'
+                          : 'text-[#AAA69C] hover:text-white'
+                      }`}
+                    >
+                      Trade License (የንግድ ፈቃድ)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveInspectionDocTab('fayda');
+                        setInspectDocRotation(0);
+                        setInspectDocScale(1);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
+                        activeInspectionDocTab === 'fayda'
+                          ? 'bg-white/15 text-white shadow-sm'
+                          : 'text-[#AAA69C] hover:text-white'
+                      }`}
+                    >
+                      Fayda National ID &amp; QR
+                    </button>
+                  </div>
+
+                  {/* Active Document Controls */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setInspectDocRotation((prev) => (prev + 90) % 360)}
+                      title="Rotate 90°"
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#AAA69C] hover:text-white transition cursor-pointer"
+                    >
+                      <RotateCw className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInspectDocScale((prev) => Math.min(prev + 0.25, 2.5))}
+                      title="Zoom in"
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#AAA69C] hover:text-white transition cursor-pointer"
+                    >
+                      <ZoomIn className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInspectDocScale((prev) => Math.max(prev - 0.25, 0.75))}
+                      title="Zoom out"
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#AAA69C] hover:text-white transition cursor-pointer"
+                    >
+                      <ZoomOut className="w-3.5 h-3.5" />
+                    </button>
+                    {(inspectDocRotation !== 0 || inspectDocScale !== 1) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInspectDocRotation(0);
+                          setInspectDocScale(1);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] text-[#AAA69C] hover:text-white transition cursor-pointer"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Viewport Frame */}
+                {activeInspectionDocTab === 'license' ? (
+                  <div className="flex-1 min-h-[380px] sm:min-h-[440px] rounded-xl bg-black/80 border border-white/10 relative overflow-hidden flex items-center justify-center p-2 group">
+                    {inspectingPlace.trade_license_url ? (
+                      <>
                         <img
                           src={inspectingPlace.trade_license_url}
                           alt="Trade License"
-                          className="w-full h-full object-contain group-hover:scale-105 transition"
+                          style={{
+                            transform: `rotate(${inspectDocRotation}deg) scale(${inspectDocScale})`,
+                            transition: 'transform 0.2s ease',
+                          }}
+                          className="max-h-[400px] w-auto object-contain cursor-grab active:cursor-grabbing"
                         />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs font-bold text-white gap-1.5">
-                          <Eye className="w-4 h-4 text-emerald-400" />
-                          <span>Click to Zoom &amp; Rotate</span>
+
+                        {/* Top-Right Quick Links */}
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openLightbox(
+                                inspectingPlace.trade_license_url,
+                                `Trade License — ${inspectingPlace.name}`,
+                                'license'
+                              )
+                            }
+                            className="px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-black border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1 backdrop-blur-md transition cursor-pointer"
+                          >
+                            <Maximize2 className="w-3 h-3 text-emerald-400" />
+                            <span>Fullscreen</span>
+                          </button>
                         </div>
-                      </div>
+                      </>
                     ) : (
-                      <div className="h-48 rounded-xl bg-white/5 border border-dashed border-white/10 flex items-center justify-center text-xs text-[#AAA69C]">
-                        No Trade License document uploaded
+                      <div className="text-center p-8 text-[#AAA69C]">
+                        <FileText className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                        <p className="text-xs">No Trade License document uploaded</p>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-[#AAA69C]">Fayda National ID &amp; QR</span>
-                      {inspectingPlace.fayda_document_url && (
-                        <button
-                          type="button"
-                          onClick={() => openLightbox(inspectingPlace.fayda_document_url, `Fayda National ID — ${inspectingPlace.name}`, 'fayda')}
-                          className="text-emerald-400 hover:text-emerald-300 font-semibold text-xs flex items-center gap-1"
-                        >
-                          <Maximize2 className="w-3.5 h-3.5" />
-                          <span>Inspect QR Fullscreen</span>
-                        </button>
-                      )}
-                    </div>
-
+                  <div className="flex-1 min-h-[380px] sm:min-h-[440px] rounded-xl bg-black/80 border border-white/10 relative overflow-hidden flex items-center justify-center p-2 group">
                     {inspectingPlace.fayda_document_url ? (
-                      <div
-                        onClick={() => openLightbox(inspectingPlace.fayda_document_url, `Fayda National ID — ${inspectingPlace.name}`, 'fayda')}
-                        className="h-64 rounded-xl bg-black/60 overflow-hidden cursor-pointer relative group border border-white/10 flex items-center justify-center"
-                      >
+                      <>
                         <img
                           src={inspectingPlace.fayda_document_url}
-                          alt="Fayda ID"
-                          className="w-full h-full object-contain group-hover:scale-105 transition"
+                          alt="Fayda National ID"
+                          style={{
+                            transform: `rotate(${inspectDocRotation}deg) scale(${inspectDocScale})`,
+                            transition: 'transform 0.2s ease',
+                          }}
+                          className="max-h-[400px] w-auto object-contain cursor-grab active:cursor-grabbing"
                         />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs font-bold text-white gap-1.5">
-                          <QrCode className="w-4 h-4 text-emerald-400" />
-                          <span>Click to Scan Digital QR</span>
+
+                        {/* Top-Right Quick Links */}
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition">
+                          <a
+                            href="https://id.gov.et/scanId"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-[11px] font-semibold flex items-center gap-1 backdrop-blur-md transition"
+                          >
+                            <QrCode className="w-3 h-3" />
+                            <span>Scan with id.gov.et</span>
+                            <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                          </a>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openLightbox(
+                                inspectingPlace.fayda_document_url,
+                                `Fayda National ID — ${inspectingPlace.name}`,
+                                'fayda'
+                              )
+                            }
+                            className="px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-black border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1 backdrop-blur-md transition cursor-pointer"
+                          >
+                            <Maximize2 className="w-3 h-3 text-emerald-400" />
+                            <span>Fullscreen</span>
+                          </button>
                         </div>
-                      </div>
+                      </>
                     ) : (
-                      <div className="h-48 rounded-xl bg-white/5 border border-dashed border-white/10 flex items-center justify-center text-xs text-[#AAA69C]">
-                        No Fayda ID document uploaded
+                      <div className="text-center p-8 text-[#AAA69C]">
+                        <QrCode className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                        <p className="text-xs">No Fayda National ID document uploaded</p>
                       </div>
                     )}
                   </div>
@@ -1175,27 +1380,17 @@ export function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Action Footer in Drawer */}
-            <div className="pt-4 border-t border-white/[0.08] flex items-center gap-3">
+            {/* Modal Footer */}
+            <div className="px-5 py-3 sm:px-6 sm:py-3.5 border-t border-white/[0.08] flex items-center justify-between bg-black/30 text-xs">
+              <span className="text-[#AAA69C] hidden sm:inline text-[11px]">
+                Verify Trade License GM name against Fayda National ID card.
+              </span>
               <button
                 type="button"
-                onClick={() => {
-                  setRejectingPlace(inspectingPlace);
-                  setRejectionNotes('');
-                  setRejectionError('');
-                }}
-                className="flex-1 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold transition cursor-pointer"
+                onClick={() => setInspectingPlace(null)}
+                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold transition cursor-pointer ml-auto"
               >
-                Decline Application
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setApprovingPlace(inspectingPlace)}
-                className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg cursor-pointer"
-              >
-                <Check className="w-4 h-4 stroke-[2.5]" />
-                <span>Approve Verification</span>
+                Close Review
               </button>
             </div>
           </div>
