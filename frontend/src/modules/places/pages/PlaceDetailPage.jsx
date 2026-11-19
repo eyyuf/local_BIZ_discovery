@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { placesApi } from '../api/placesApi';
 import { PlaceHero } from '../components/PlaceHero';
 import { PlaceAtmosphereGallery } from '../components/PlaceAtmosphereGallery';
@@ -7,9 +7,12 @@ import { WeeklySchedule } from '../components/WeeklySchedule';
 import { PlaceLocation } from '../components/PlaceLocation';
 import { PlaceDirectContact } from '../components/PlaceDirectContact';
 import { PlaceMenuCarousel } from '../components/PlaceMenuCarousel';
+import { ClaimBusinessCard } from '../components/ClaimBusinessCard';
+import { ClaimBusinessModal } from '../components/ClaimBusinessModal';
 import { PlaceReviewsSection } from '@/modules/reviews/components/PlaceReviewsSection';
 import { getPlacePhotos } from '@/shared/utils/placeImages';
 import { socialApi, DealCard } from '@/modules/social';
+import { useAuth } from '@/modules/identity';
 import {
   AlertCircle,
   ArrowLeft,
@@ -24,6 +27,8 @@ import {
 export function PlaceDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
 
   const [place, setPlace] = useState(null);
   const [photos, setPhotos] = useState([]);
@@ -31,6 +36,15 @@ export function PlaceDetailPage() {
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+
+  // Automatically trigger claim modal if URL contains ?claim=true (e.g. after login redirect)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('claim') === 'true') {
+      setIsClaimModalOpen(true);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     let isMounted = true;
@@ -114,6 +128,7 @@ export function PlaceDetailPage() {
         photos={photos}
         activePhotoIndex={activePhotoIndex}
         onPhotoChange={setActivePhotoIndex}
+        onOpenClaimModal={() => setIsClaimModalOpen(true)}
       />
 
       {/* Anchor Navigation Bar */}
@@ -223,14 +238,40 @@ export function PlaceDetailPage() {
             </div>
           </div>
 
-          {/* Right Column: Interactive Map & Direct Contact Actions (5 cols) */}
-          <div id="location-section" className="lg:col-span-5 space-y-8 lg:sticky lg:top-32 scroll-mt-28">
+          {/* Right Column: Interactive Map, Ownership Claim & Direct Contact (5 cols) */}
+          <div id="location-section" className="lg:col-span-5 space-y-6 lg:sticky lg:top-32 scroll-mt-28">
+            {/* Legal Ownership Verification Card */}
+            <ClaimBusinessCard
+              place={place}
+              onOpenClaimModal={() => setIsClaimModalOpen(true)}
+            />
+
             <PlaceLocation place={place} />
 
             <PlaceDirectContact place={place} />
           </div>
         </div>
       </div>
+
+      {/* Claim Business Modal */}
+      <ClaimBusinessModal
+        place={place}
+        isOpen={isClaimModalOpen}
+        onClose={() => setIsClaimModalOpen(false)}
+        onClaimSubmitted={(updatedPlace) => {
+          if (updatedPlace) {
+            setPlace(updatedPlace);
+          } else {
+            setPlace((prev) => ({
+              ...prev,
+              verification_status: 'pending',
+              is_claim_pending: true,
+              is_claimed_by_me: true,
+            }));
+          }
+        }}
+        currentUser={user}
+      />
     </div>
   );
 }

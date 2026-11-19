@@ -328,17 +328,45 @@ export function AdminVerificationsPage() {
                           Rejected
                         </span>
                       )}
+
+                      {app.is_claim && (
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/15 border border-blue-500/40 text-blue-300">
+                          Ownership Claim
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-xs text-[#AAA69C]">{app.address || 'Address not set'}</p>
 
-                    {/* Owner Info */}
-                    {app.owner && (
+                    {/* Claimant or Owner Info */}
+                    {app.is_claim && app.claimant ? (
+                      <div className="space-y-1 text-xs text-[#AAA69C] pt-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <User className="w-3.5 h-3.5 text-blue-400" />
+                          <span>
+                            Claimant: <strong className="text-white font-medium">{app.claimant.name}</strong> ({app.claimant.email})
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-white/10 text-white text-[10px] uppercase font-mono">
+                            {app.claim_role || 'Representative'}
+                          </span>
+                        </div>
+                        {app.claim_contact_phone && (
+                          <div className="pl-5 text-[11px] text-[#AAA69C]">
+                            Contact Phone: <strong className="text-white font-mono">{app.claim_contact_phone}</strong>
+                          </div>
+                        )}
+                        {app.claim_notes && (
+                          <p className="pl-5 text-[11px] text-[#AAA69C]/80 italic">
+                            &ldquo;{app.claim_notes}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    ) : app.owner ? (
                       <div className="flex items-center gap-2 text-xs text-[#AAA69C] pt-1">
                         <User className="w-3.5 h-3.5 text-white/50" />
                         <span>Owner: <strong className="text-white font-medium">{app.owner.name}</strong> ({app.owner.email})</span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Middle: Credentials Box */}
@@ -664,9 +692,16 @@ export function AdminVerificationsPage() {
               {decisionType === 'approve' && (
                 <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-300 space-y-1">
                   <span className="font-bold block">Approval Confirmation</span>
-                  <p>
-                    Approving this application marks <strong>{selectedApp.name}</strong> as verified and awards the official Verified green badge across discovery.
-                  </p>
+                  {selectedApp.is_claim ? (
+                    <p>
+                      Approving this legal claim will <strong>transfer ownership of {selectedApp.name}</strong> to{' '}
+                      <strong>{selectedApp.claimant?.name || selectedApp.claimant?.email || 'the claimant'}</strong>, promote their account to Business Owner, mark the listing verified, and grant full Owner Dashboard privileges.
+                    </p>
+                  ) : (
+                    <p>
+                      Approving this application marks <strong>{selectedApp.name}</strong> as verified and awards the official Verified badge across discovery.
+                    </p>
+                  )}
                 </div>
               )}
             </div>

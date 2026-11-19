@@ -11,6 +11,8 @@ import {
   MessageCircle,
   Bookmark,
   Check,
+  ShieldCheck,
+  Clock,
 } from 'lucide-react';
 import { BookmarkButton } from '@/modules/bookmarks/components/BookmarkButton';
 import { PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
@@ -22,6 +24,7 @@ export function PlaceHero({
   photos = [],
   activePhotoIndex = 0,
   onPhotoChange,
+  onOpenClaimModal,
 }) {
   const navigate = useNavigate();
   const [copiedShare, setCopiedShare] = useState(false);
@@ -177,12 +180,29 @@ export function PlaceHero({
 
       {/* Bottom Content Overlay */}
       <div className="absolute bottom-8 inset-x-0 z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-        {/* Title */}
+        {/* Title & Verification Status */}
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight text-border-letters font-display max-w-4xl">
             {place?.name}
           </h1>
-          {Boolean(place?.is_verified) && <VerifiedBadge size="lg" />}
+          {Boolean(place?.is_verified) ? (
+            <VerifiedBadge size="lg" />
+          ) : place?.verification_status === 'pending' || place?.is_claim_pending ? (
+            <span className="px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center gap-1.5 shadow-sm">
+              <Clock className="w-3.5 h-3.5 animate-pulse" />
+              <span>Verification Pending</span>
+            </span>
+          ) : onOpenClaimModal ? (
+            <button
+              type="button"
+              onClick={onOpenClaimModal}
+              className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[#F5F2EA] border border-white/20 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer backdrop-blur-md shadow-sm"
+              title="Claim official ownership of this listing"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>Claim Spot</span>
+            </button>
+          ) : null}
         </div>
 
         {/* Status & Location line */}

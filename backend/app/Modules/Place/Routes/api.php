@@ -16,6 +16,11 @@ Route::prefix('api/v1/places')->middleware('api')->group(function () {
     Route::get('{place:slug}/images', [PlaceImageController::class, 'index']);
 });
 
+// Business Claim routes (Authenticated users claiming an unverified listing)
+Route::prefix('api/v1/places')->middleware(['api', 'auth:sanctum'])->group(function () {
+    Route::post('{place}/claim', [PlaceVerificationController::class, 'claim']);
+});
+
 // Business Owner routes (Protected by auth)
 Route::prefix('api/v1/owner/places')->middleware(['api', 'auth:sanctum'])->group(function () {
     Route::get('/', [OwnerPlaceController::class, 'index']);

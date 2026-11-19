@@ -24,6 +24,10 @@ class Place extends Model
 
     protected $fillable = [
         'user_id',
+        'claimed_by_id',
+        'claim_role',
+        'claim_contact_phone',
+        'claim_notes',
         'name',
         'slug',
         'description',
@@ -152,6 +156,11 @@ class Place extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function claimant(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'claimed_by_id');
     }
 
     public function operatingHours(): HasMany

@@ -147,6 +147,14 @@ export const placesApi = {
     return response.data;
   },
 
+  // Business Ownership Claim (Claim an unclaimed or scraped spot)
+  claimPlace: async (placeIdOrSlug, payload) => {
+    const isFormData = payload instanceof FormData;
+    const headers = isFormData ? { 'Content-Type': 'multipart/form-data' } : {};
+    const response = await apiClient.post(`/places/${placeIdOrSlug}/claim`, payload, { headers });
+    return response.data;
+  },
+
   // Admin Verification Management
   getPendingVerifications: async (status = 'pending', page = 1) => {
     const response = await apiClient.get('/admin/places/pending-verifications', {

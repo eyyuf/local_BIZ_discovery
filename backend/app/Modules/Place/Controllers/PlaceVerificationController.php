@@ -3,9 +3,11 @@
 namespace App\Modules\Place\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Place\Actions\ClaimBusinessAction;
 use App\Modules\Place\Actions\ReviewVerificationAction;
 use App\Modules\Place\Actions\SubmitVerificationAction;
 use App\Modules\Place\Models\Place;
+use App\Modules\Place\Requests\ClaimBusinessRequest;
 use App\Modules\Place\Requests\ReviewVerificationRequest;
 use App\Modules\Place\Requests\SubmitVerificationRequest;
 use App\Modules\Place\Resources\PlaceDetailResource;
@@ -15,7 +17,8 @@ use Illuminate\Http\Request;
 class PlaceVerificationController extends Controller
 {
     /**
-     * Submit business legitimacy verification details (TIN, Manager Name, Trade License, Fayda ID).
+     * Submit business legitimacy verification details (TIN, Manager Name, Trade License, Fayda ID)
+     * by the existing venue creator/owner.
      */
     public function submit(SubmitVerificationRequest $request, Place $place, SubmitVerificationAction $action): JsonResponse
     {
@@ -30,12 +33,30 @@ class PlaceVerificationController extends Controller
     }
 
     /**
+     * Submit a legal business ownership claim for an unclaimed or curator-listed venue.
+     * Strictly requires official Ethiopian Trade License (የንግድ ፈቃድ), TIN, and legal manager verification.
+     */
+    public function claim(ClaimBusinessRequest $request, Place $place, ClaimBusinessAction $action): JsonResponse
+    {
+        $updated = $action->execute($place, $request->user(), $request->validated());
+
+        return response()->json([
+            'message' => 'Your business ownership claim has been submitted successfully. Our administration will review your Trade License and TIN within 24-48 hours.',
+            'place'   => new PlaceDetailResource($updated),
+        ], 200);
+    }
+
+    /**
      * Get the current legitimacy verification status and submitted documents.
      */
     public function status(Request $request, Place $place): JsonResponse
     {
         $user = $request->user();
-        if ((int) $place->user_id !== (int) $user->id && ! $user->isAdmin() && $user->role !== 'admin') {
+        $isOwner = (int) $place->user_id === (int) $user->id;
+        $isClaimant = (int) $place->claimed_by_id === (int) $user->id;
+        $isAdmin = $user->isAdmin() || $user->role === 'admin';
+
+        if (! $isOwner && ! $isClaimant && ! $isAdmin) {
             abort(403, 'You are not authorized to view verification details for this place.');
         }
 
@@ -53,6 +74,10 @@ class PlaceVerificationController extends Controller
             'verification_notes'    => $place->verification_notes,
             'verified_at'           => $place->verified_at?->toISOString(),
             'fayda_validator_url'   => 'https://id.gov.et/scanId',
+            'is_claim'              => (bool) $place->claimed_by_id,
+            'claim_role'            => $place->claim_role,
+            'claim_contact_phone'   => $place->claim_contact_phone,
+            'claim_notes'           => $place->claim_notes,
         ], 200);
     }
 
@@ -71,7 +96,7 @@ class PlaceVerificationController extends Controller
             $status = 'verified';
         }
 
-        $query = Place::with('owner')->latest('updated_at');
+        $query = Place::with(['owner', 'claimant'])->latest('updated_at');
 
         if ($status !== 'all') {
             $query->where('verification_status', $status);
@@ -106,10 +131,22 @@ class PlaceVerificationController extends Controller
                 'submitted_at'          => $place->updated_at?->toISOString(),
                 'verified_at'           => $place->verified_at?->toISOString(),
                 'fayda_validator_url'   => 'https://id.gov.et/scanId',
+                'is_claim'              => (bool) $place->claimed_by_id,
+                'claim_role'            => $place->claim_role,
+                'claim_contact_phone'   => $place->claim_contact_phone,
+                'claim_notes'           => $place->claim_notes,
                 'owner'                 => $place->owner ? [
                     'id'    => $place->owner->id,
                     'name'  => $place->owner->name,
                     'email' => $place->owner->email,
+                ] : null,
+                'claimant'              => $place->claimant ? [
+                    'id'    => $place->claimant->id,
+                    'name'  => $place->claimant->name,
+                    'email' => $place->claimant->email,
+                    'phone' => $place->claim_contact_phone,
+                    'role'  => $place->claim_role,
+                    'notes' => $place->claim_notes,
                 ] : null,
             ];
         })->values();
@@ -127,7 +164,7 @@ class PlaceVerificationController extends Controller
     }
 
     /**
-     * Admin review action: approve or reject business verification.
+     * Admin review action: approve or reject business verification or claim.
      */
     public function review(ReviewVerificationRequest $request, Place $place, ReviewVerificationAction $action): JsonResponse
     {

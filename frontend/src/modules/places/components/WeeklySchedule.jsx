@@ -91,11 +91,10 @@ export function WeeklySchedule({ operatingHours = [] }) {
           {schedule.map((item) => (
             <div
               key={item.name}
-              className={`flex items-center justify-between py-3 px-3 rounded-xl transition-colors ${
-                item.isToday
-                  ? 'bg-[#1D1C19] border border-white/10 text-white font-bold my-1'
-                  : 'text-[#AAA69C] hover:text-white/90'
-              }`}
+              className={`flex items-center justify-between py-3 px-3 rounded-xl transition-colors ${item.isToday
+                ? 'bg-[#1D1C19] border border-white/10 text-white font-bold my-1'
+                : 'text-[#AAA69C] hover:text-white/90'
+                }`}
             >
               <div className="flex items-center gap-2.5">
                 <span className="text-xs sm:text-sm">{item.name}</span>
@@ -107,9 +106,8 @@ export function WeeklySchedule({ operatingHours = [] }) {
               </div>
 
               <span
-                className={`text-xs sm:text-sm font-mono tracking-tight ${
-                  item.isClosed ? 'text-[#AAA69C]/60' : 'text-[#F5F2EA]'
-                }`}
+                className={`text-xs sm:text-sm font-mono tracking-tight ${item.isClosed ? 'text-[#AAA69C]/60' : 'text-[#F5F2EA]'
+                  }`}
               >
                 {item.time}
               </span>
