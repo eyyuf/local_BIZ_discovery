@@ -9,6 +9,7 @@ import { PlaceDirectContact } from '../components/PlaceDirectContact';
 import { PlaceMenuCarousel } from '../components/PlaceMenuCarousel';
 import { PlaceReviewsSection } from '@/modules/reviews/components/PlaceReviewsSection';
 import { getPlacePhotos } from '@/shared/utils/placeImages';
+import { socialApi, DealCard } from '@/modules/social';
 import {
   AlertCircle,
   ArrowLeft,
@@ -17,6 +18,7 @@ import {
   MapPin,
   MessageSquare,
   UtensilsCrossed,
+  Flame,
 } from 'lucide-react';
 
 export function PlaceDetailPage() {
@@ -25,6 +27,7 @@ export function PlaceDetailPage() {
 
   const [place, setPlace] = useState(null);
   const [photos, setPhotos] = useState([]);
+  const [placeDeals, setPlaceDeals] = useState([]);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,6 +46,13 @@ export function PlaceDetailPage() {
         const venuePhotos = getPlacePhotos(data);
         setPhotos(venuePhotos);
         setActivePhotoIndex(0);
+
+        try {
+          const deals = await socialApi.fetchPlaceDeals(data.id);
+          if (isMounted) setPlaceDeals(deals || []);
+        } catch {
+          // Non-blocking
+        }
       } catch (err) {
         if (!isMounted) return;
         setError(
@@ -109,6 +119,15 @@ export function PlaceDetailPage() {
       {/* Anchor Navigation Bar */}
       <div className="sticky top-16 z-30 bg-[#0D0D0C]/90 backdrop-blur-md border-b border-white/[0.08] py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {placeDeals.length > 0 && (
+            <a
+              href="#deals-section"
+              className="px-4 py-1.5 rounded-full text-xs font-semibold border border-amber-500/30 bg-amber-500/15 text-amber-300 hover:border-amber-400 transition whitespace-nowrap flex items-center gap-1.5 shadow-sm"
+            >
+              <Flame className="w-3.5 h-3.5 text-amber-400" />
+              <span>Deals ({placeDeals.length})</span>
+            </a>
+          )}
           {hasMenuItems && (
             <a
               href="#menu-section"
@@ -153,6 +172,31 @@ export function PlaceDetailPage() {
       {hasMenuItems && (
         <div id="menu-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 scroll-mt-28">
           <PlaceMenuCarousel menuSections={menuSections} />
+        </div>
+      )}
+
+      {/* 2.5 Deals Section */}
+      {placeDeals.length > 0 && (
+        <div id="deals-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 scroll-mt-28">
+          <div className="rounded-2xl bg-[#141418] border border-white/10 p-5 sm:p-6 space-y-4 shadow-xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+                <Flame className="w-4 h-4" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-white font-display">
+                  Active Deals &amp; Vouchers
+                </h2>
+                <p className="text-xs text-[#AAA69C]">Exclusive promotional discounts valid at {place.name}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {placeDeals.map((deal) => (
+                <DealCard key={deal.id} post={deal} />
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

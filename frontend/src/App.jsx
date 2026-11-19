@@ -17,6 +17,7 @@ import { SearchPage } from '@/modules/discovery/pages/SearchPage';
 import { NearbyPage } from '@/modules/discovery/pages/NearbyPage';
 import { PlaceDetailPage } from '@/modules/places/pages/PlaceDetailPage';
 import { SavedPlacesPage, BookmarkProvider } from '@/modules/bookmarks';
+import { DealsFeedPage } from '@/modules/social';
 import { NotFoundPage } from '@/shared/pages/NotFoundPage';
 import { Navbar } from '@/shared/components/Navbar';
 import { Footer } from '@/shared/components/Footer';
@@ -62,6 +63,7 @@ export function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/places" element={<SearchPage />} />
               <Route path="/places/:slug" element={<PlaceDetailPage />} />
+              <Route path="/deals" element={<DealsFeedPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/nearby" element={<NearbyPage />} />
               <Route

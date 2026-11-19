@@ -13,6 +13,7 @@ import {
   X,
   Menu,
   ShieldCheck,
+  Flame,
 } from 'lucide-react';
 import { QuickFilters } from '@/modules/discovery/components/QuickFilters';
 import { NearMeFloatingPill } from '@/modules/discovery/components/NearMeFloatingPill';
@@ -159,6 +160,14 @@ export function Navbar() {
           </Link>
 
           <Link
+            to="/deals"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 backdrop-blur-md text-xs font-semibold text-amber-300 hover:border-amber-400 hover:bg-amber-500/20 transition shadow-sm shadow-amber-500/10"
+          >
+            <Flame className="w-3.5 h-3.5 text-amber-400" />
+            <span>Deals</span>
+          </Link>
+
+          <Link
             to="/saved"
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-xs font-semibold text-[#F5F2EA] hover:border-white hover:text-white transition"
           >
@@ -258,29 +267,37 @@ export function Navbar() {
             </div>
           </form>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <Link
               to="/search"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-center gap-1.5 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
+              className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
             >
-              <LayoutGrid className="w-4 h-4 text-[#AAA69C]" />
+              <LayoutGrid className="w-3.5 h-3.5 text-[#AAA69C]" />
               <span>Browse</span>
             </Link>
             <Link
               to="/nearby"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-center gap-1.5 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
+              className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
             >
-              <MapPin className="w-4 h-4 text-[#AAA69C]" />
+              <MapPin className="w-3.5 h-3.5 text-[#AAA69C]" />
               <span>Nearby</span>
+            </Link>
+            <Link
+              to="/deals"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-300"
+            >
+              <Flame className="w-3.5 h-3.5 text-amber-400" />
+              <span>Deals</span>
             </Link>
             <Link
               to="/saved"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-center gap-1.5 p-3 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
+              className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-white/10 bg-black/40 text-xs font-semibold text-white"
             >
-              <Bookmark className="w-4 h-4 text-[#AAA69C]" />
+              <Bookmark className="w-3.5 h-3.5 text-[#AAA69C]" />
               <span>Saved</span>
             </Link>
           </div>

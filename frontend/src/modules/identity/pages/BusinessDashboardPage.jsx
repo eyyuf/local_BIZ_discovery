@@ -36,6 +36,7 @@ import { getPlacePrimaryPhoto, getPlacePhotos, PLACE_PLACEHOLDER } from '@/share
 import { ImageCropModal } from '@/shared/components/ImageCropModal';
 import { BusinessVerificationSection } from '../components/BusinessVerificationSection';
 import { VerifiedBadge } from '@/shared/components/VerifiedBadge';
+import { useOwnerPosts, CreateDealModal } from '@/modules/social';
 
 const DAYS_OF_WEEK = [
   { index: 1, name: 'Monday' },
@@ -141,6 +142,16 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [isDeletingBusiness, setIsDeletingBusiness] = useState(false);
+
+  // Deals & Promotions State
+  const {
+    posts: ownerDeals,
+    loading: isLoadingDeals,
+    deletePost: handleDeleteDeal,
+    fetchPosts: refetchDeals,
+  } = useOwnerPosts(id);
+  const [createDealModalOpen, setCreateDealModalOpen] = useState(false);
+  const [deletingDealId, setDeletingDealId] = useState(null);
 
   const showNotification = useCallback((msg) => {
     setToastMessage(msg);
@@ -817,6 +828,7 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
     { id: 'info', label: 'Business Info', icon: Edit },
     { id: 'photos', label: 'Photos & Gallery', icon: Camera, badge: placeImages.length },
     { id: 'menu', label: 'Menu & Dishes', icon: UtensilsCrossed },
+    { id: 'deals', label: 'Deals & Offers', icon: Tag, badge: ownerDeals?.length || undefined },
     { id: 'hours', label: 'Operating Hours', icon: Clock },
     { id: 'location', label: 'Location & GPS', icon: MapPin },
     {
@@ -1779,6 +1791,117 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
               </div>
             )}
 
+            {/* TAB: DEALS & PROMOTIONS */}
+            {activeTab === 'deals' && (
+              <div className="p-5 sm:p-7 rounded-2xl bg-[#151518] border border-white/[0.08] shadow-xl space-y-6 animate-in fade-in duration-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-white font-display">Special Deals &amp; Vouchers</h2>
+                    <p className="text-xs text-[#AAA69C]">
+                      Publish exclusive promotional codes and discounts displayed on the public /deals feed.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCreateDealModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-black hover:bg-[#F5F2EA] active:scale-95 text-xs font-bold transition cursor-pointer shadow-md self-start sm:self-auto"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Publish New Deal</span>
+                  </button>
+                </div>
+
+                {isLoadingDeals ? (
+                  <div className="py-12 flex flex-col items-center justify-center space-y-3">
+                    <Loader2 className="w-6 h-6 animate-spin text-white/50" />
+                    <p className="text-xs font-mono text-[#AAA69C]">Loading published promotions...</p>
+                  </div>
+                ) : ownerDeals.length === 0 ? (
+                  <div className="py-12 text-center space-y-3 rounded-xl bg-black/30 border border-white/5 p-6">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+                      <Tag className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-white">No Promotions Published Yet</h4>
+                      <p className="text-xs text-[#AAA69C] max-w-sm mx-auto">
+                        Attract new local customers by publishing a limited-time voucher or discount.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCreateDealModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Create Your First Deal</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {ownerDeals.map((deal) => (
+                      <div
+                        key={deal.id}
+                        className="rounded-xl bg-black/40 border border-white/10 p-4 space-y-3 flex flex-col justify-between"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold">
+                              {deal.discount_percentage ? `${Math.round(deal.discount_percentage)}% OFF` : 'DEAL'}
+                            </span>
+                            {deal.discount_code && (
+                              <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-white/10 text-white font-bold">
+                                {deal.discount_code}
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="text-sm font-bold text-white">{deal.title}</h4>
+                          <p className="text-xs text-[#AAA69C] line-clamp-2">{deal.content}</p>
+                        </div>
+
+                        <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-[#AAA69C]">
+                          <div className="flex items-center gap-3">
+                            <span>
+                              Claims: <strong className="text-white">{deal.claims_count || 0}</strong>
+                              {deal.max_claims ? ` / ${deal.max_claims}` : ''}
+                            </span>
+                            <span>
+                              Likes: <strong className="text-white">{deal.likes_count || 0}</strong>
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={deletingDealId === deal.id}
+                            onClick={async () => {
+                              setDeletingDealId(deal.id);
+                              try {
+                                await handleDeleteDeal(deal.id);
+                                showNotification('Deal deleted successfully.');
+                              } catch (err) {
+                                showNotification('Could not delete deal.');
+                              } finally {
+                                setDeletingDealId(null);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1 text-red-400 hover:text-red-300 transition text-[11px] font-semibold cursor-pointer"
+                          >
+                            {deletingDealId === deal.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3 h-3" />
+                            )}
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* TAB 5: OPERATING HOURS */}
             {activeTab === 'hours' && (
               <div className="p-5 sm:p-7 rounded-2xl bg-[#151518] border border-white/[0.08] shadow-xl space-y-6 animate-in fade-in duration-200">
@@ -2131,6 +2254,16 @@ export function BusinessDashboardPage({ defaultTab = 'overview' }) {
           </div>
         </div>
       )}
+      {/* Create Deal Modal */}
+      <CreateDealModal
+        isOpen={createDealModalOpen}
+        onClose={() => setCreateDealModalOpen(false)}
+        placeId={id}
+        onCreated={() => {
+          showNotification('Special deal published successfully!');
+          refetchDeals();
+        }}
+      />
     </div>
   );
 }

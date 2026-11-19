@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, Search, MapPin, Bookmark, User } from 'lucide-react';
+import { Compass, Search, MapPin, Bookmark, User, Flame } from 'lucide-react';
 import { useAuth } from '@/modules/identity';
 
 export function MobileBottomNav() {
@@ -42,11 +42,11 @@ export function MobileBottomNav() {
       isActive: currentPath === '/search' || currentPath === '/places',
     },
     {
-      id: 'nearby',
-      label: 'Nearby',
-      icon: MapPin,
-      to: '/nearby',
-      isActive: currentPath === '/nearby',
+      id: 'deals',
+      label: 'Deals',
+      icon: Flame,
+      to: '/deals',
+      isActive: currentPath === '/deals',
     },
     {
       id: 'saved',

@@ -1,4 +1,4 @@
-// Social module API communication layer
+import apiClient from '@/api/client';
 
 export const socialApi = {
   /**
@@ -6,7 +6,8 @@ export const socialApi = {
    * @param {Object} params - Query params (page, per_page, deal_type)
    */
   fetchDeals: async (params = {}) => {
-    // TODO: GET /api/v1/social/deals
+    const response = await apiClient.get('/social/deals', { params });
+    return response.data;
   },
 
   /**
@@ -14,7 +15,8 @@ export const socialApi = {
    * @param {number|string} placeId
    */
   fetchPlaceDeals: async (placeId) => {
-    // TODO: GET /api/v1/social/places/${placeId}/deals
+    const response = await apiClient.get(`/social/places/${placeId}/deals`);
+    return response.data?.data || response.data || [];
   },
 
   /**
@@ -23,7 +25,8 @@ export const socialApi = {
    * @param {Object} postData
    */
   createPost: async (placeId, postData) => {
-    // TODO: POST /api/v1/social/places/${placeId}/posts
+    const response = await apiClient.post(`/social/places/${placeId}/posts`, postData);
+    return response.data;
   },
 
   /**
@@ -31,7 +34,8 @@ export const socialApi = {
    * @param {number|string} postId
    */
   deletePost: async (postId) => {
-    // TODO: DELETE /api/v1/social/posts/${postId}
+    const response = await apiClient.delete(`/social/posts/${postId}`);
+    return response.data;
   },
 
   /**
@@ -39,9 +43,35 @@ export const socialApi = {
    * @param {number|string} postId
    */
   toggleLike: async (postId) => {
-    // TODO: POST /api/v1/social/posts/${postId}/like
+    const response = await apiClient.post(`/social/posts/${postId}/like`);
+    return response.data;
+  },
+
+  /**
+   * Claim a deal voucher code
+   * @param {number|string} postId
+   */
+  claimDeal: async (postId) => {
+    const response = await apiClient.post(`/social/posts/${postId}/claim`);
+    return response.data;
+  },
+
+  /**
+   * Fetch user's claimed deals/vouchers
+   */
+  fetchMyClaims: async (params = {}) => {
+    const response = await apiClient.get('/social/my-claims', { params });
+    return response.data;
+  },
+
+  /**
+   * Mark voucher claimed as redeemed
+   * @param {number|string} claimId
+   */
+  redeemClaim: async (claimId) => {
+    const response = await apiClient.post(`/social/claims/${claimId}/redeem`);
+    return response.data;
   },
 };
 
 export default socialApi;
-

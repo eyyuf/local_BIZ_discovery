@@ -61,6 +61,10 @@ class Post extends Model
 
     public function scopeActive(Builder $query): Builder
     {
-        // TODO: Scope active and non-expired deals
+        return $query->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            });
     }
 }
