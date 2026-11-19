@@ -3,111 +3,81 @@ import React from 'react';
 /**
  * Ma'ed (ማዕድ) Brand Logo Component
  *
- * Design Architecture:
- * - Mark: A bespoke geometric monogram of the letter "M" sculpted around a culinary cloche
- *   (serving banquet dome) with an amber dining beacon at the apex, representing the shared Ethiopian table.
- * - Typography: High-contrast geometric display typography with a golden accent apostrophe.
- * - Subtitle: Refined letter-spaced descriptor "ETHIOPIAN DINING GUIDE" and Ge'ez script "ማዕድ".
+ * Production-Level Visual Architecture:
+ * - Mark: A continuous, sculptural geometric letter "M" forming a culinary banquet cloche
+ *   resting on an Ethiopian communal platter base line, crowned with an amber dining star.
+ * - Typography: High-contrast display typography with a bespoke 45° amber diamond accent mark.
+ * - Ge'ez Seal: Integrated cultural typography (ማዕድ) seamlessly balanced without tacky box borders.
  */
-export function MaedMark({ size = 36, className = '' }) {
+export function MaedMark({ size = 34, className = '' }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 48 48"
+      viewBox="0 0 36 36"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`shrink-0 transition-transform group-hover:scale-105 duration-200 ${className}`}
       aria-hidden="true"
     >
       <defs>
-        {/* Obsidian-to-charcoal background shield gradient */}
-        <linearGradient id="maedBg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#1E1E24" />
-          <stop offset="100%" stopColor="#0E0E12" />
-        </linearGradient>
+        {/* Subtle ambient warmth behind the mark */}
+        <radialGradient id="ambientWarmth" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+        </radialGradient>
 
-        {/* Warm saffron & Ethiopian butter amber gradient for the culinary cloche */}
+        {/* Ethiopian Saffron Gold Gradient */}
         <linearGradient id="maedGold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FBBF24" />
-          <stop offset="60%" stopColor="#F59E0B" />
+          <stop offset="0%" stopColor="#FDE047" />
+          <stop offset="50%" stopColor="#F59E0B" />
           <stop offset="100%" stopColor="#D97706" />
         </linearGradient>
 
-        {/* Subtle glow for the focal beacon */}
-        <filter id="beaconGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="1.5" result="blur" />
+        {/* Soft bloom for the beacon star */}
+        <filter id="starBloom" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="1" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
       </defs>
 
-      {/* Rounded Squircle Container */}
-      <rect
-        x="1.5"
-        y="1.5"
-        width="45"
-        height="45"
-        rx="13"
-        fill="url(#maedBg)"
-        stroke="rgba(255, 255, 255, 0.12)"
-        strokeWidth="1.2"
-      />
+      {/* Ambient warm radial glow */}
+      <circle cx="18" cy="18" r="16" fill="url(#ambientWarmth)" />
 
-      {/* Inner Accent Ring with soft amber shimmer */}
-      <rect
-        x="3"
-        y="3"
-        width="42"
-        height="42"
-        rx="11.5"
-        fill="none"
-        stroke="url(#maedGold)"
-        strokeWidth="0.8"
-        strokeOpacity="0.35"
-      />
-
-      {/* === The "M" Table & Cloche Symbol === */}
-      {/* 1. Left Pillar (Seated Host / Table Leg) */}
+      {/* Communal Platter Base Line (Serving table) */}
       <path
-        d="M12 34V19.5C12 18.1 13.1 17 14.5 17C15.9 17 17 18.1 17 19.5V34"
-        stroke="#F5F2EA"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-
-      {/* 2. Right Pillar (Seated Guest / Table Leg) */}
-      <path
-        d="M36 34V19.5C36 18.1 34.9 17 33.5 17C32.1 17 31 18.1 31 19.5V34"
-        stroke="#F5F2EA"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-
-      {/* 3. Central Banquet Cloche Dome (Forms the center apex of "M") */}
-      <path
-        d="M17 25C17 20 20.1 16 24 16C27.9 16 31 20 31 25"
-        stroke="url(#maedGold)"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-      />
-
-      {/* 4. Communal Dining Table / Serving Base Platter */}
-      <path
-        d="M15 30.5H33"
+        d="M 5 27.5 H 31"
         stroke="url(#maedGold)"
         strokeWidth="2"
         strokeLinecap="round"
       />
 
-      {/* 5. Cloche Finial / Shared Dining Focal Beacon */}
+      {/* Primary Sculptural "M" Banquet Arch */}
+      <path
+        d="M 8 26.5 V 18 C 8 13 12 12 16 16.5 L 18 18.8 L 20 16.5 C 24 12 28 13 28 18 V 26.5"
+        stroke="#F5F2EA"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Inner Cloche Dome Arc (Ties the "M" into an authentic food cloche) */}
+      <path
+        d="M 12.5 21 C 14 17 16 15.2 18 15.2 C 20 15.2 22 17 23.5 21"
+        stroke="url(#maedGold)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+
+      {/* Dining Beacon Star / Cloche Pearl */}
       <circle
-        cx="24"
-        cy="12"
+        cx="18"
+        cy="9.5"
         r="2.2"
         fill="url(#maedGold)"
-        filter="url(#beaconGlow)"
+        filter="url(#starBloom)"
       />
-      <circle cx="24" cy="12" r="1.2" fill="#FFFBEB" />
+      <circle cx="18" cy="9.5" r="1" fill="#FFFFFF" />
     </svg>
   );
 }
@@ -120,13 +90,13 @@ export function MaedLogo({
 }) {
   const markSizes = {
     sm: 28,
-    md: 36,
-    lg: 44,
+    md: 34,
+    lg: 42,
   };
 
   const textSizes = {
     sm: 'text-base',
-    md: 'text-lg',
+    md: 'text-lg sm:text-xl',
     lg: 'text-2xl',
   };
 
@@ -138,31 +108,39 @@ export function MaedLogo({
 
   return (
     <div className={`flex items-center gap-2.5 group select-none ${className}`}>
-      {/* Visual Icon Mark */}
+      {/* Freestanding Vector Mark */}
       <MaedMark size={currentMarkSize} />
 
-      {/* Brand Typography */}
+      {/* Brand Typography Lockup */}
       {variant !== 'mark' && (
         <div className="flex flex-col justify-center">
           <div className="flex items-center gap-1.5 leading-none">
+            {/* Custom Wordmark */}
             <span
-              className={`font-black tracking-tight text-white font-display ${
+              className={`font-black tracking-tight text-white font-display flex items-baseline ${
                 textSizes[size] || textSizes.md
               }`}
             >
-              Ma
-              <span className="text-[#F59E0B] font-extrabold mx-[1px]">’</span>
-              ed
+              <span>Ma</span>
+              {/* Bespoke 45° Amber Diamond Accent */}
+              <span
+                className="inline-block w-1.5 h-1.5 bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 rotate-45 mx-0.5 mb-1.5 shadow-[0_0_8px_rgba(245,158,11,0.7)]"
+                aria-hidden="true"
+              />
+              <span>ed</span>
             </span>
 
-            {/* Ge'ez Script Micro-Badge */}
-            <span className="text-[10px] font-mono tracking-widest text-[#AAA69C]/80 px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.08]">
+            {/* Seamless Ge'ez Script Signature (No tacky grey box) */}
+            <span
+              className="text-xs font-mono font-bold tracking-widest text-amber-400/90 ml-1 opacity-90 select-none hover:opacity-100 transition-opacity"
+              title="ማዕድ — Banquet / Dining Table"
+            >
               ማዕድ
             </span>
           </div>
 
           {showTagline && (
-            <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#AAA69C] mt-0.5">
+            <span className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#AAA69C] mt-0.5">
               Ethiopian Dining Guide
             </span>
           )}
