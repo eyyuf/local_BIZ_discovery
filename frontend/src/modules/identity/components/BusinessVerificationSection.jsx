@@ -325,7 +325,7 @@ export function BusinessVerificationSection({ place, onPlaceUpdated }) {
                 <VerifiedBadge size="sm" />
               </h3>
               <p className="text-xs text-[#AAA69C]">
-                Your business has been officially verified by Local Spot. The verified badge is displayed on your public spot page and in search results.
+                Your business has been officially verified by Ma'ed. The verified badge is displayed on your public spot page and in search results.
               </p>
             </div>
           </div>

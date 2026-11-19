@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Compass } from 'lucide-react';
+import { Mail, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import identityApi from '../api/identityApi';
+import { MaedLogo } from '@/shared/components/MaedLogo';
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -64,18 +65,8 @@ export function ForgotPasswordPage() {
           <span>Back to Sign In</span>
         </Link>
 
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="text-right">
-            <span className="font-extrabold text-base tracking-tight text-white font-display block leading-none">
-              Local Spot
-            </span>
-            <span className="text-[9px] tracking-widest text-[#AAA69C] uppercase font-mono mt-1 block">
-              Addis Ababa / Discovery
-            </span>
-          </div>
-          <div className="w-8 h-8 rounded-full border border-white/20 bg-[#151513] flex items-center justify-center text-white group-hover:border-white transition">
-            <Compass className="w-4 h-4" />
-          </div>
+        <Link to="/" className="flex items-center group" aria-label="Ma'ed Home">
+          <MaedLogo size="md" />
         </Link>
       </header>
 
@@ -186,7 +177,7 @@ export function ForgotPasswordPage() {
       {/* Bottom Sub-footer */}
       <footer className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#AAA69C]/80 font-mono">
         <div>Bole / Kazanchis / Bishoftu / Piassa</div>
-        <div>Local Spot Ethiopia &copy; 2026</div>
+        <div>Ma'ed Ethiopia &copy; 2026</div>
       </footer>
     </div>
   );

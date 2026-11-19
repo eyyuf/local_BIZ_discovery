@@ -390,10 +390,10 @@ export function BusinessCreatePage() {
             <span>Register New Business Spot</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-black text-white font-display tracking-tight">
-            Launch Your Local Spot
+            Register Your Venue on Ma'ed
           </h1>
           <p className="text-xs sm:text-sm text-[#AAA69C] max-w-2xl leading-relaxed">
-            Register your restaurant, cafe, bakery, hotel, or local business. Once created, your venue is immediately indexed across search, interactive maps, and community discovery.
+            Register your restaurant, cafe, bakery, or culinary spot. Once created, your venue is immediately indexed across search, interactive maps, and community discovery.
           </p>
         </div>
 

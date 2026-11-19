@@ -24,8 +24,8 @@ export function PersonalizedRadar() {
 
             <p className="text-xs sm:text-sm text-[#AAA69C] leading-relaxed max-w-xl">
               {isAuthenticated
-                ? `Welcome back ${user?.name || ''}! Local Spot is tailoring suggestions based on your bookmarked restaurants, cafes, and hotels.`
-                : 'Sign in to unlock your personal taste radar. Local Spot analyzes your favorite cafes, restaurants, and hotels to surface fresh daily recommendations.'}
+                ? `Welcome back ${user?.name || ''}! Ma'ed is tailoring suggestions based on your bookmarked restaurants, cafes, and dining spots.`
+                : "Sign in to unlock your personal taste radar. Ma'ed analyzes your favorite cafes, restaurants, and bakeries to surface fresh daily dining recommendations."}
             </p>
 
             <div className="flex flex-wrap gap-2 pt-1">

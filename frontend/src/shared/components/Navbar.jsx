@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/modules/identity';
 import {
-  Compass,
   Search,
   LayoutGrid,
   MapPin,
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react';
 import { QuickFilters } from '@/modules/discovery/components/QuickFilters';
 import { NearMeFloatingPill } from '@/modules/discovery/components/NearMeFloatingPill';
+import { MaedLogo } from '@/shared/components/MaedLogo';
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -117,13 +117,8 @@ export function Navbar() {
       {/* Row 1: Primary Navigation Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-3 lg:gap-4">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-2 group shrink-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 bg-black/45 flex items-center justify-center text-white backdrop-blur-md group-hover:border-white transition">
-            <Compass className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <span className="font-extrabold text-base sm:text-lg tracking-tight text-white font-display whitespace-nowrap">
-            Local Spot
-          </span>
+        <Link to="/" className="flex items-center group shrink-0" aria-label="Ma'ed Home">
+          <MaedLogo size="md" />
         </Link>
 
         {/* Global Search Input (Centered frosted pill) */}
@@ -134,8 +129,8 @@ export function Navbar() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search spots, cafes, dining, hotels..."
-              aria-label="Search places"
+              placeholder="Search cafes, restaurants, bakeries, dishes..."
+              aria-label="Search food spots"
               className="w-full h-10 rounded-full border border-white/20 bg-black/50 pl-11 pr-4 text-xs text-[#F5F2EA] placeholder:text-[#AAA69C]/65 backdrop-blur-md focus:border-white focus:outline-none transition font-sans"
             />
           </div>
@@ -340,7 +335,7 @@ export function Navbar() {
                 className="w-full py-2.5 rounded-full bg-white text-black text-xs font-bold flex items-center justify-center gap-2 shadow-lg"
               >
                 <User className="w-3.5 h-3.5" />
-                <span>Sign in to Local Spot</span>
+                <span>Sign in to Ma'ed</span>
               </Link>
             )}
           </div>

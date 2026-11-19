@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, ChevronRight, Compass } from 'lucide-react';
+import { MapPin, ChevronRight, UtensilsCrossed } from 'lucide-react';
 import { getPlacePrimaryPhoto, PLACE_PLACEHOLDER } from '@/shared/utils/placeImages';
 import { VerifiedBadge } from '@/shared/components/VerifiedBadge';
 
@@ -8,10 +8,10 @@ export function HeroCard({ place }) {
   const hasPlace = Boolean(place && place.slug && place.name);
 
   const heroSlug = hasPlace ? place.slug : null;
-  const heroName = hasPlace ? place.name : 'Discover Authentic Spots Across Ethiopia';
+  const heroName = hasPlace ? place.name : 'Discover Authentic Dining Across Ethiopia';
   const heroLocation = hasPlace
     ? (place.address?.split(',')?.slice(-2)?.join(',')?.trim() || place.address || 'Ethiopia')
-    : 'Restaurants, cafes & local spots';
+    : 'Restaurants, cafes, bakeries & dining spots';
   const bgImage = hasPlace ? getPlacePrimaryPhoto(place) : '/assets/place-placeholder.svg';
 
   return (
@@ -64,8 +64,8 @@ export function HeroCard({ place }) {
               </>
             ) : (
               <>
-                <Compass className="w-4 h-4 text-black" />
-                <span>Explore All Spots</span>
+                <UtensilsCrossed className="w-4 h-4 text-black" />
+                <span>Explore Dining Spots</span>
               </>
             )}
           </Link>

@@ -341,7 +341,7 @@ export function AdminDashboardPage() {
               </div>
               <div>
                 <span className="font-extrabold text-sm tracking-tight text-white font-display block leading-none">
-                  Local Spot
+                  Ma'ed
                 </span>
                 <span className="text-[9px] tracking-widest text-[#AAA69C] uppercase font-mono mt-0.5 block">
                   KYC Admin

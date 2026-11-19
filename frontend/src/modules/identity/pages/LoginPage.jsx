@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Mail, Lock, Eye, EyeOff, Compass, ArrowLeft, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
+import { MaedLogo } from '@/shared/components/MaedLogo';
 
 export function LoginPage() {
   const { login, isAuthenticated, user } = useAuth();
@@ -77,18 +78,8 @@ export function LoginPage() {
           <span>Back to Discovery Home</span>
         </Link>
 
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="text-right">
-            <span className="font-extrabold text-base tracking-tight text-white font-display block leading-none">
-              Local Spot
-            </span>
-            <span className="text-[9px] tracking-widest text-[#AAA69C] uppercase font-mono mt-1 block">
-              Addis Ababa &amp; Beyond
-            </span>
-          </div>
-          <div className="w-8 h-8 rounded-full border border-white/20 bg-[#151513] flex items-center justify-center text-white group-hover:border-white transition">
-            <Compass className="w-4 h-4" />
-          </div>
+        <Link to="/" className="flex items-center group" aria-label="Ma'ed Home">
+          <MaedLogo size="md" />
         </Link>
       </header>
 
@@ -253,13 +244,13 @@ export function LoginPage() {
           {/* Right Column: Editorial Cultural Message */}
           <div className="hidden lg:flex lg:col-span-6 flex-col justify-center space-y-4 pl-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-black/40 text-[10px] font-mono uppercase tracking-widest text-white/90 w-fit backdrop-blur-md">
-              Restaurants &amp; Local Spots
+              Ethiopian Dining &amp; Cafes
             </div>
             <h2 className="text-4xl xl:text-5xl font-black text-white tracking-tight leading-tight font-display">
-              Ethiopia's finest restaurants, cafes &amp; hotels.
+              Discover Ethiopia's finest dining, cafes &amp; culinary spots.
             </h2>
             <p className="text-sm xl:text-base text-[#AAA69C] leading-relaxed max-w-lg">
-              Discover verified restaurants, cafes, bakeries, and hotels.
+              Explore authentic local dishes, specialty coffee bars, traditional banquets, and neighborhood gems across Ethiopia.
             </p>
           </div>
         </div>
@@ -268,7 +259,7 @@ export function LoginPage() {
       {/* Bottom Sub-footer */}
       <footer className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#AAA69C]/80 font-mono">
         <div>Bole / Kazanchis / Bishoftu / Piassa</div>
-        <div>Local Spot Ethiopia &copy; 2026</div>
+        <div>Ma'ed Ethiopia &copy; 2026</div>
       </footer>
     </div>
   );

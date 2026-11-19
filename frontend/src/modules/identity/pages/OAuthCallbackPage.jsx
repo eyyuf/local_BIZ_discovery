@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { CheckCircle2, AlertCircle, ArrowRight, Compass } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import { MaedLogo } from '@/shared/components/MaedLogo';
 
 export function OAuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -54,13 +55,8 @@ export function OAuthCallbackPage() {
 
       {/* Top minimal bar */}
       <header className="relative z-20 max-w-7xl w-full mx-auto pt-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-full border border-white/20 bg-black/45 flex items-center justify-center text-white backdrop-blur-md group-hover:border-white transition">
-            <Compass className="w-4 h-4" />
-          </div>
-          <span className="font-extrabold text-base tracking-tight text-white font-display">
-            Local Spot
-          </span>
+        <Link to="/" className="flex items-center group" aria-label="Ma'ed Home">
+          <MaedLogo size="md" />
         </Link>
       </header>
 
@@ -88,7 +84,7 @@ export function OAuthCallbackPage() {
               </div>
               <h2 className="text-xl font-black text-white font-display">Authentication Verified!</h2>
               <p className="text-xs sm:text-sm text-[#AAA69C]">
-                Welcome to Local Spot. Redirecting you to discovery...
+                Welcome to Ma'ed. Redirecting you to discovery...
               </p>
             </div>
           )}
@@ -115,7 +111,7 @@ export function OAuthCallbackPage() {
       </main>
 
       <footer className="relative z-20 text-center py-4 text-[11px] text-[#AAA69C]/60 font-mono">
-        Local Spot Ethiopia — 2026
+        Ma'ed Ethiopia — 2026
       </footer>
     </div>
   );
