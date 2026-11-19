@@ -25,10 +25,18 @@ function getCategoryLabel(place) {
   return getPlaceCategoryLabel(place);
 }
 
+const ADDIS_NEIGHBORHOODS = [
+  { name: 'Bole / Central', lat: 9.0054, lng: 38.7845 },
+  { name: 'Kazanchis', lat: 9.0175, lng: 38.7667 },
+  { name: 'Piassa / 4 Kilo', lat: 9.0345, lng: 38.7518 },
+  { name: 'Sarbet / Old Airport', lat: 8.9950, lng: 38.7350 },
+  { name: 'CMC / 22 Mazoriya', lat: 9.0150, lng: 38.7900 },
+];
+
 export function NearbyPage() {
-  // Geolocation states: 'requesting' | 'ready' | 'denied' | 'unavailable' | 'timeout' | 'unsupported'
-  const [locationStatus, setLocationStatus] = useState('requesting');
-  const [coords, setCoords] = useState(null); // { lat: number, lng: number } | null
+  // Default to Addis Ababa central coordinates so the map and hundreds of pins render immediately
+  const [coords, setCoords] = useState({ lat: 9.0054, lng: 38.7845 });
+  const [locationStatus, setLocationStatus] = useState('ready');
   const [locationErrorMessage, setLocationErrorMessage] = useState(null);
 
   const [radius, setRadius] = useState(10);
@@ -219,7 +227,8 @@ export function NearbyPage() {
 
         setLocationStatus(status);
         setLocationErrorMessage(message);
-        setCoords(null);
+        // Retain Addis Ababa central coordinates as fallback so map stays interactive
+        setCoords((prev) => prev || { lat: 9.0054, lng: 38.7845 });
       },
       {
         enableHighAccuracy: true,
@@ -316,6 +325,31 @@ export function NearbyPage() {
             {locationStatus === 'requesting' ? '...' : 'Update'}
           </span>
         </button>
+      </div>
+
+      {/* Quick Neighborhood Jump Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+        <span className="text-[#AAA69C] text-[11px] font-mono shrink-0 mr-1">Neighborhoods:</span>
+        {ADDIS_NEIGHBORHOODS.map((hood) => {
+          const isActive = coords && Math.abs(coords.lat - hood.lat) < 0.005 && Math.abs(coords.lng - hood.lng) < 0.005;
+          return (
+            <button
+              key={hood.name}
+              type="button"
+              onClick={() => {
+                setCoords({ lat: hood.lat, lng: hood.lng });
+                setLocationStatus('ready');
+              }}
+              className={`px-3 py-1 rounded-full whitespace-nowrap transition cursor-pointer text-xs font-semibold ${
+                isActive
+                  ? 'bg-amber-400 text-black font-bold shadow-md'
+                  : 'bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-[#AAA69C] hover:text-white'
+              }`}
+            >
+              📍 {hood.name}
+            </button>
+          );
+        })}
       </div>
 
       {/* Geolocation State 1: Requesting location */}

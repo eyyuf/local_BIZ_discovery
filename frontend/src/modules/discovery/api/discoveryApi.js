@@ -56,7 +56,7 @@ export const discoveryApi = {
     return data;
   },
 
-  getNearbyPlaces: async (lat, lng, radius = 5, limit = 20) => {
+  getNearbyPlaces: async (lat, lng, radius = 10, limit = 100) => {
     const response = await apiClient.get('/discovery/nearby', {
       params: { lat, lng, radius, limit },
     });
