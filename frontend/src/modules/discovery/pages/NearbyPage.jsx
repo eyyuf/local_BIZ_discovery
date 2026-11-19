@@ -20,6 +20,23 @@ function formatDistance(distanceKm) {
   return `${dist.toFixed(1)} km away`;
 }
 
+// Distance from central Addis Ababa in km
+function getDistanceFromAddis(lat, lng) {
+  if (lat == null || lng == null) return 0;
+  const addisLat = 9.0054;
+  const addisLng = 38.7845;
+  const R = 6371;
+  const dLat = ((lat - addisLat) * Math.PI) / 180;
+  const dLng = ((lng - addisLng) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((addisLat * Math.PI) / 180) *
+      Math.cos((lat * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
 // Derive category label with simplified terminology
 function getCategoryLabel(place) {
   return getPlaceCategoryLabel(place);
@@ -34,6 +51,9 @@ const ADDIS_NEIGHBORHOODS = [
 ];
 
 export function NearbyPage() {
+  // Flag to know if user explicitly chose a neighborhood or city center
+  const userManualOverrideRef = useRef(false);
+
   // Default to Addis Ababa central coordinates so the map and hundreds of pins render immediately
   const [coords, setCoords] = useState({ lat: 9.0054, lng: 38.7845 });
   const [locationStatus, setLocationStatus] = useState('ready');
@@ -203,10 +223,12 @@ export function NearbyPage() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        setCoords({
-          lat: latitude,
-          lng: longitude,
-        });
+        if (!userManualOverrideRef.current) {
+          setCoords({
+            lat: latitude,
+            lng: longitude,
+          });
+        }
         setLocationStatus('ready');
         setLocationErrorMessage(null);
       },
@@ -337,6 +359,7 @@ export function NearbyPage() {
               key={hood.name}
               type="button"
               onClick={() => {
+                userManualOverrideRef.current = true;
                 setCoords({ lat: hood.lat, lng: hood.lng });
                 setLocationStatus('ready');
               }}
@@ -351,6 +374,30 @@ export function NearbyPage() {
           );
         })}
       </div>
+
+      {/* Alert when GPS is in Adama or outside Addis Ababa */}
+      {coords && getDistanceFromAddis(coords.lat, coords.lng) > 30 && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-md">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="text-[#F5F2EA]">
+              Your browser detected your device is in <strong className="text-amber-300 font-mono">Adama / Nazret ({Math.round(getDistanceFromAddis(coords.lat, coords.lng))} km away)</strong>. Currently showing spots in Adama only.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              userManualOverrideRef.current = true;
+              setCoords({ lat: 9.0054, lng: 38.7845 });
+              setLocationStatus('ready');
+            }}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs shrink-0 transition shadow-sm cursor-pointer self-start sm:self-auto"
+          >
+            <span>Switch to Addis Ababa (1,000+ Spots)</span>
+            <span>&rarr;</span>
+          </button>
+        </div>
+      )}
 
       {/* Geolocation State 1: Requesting location */}
       {locationStatus === 'requesting' && !coords && (
