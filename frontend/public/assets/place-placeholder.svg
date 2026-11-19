@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181B" />
+      <stop offset="100%" stop-color="#0F0F11" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bgGrad)" />
+  <rect x="24" y="24" width="752" height="552" rx="20" fill="none" stroke="#27272A" stroke-width="2" stroke-dasharray="6 6" />
+  <g transform="translate(368, 220)" fill="none" stroke="#52525B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+    <circle cx="12" cy="7" r="1.5" fill="#52525B" />
+  </g>
+  <text x="400" y="310" fill="#A1A1AA" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" text-anchor="middle" letter-spacing="2">LOCAL SPOT</text>
+  <text x="400" y="334" fill="#52525B" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" text-anchor="middle">No photo uploaded yet</text>
+</svg>
+

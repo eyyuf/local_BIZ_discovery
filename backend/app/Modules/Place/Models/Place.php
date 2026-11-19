@@ -2,12 +2,21 @@
 
 namespace App\Modules\Place\Models;
 
+use App\Modules\Discovery\Models\Amenity;
+use App\Modules\Discovery\Models\Category;
+use App\Modules\Discovery\Models\PlaceBookmark;
 use App\Modules\Identity\Models\User;
+use App\Modules\Place\Actions\CheckIsOpenNowAction;
+use DateTimeInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 class Place extends Model
 {
@@ -21,10 +30,124 @@ class Place extends Model
         'address',
         'latitude',
         'longitude',
+        'location',
         'phone',
         'website',
         'is_active',
+        'verification_status',
+        'is_verified',
+        'tax_id',
+        'manager_name',
+        'fayda_fin',
+        'telebirr_merchant_id',
+        'verification_document',
+        'fayda_document',
+        'verification_notes',
+        'verified_at',
     ];
+
+    protected $appends = [
+        'is_open',
+        'cover_image',
+    ];
+
+    public function getCoverImageAttribute(): ?string
+    {
+        if ($this->relationLoaded('images') && $this->images->isNotEmpty()) {
+            return $this->images->firstWhere('is_cover', true)?->url ?? $this->images->first()?->url;
+        }
+
+        return $this->images()->where('is_cover', true)->first()?->url
+            ?? $this->images()->first()?->url;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'is_verified' => 'boolean',
+            'is_active'   => 'boolean',
+            'verified_at' => 'datetime',
+        ];
+    }
+
+    /**
+     * Determine whether the place is currently open in Africa/Addis_Ababa.
+     */
+    public function isOpen(?DateTimeInterface $at = null): bool
+    {
+        return app(CheckIsOpenNowAction::class)->execute($this, $at);
+    }
+
+    /**
+     * Dynamic is_open attribute accessor.
+     */
+    public function getIsOpenAttribute(): bool
+    {
+        return $this->isOpen();
+    }
+
+    public function isVerified(): bool
+    {
+        return (bool) $this->is_verified;
+    }
+
+    public function scopeVerified(Builder $query): Builder
+    {
+        return $query->where('is_verified', true);
+    }
+
+    public function scopePendingVerification(Builder $query): Builder
+    {
+        return $query->where('verification_status', 'pending');
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $place) {
+            if ($place->latitude !== null && $place->longitude !== null) {
+                $place->location = DB::raw(
+                    "ST_SetSRID(ST_MakePoint({$place->longitude}, {$place->latitude}), 4326)"
+                );
+            }
+        });
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field) {
+            return $this->where($field, $value)->first();
+        }
+
+        return is_numeric($value)
+            ? $this->where('id', $value)->first()
+            : $this->where('slug', $value)->first();
+    }
+
+    /**
+     * PostGIS: calculate distance in kilometers using ST_Distance.
+     */
+    public function scopeWithDistanceTo(Builder $query, float $lat, float $lng): Builder
+    {
+        return $query->select('places.*')
+            ->selectRaw(
+                'ST_Distance(places.location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) / 1000.0 AS distance_km',
+                [$lng, $lat]
+            );
+    }
+
+    /**
+     * PostGIS: filter places within radius in kilometers using spatial index (ST_DWithin).
+     */
+    public function scopeWithinRadius(Builder $query, float $lat, float $lng, float $radiusKm): Builder
+    {
+        $radiusMeters = $radiusKm * 1000;
+
+        return $query->whereNotNull('location')
+            ->whereRaw(
+                'ST_DWithin(places.location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?)',
+                [$lng, $lat, $radiusMeters]
+            );
+    }
 
     public function owner(): BelongsTo
     {
@@ -44,5 +167,45 @@ class Place extends Model
     public function menuItems(): HasManyThrough
     {
         return $this->hasManyThrough(MenuItem::class, MenuSection::class);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'category_place');
+    }
+
+    public function amenities(): BelongsToMany
+    {
+        return $this->belongsToMany(Amenity::class, 'amenity_place');
+    }
+
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(PlaceBookmark::class);
+    }
+
+    public function posts(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Social\Models\Post::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Review\Models\Review::class);
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Review\Models\Favorite::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(PlaceImage::class)->orderBy('display_order')->orderBy('id');
+    }
+
+    public function coverImage(): HasOne
+    {
+        return $this->hasOne(PlaceImage::class)->where('is_cover', true);
     }
 }

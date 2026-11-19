@@ -63,3 +63,7 @@ Thumbs.db
 /auth.json
 Homestead.json
 Homestead.yaml
+
+tests/
+!tests/Unit/OperatingHoursStatusTest.php
+!tests/Feature/OperatingHoursFeatureTest.php
