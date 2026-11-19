@@ -338,11 +338,10 @@ export function ProfilePage() {
                   <h1 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight">
                     {user?.name || 'LocalSpot Explorer'}
                   </h1>
-                  <span className={`px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider font-mono ${
-                    user?.role === 'admin'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : 'bg-white/[0.08] text-white/90 border border-white/10'
-                  }`}>
+                  <span className={`px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider font-mono ${user?.role === 'admin'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                    : 'bg-white/[0.08] text-white/90 border border-white/10'
+                    }`}>
                     {user?.role === 'admin' ? 'System Administrator' : (user?.role === 'owner' ? 'Business Owner' : 'Verified Explorer')}
                   </span>
                 </div>
@@ -413,11 +412,10 @@ export function ProfilePage() {
           {/* Avatar Upload Feedback */}
           {avatarFeedback && (
             <div
-              className={`mt-4 p-3.5 rounded-2xl text-xs flex items-center gap-2.5 ${
-                avatarFeedback.type === 'success'
-                  ? 'bg-[#162B1E] border border-[#22C55E]/40 text-white'
-                  : 'bg-red-950/40 border border-red-500/30 text-white'
-              }`}
+              className={`mt-4 p-3.5 rounded-2xl text-xs flex items-center gap-2.5 ${avatarFeedback.type === 'success'
+                ? 'bg-[#162B1E] border border-[#22C55E]/40 text-white'
+                : 'bg-red-950/40 border border-red-500/30 text-white'
+                }`}
             >
               {avatarFeedback.type === 'success' ? (
                 <Check className="w-4 h-4 text-[#22C55E] shrink-0" />
@@ -512,11 +510,10 @@ export function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('bookmarks')}
-            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${
-              activeTab === 'bookmarks'
-                ? 'border border-white bg-white/15 text-white shadow-sm'
-                : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
-            }`}
+            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${activeTab === 'bookmarks'
+              ? 'border border-white bg-white/15 text-white shadow-sm'
+              : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
+              }`}
           >
             <Bookmark className="w-4 h-4 text-white" />
             <span>Saved Spots</span>
@@ -530,11 +527,10 @@ export function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('reviews')}
-            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${
-              activeTab === 'reviews'
-                ? 'border border-white bg-white/15 text-white shadow-sm'
-                : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
-            }`}
+            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${activeTab === 'reviews'
+              ? 'border border-white bg-white/15 text-white shadow-sm'
+              : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
+              }`}
           >
             <MessageSquare className="w-4 h-4 text-white" />
             <span>My Reviews</span>
@@ -548,11 +544,10 @@ export function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('businesses')}
-            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${
-              activeTab === 'businesses'
-                ? 'border border-white bg-white/15 text-white shadow-sm'
-                : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
-            }`}
+            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${activeTab === 'businesses'
+              ? 'border border-white bg-white/15 text-white shadow-sm'
+              : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
+              }`}
           >
             <Building2 className="w-4 h-4 text-white" />
             <span>Businesses</span>
@@ -566,11 +561,10 @@ export function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('details')}
-            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${
-              activeTab === 'details'
-                ? 'border border-white bg-white/15 text-white shadow-sm'
-                : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
-            }`}
+            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${activeTab === 'details'
+              ? 'border border-white bg-white/15 text-white shadow-sm'
+              : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
+              }`}
           >
             <User className="w-4 h-4 text-white" />
             <span>Account Details</span>
@@ -579,11 +573,10 @@ export function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('security')}
-            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${
-              activeTab === 'security'
-                ? 'border border-white bg-white/15 text-white shadow-sm'
-                : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
-            }`}
+            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md whitespace-nowrap ${activeTab === 'security'
+              ? 'border border-white bg-white/15 text-white shadow-sm'
+              : 'border border-white/10 bg-black/40 text-[#AAA69C] hover:text-white hover:border-white/30'
+              }`}
           >
             <Shield className="w-4 h-4 text-white" />
             <span>Security</span>
@@ -677,9 +670,8 @@ export function ProfilePage() {
                             {[1, 2, 3, 4, 5].map((s) => (
                               <Star
                                 key={s}
-                                className={`w-3.5 h-3.5 ${
-                                  s <= starScore ? 'fill-amber-400 text-amber-400' : 'text-white/20'
-                                }`}
+                                className={`w-3.5 h-3.5 ${s <= starScore ? 'fill-amber-400 text-amber-400' : 'text-white/20'
+                                  }`}
                               />
                             ))}
                           </div>
@@ -822,11 +814,10 @@ export function ProfilePage() {
                             }}
                           />
                           <span
-                            className={`absolute top-2.5 right-2.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide border backdrop-blur-md ${
-                              place.is_active
-                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                                : 'bg-black/80 text-zinc-400 border-white/10'
-                            }`}
+                            className={`absolute top-2.5 right-2.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide border backdrop-blur-md ${place.is_active
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                              : 'bg-black/80 text-zinc-400 border-white/10'
+                              }`}
                           >
                             {place.is_active ? 'Live' : 'Draft'}
                           </span>
