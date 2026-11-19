@@ -27,6 +27,7 @@ import {
   Power,
   Layers,
   Upload,
+  AlertTriangle,
 } from 'lucide-react';
 import placesApi from '@/modules/places/api/placesApi';
 import discoveryApi from '@/modules/discovery/api/discoveryApi';
