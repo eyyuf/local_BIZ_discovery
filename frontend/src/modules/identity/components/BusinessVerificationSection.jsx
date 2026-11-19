@@ -314,9 +314,9 @@ export function BusinessVerificationSection({ place, onPlaceUpdated }) {
 
       {/* 2. STATE A: APPROVED / VERIFIED */}
       {isVerified && (
-        <div className="p-6 sm:p-8 rounded-2xl bg-[#151518] border border-emerald-500/30 shadow-xl space-y-6">
+        <div className="p-6 sm:p-8 rounded-2xl bg-[#151518] border border-sky-500/30 shadow-xl space-y-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400 shrink-0">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div className="space-y-1">
@@ -346,7 +346,7 @@ export function BusinessVerificationSection({ place, onPlaceUpdated }) {
             </div>
             <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06]">
               <span className="text-[11px] text-[#AAA69C] block">Verified On</span>
-              <span className="text-sm font-medium text-emerald-400 mt-0.5 block">
+              <span className="text-sm font-medium text-sky-400 mt-0.5 block">
                 {verificationData?.verified_at
                   ? new Date(verificationData.verified_at).toLocaleDateString()
                   : 'Official Verification'}
