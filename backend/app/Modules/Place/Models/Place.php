@@ -48,7 +48,18 @@ class Place extends Model
 
     protected $appends = [
         'is_open',
+        'cover_image',
     ];
+
+    public function getCoverImageAttribute(): ?string
+    {
+        if ($this->relationLoaded('images') && $this->images->isNotEmpty()) {
+            return $this->images->firstWhere('is_cover', true)?->url ?? $this->images->first()?->url;
+        }
+
+        return $this->images()->where('is_cover', true)->first()?->url
+            ?? $this->images()->first()?->url;
+    }
 
     protected function casts(): array
     {
